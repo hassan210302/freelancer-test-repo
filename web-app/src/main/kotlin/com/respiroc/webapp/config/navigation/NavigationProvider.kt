@@ -38,6 +38,14 @@ class NavigationProvider {
             ),
 
             NavigationSection(
+                title = "Expenses", icon = "credit-card",
+                items = listOf(
+                    NavigationSectionItem(label = "Overview", url = "/expenses/overview"),
+                    NavigationSectionItem(label = "New Expense", url = "/expenses/new")
+                )
+            ),
+
+            NavigationSection(
                 title = "Contact", icon = "users",
                 items = listOf(
                     NavigationSectionItem(label = "Customers", url = "/contact/customer"),
