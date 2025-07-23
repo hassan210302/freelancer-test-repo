@@ -25,20 +25,18 @@ class VoucherService(
 ) : ContextAwareApi {
 
     fun createVoucher(payload: CreateVoucherPayload): VoucherPayload {
-        val tenantId = tenantId()
-
-        val voucherNumber = generateNextVoucherNumber(tenantId, payload.date)
+        val voucherNumber = generateNextVoucherNumber(payload.date)
 
         if (payload.postings.isNotEmpty()) {
             validatePostingCommands(payload.postings)
             validateBalance(payload.postings)
         }
 
-        val voucher = createVoucherEntity(payload, tenantId, voucherNumber)
+        val voucher = createVoucherEntity(payload, voucherNumber)
         val savedVoucher = voucherRepository.save(voucher)
 
         if (payload.postings.isNotEmpty()) {
-            saveNonZeroPostings(payload.postings, tenantId, savedVoucher.id)
+            saveNonZeroPostings(payload.postings,savedVoucher.id)
         }
 
         return VoucherPayload(
@@ -50,9 +48,7 @@ class VoucherService(
     }
 
     fun findOrCreateEmptyVoucher(): VoucherPayload {
-        val tenantId = tenantId()
-
-        val existingEmptyVoucher = voucherRepository.findFirstEmptyVoucherByTenantId(tenantId)
+        val existingEmptyVoucher = voucherRepository.findFirstEmptyVoucher()
         if (existingEmptyVoucher != null) {
             return VoucherPayload(
                 id = existingEmptyVoucher.id,
@@ -73,19 +69,14 @@ class VoucherService(
 
     @Transactional(readOnly = true)
     fun findVoucherSummariesByDateRange(startDate: LocalDate, endDate: LocalDate): List<VoucherSummaryPayload> {
-        val vouchers = voucherRepository.findVoucherSummariesByTenantIdAndDateRange(
-            tenantId(), startDate, endDate
-        )
-
+        val vouchers = voucherRepository.findVoucherSummariesDateRange(startDate, endDate)
         return vouchers
             .filter { it.postings.isNotEmpty() }
             .map { voucher -> toVoucherSummary(voucher) }
     }
 
     fun updateVoucherWithPostings(payload: UpdateVoucherPayload): VoucherPayload {
-        val tenantId = tenantId()
-
-        val voucher = voucherRepository.findByIdAndTenantIdWithPostings(payload.id, tenantId)
+        val voucher = voucherRepository.findByIdWithPostings(payload.id)
             ?: throw IllegalArgumentException("Voucher not found")
 
         if (payload.postings.isNotEmpty()) {
@@ -98,7 +89,7 @@ class VoucherService(
         }
 
         if (payload.postings.isNotEmpty()) {
-            saveNonZeroPostings(payload.postings, tenantId, payload.id)
+            saveNonZeroPostings(payload.postings, payload.id)
         }
 
         voucher.date = payload.date
@@ -115,15 +106,15 @@ class VoucherService(
 
     @Transactional(readOnly = true)
     fun findVoucherById(id: Long): Voucher? {
-        return voucherRepository.findByIdAndTenantIdWithPostings(id, tenantId())
+        return voucherRepository.findByIdWithPostings(id)
     }
 
     // -------------------------------
     // Private Helper Methods
     // -------------------------------
 
-    private fun generateNextVoucherNumber(tenantId: Long, date: LocalDate): Short {
-        val maxNumber = voucherRepository.findMaxVoucherNumberForYear(tenantId, date.year)
+    private fun generateNextVoucherNumber(date: LocalDate): Short {
+        val maxNumber = voucherRepository.findMaxVoucherNumberForYear(date.year)
         return (maxNumber + 1).toShort()
     }
 
@@ -159,18 +150,16 @@ class VoucherService(
         }
     }
 
-    private fun createVoucherEntity(payload: CreateVoucherPayload, tenantId: Long, voucherNumber: Short): Voucher {
+    private fun createVoucherEntity(payload: CreateVoucherPayload, voucherNumber: Short): Voucher {
         val voucher = Voucher()
         voucher.number = voucherNumber
         voucher.date = payload.date
         voucher.description = payload.description
-        voucher.tenantId = tenantId
         return voucher
     }
 
     private fun createPostingEntity(
         postingData: CreatePostingPayload,
-        tenantId: Long,
         voucherId: Long
     ): Posting {
         val posting = Posting()
@@ -179,7 +168,6 @@ class VoucherService(
         posting.currency = postingData.currency
         posting.postingDate = postingData.postingDate
         posting.description = postingData.description
-        posting.tenantId = tenantId
         posting.originalAmount = postingData.originalAmount
         posting.originalCurrency = postingData.originalCurrency
         posting.vatCode = postingData.vatCode
@@ -191,13 +179,12 @@ class VoucherService(
 
     private fun saveNonZeroPostings(
         postings: List<CreatePostingPayload>,
-        tenantId: Long,
         voucherId: Long
     ) {
         val nonZeroPostings = postings
             .filter { it.amount.compareTo(BigDecimal.ZERO) != 0 }
             .map { postingData ->
-                createPostingEntity(postingData, tenantId, voucherId)
+                createPostingEntity(postingData, voucherId)
             }
 
         if (nonZeroPostings.isNotEmpty()) {

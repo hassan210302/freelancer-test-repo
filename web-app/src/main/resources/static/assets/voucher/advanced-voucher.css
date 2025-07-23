@@ -1,24 +1,23 @@
-
 .balance-row {
-    background: #f8f9fa;
-    border-top: 1px solid #dee2e6;
+    background: var(--wa-color-neutral-95);
+    border-top: 1px solid var(--wa-color-neutral-80);
 }
 
 .balance-row td {
-    padding: 0.5rem 0.4rem;
+    padding: var(--wa-space-s) var(--wa-space-xs);
     font-weight: 500;
 }
 
 .balance-total {
     text-align: right;
-    font-size: 0.8rem;
+    font-size: var(--wa-font-size-xs);
     font-weight: 600;
 }
 
 .posting-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1rem;
+    margin-bottom: var(--wa-space-m);
 }
 
 .form-actions {
@@ -27,23 +26,10 @@
     align-items: center;
 }
 
-/* Old dropdown styles removed since we're using r-combobox */
-
-
-
-.htmx-indicator {
-    opacity: 0;
-    transition: opacity 500ms ease-in;
-}
-
-.htmx-request .htmx-indicator {
-    opacity: 1;
-}
-
 .error-message {
-    color: #dc2626;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+    color: var(--wa-color-red-60);
+    font-size: var(--wa-font-size-s);
+    margin-top: var(--wa-space-xs);
     display: block;
 }
 
@@ -52,12 +38,12 @@ r-combobox {
     font-size: inherit;
 }
 
-r-combobox[style*="font-size: 0.75rem"] {
-    --combobox-font-size: 0.75rem;
+r-combobox[style*="font-size: var(--wa-font-size-xs)"] {
+    --combobox-font-size: var(--wa-font-size-xs);
 }
 
-r-combobox[style*="font-size: 0.8rem"] {
-    --combobox-font-size: 0.8rem;
+r-combobox[style*="font-size: var(--wa-font-size-s)"] {
+    --combobox-font-size: var(--wa-font-size-s);
 }
 
 #scroller_voucher_postings {

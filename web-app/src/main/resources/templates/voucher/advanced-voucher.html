@@ -13,20 +13,20 @@
 
         <div id="form-messages"></div>
 
-        <div class="htmx-indicator" id="loading-indicator" style="display: none;">
+        <div style="display: none;">
             <div>
-                <wa-icon name="clock" style="margin-right: 0.5rem;"/>
+                <wa-icon name="clock" style="margin-right: var(--wa-space-s);"/>
                 <span th:text="#{voucher_saving}"/>
             </div>
         </div>
 
-        <form hx-indicator="#loading-indicator"
-              hx-target="#form-messages"
+        <form th:hx-indicator="'#loading-indicator'"
+              th:hx-disabled-elt="'#saveButton'"
+              th:hx-target="'#form-messages'"
               th:hx-post="@{/htmx/voucher/update/{voucherId}(voucherId=${voucherId}, tenantId=${user.ctx.currentTenant?.id})}"
               id="voucherForm"
-              hx-swap="innerHTML"
-              class="wa-stack"
-        >
+              th:hx-swap="'innerHTML'"
+              class="wa-stack">
 
             <wa-card>
                 <div slot="header" class="wa-split">
@@ -93,7 +93,7 @@
                                                 placeholder="Select debit account..."
                                                 th:tabindex="${iterStat.index * 10 + 3}"
                                                 th:value="${postingLine.debitAccount}"
-                                                style="font-size: 0.8rem;">
+                                                style="font-size: var(--wa-font-size-xs);">
                                     </r-combobox>
                                     <r-combobox th:id="'debit-vat-' + ${iterStat.index}"
                                                 th:name="'postingLines[' + ${iterStat.index} + '].debitVatCode'"
@@ -101,7 +101,7 @@
                                                 th:tabindex="${iterStat.index * 10 + 8}"
                                                 th:value="${postingLine.debitVatCode}"
                                                 th:data-default-value="${defaultVatCode}"
-                                                style="font-size: 0.75rem;">
+                                                style="font-size: var(--wa-font-size-xs);">
                                     </r-combobox>
                                 </div>
                             </td>
@@ -112,7 +112,7 @@
                                                 placeholder="Select credit account..."
                                                 th:tabindex="${iterStat.index * 10 + 2}"
                                                 th:value="${postingLine.creditAccount}"
-                                                style="font-size: 0.8rem;">
+                                                style="font-size: var(--wa-font-size-xs);">
                                     </r-combobox>
                                     <r-combobox th:id="'credit-vat-' + ${iterStat.index}"
                                                 th:name="'postingLines[' + ${iterStat.index} + '].creditVatCode'"
@@ -120,7 +120,7 @@
                                                 th:tabindex="${iterStat.index * 10 + 7}"
                                                 th:value="${postingLine.creditVatCode}"
                                                 th:data-default-value="${defaultVatCode}"
-                                                style="font-size: 0.75rem;">
+                                                style="font-size: var(--wa-font-size-xs);">
                                     </r-combobox>
                                 </div>
                             </td>
@@ -193,15 +193,17 @@
                                type="button"
                                variant="neutral"/>
 
-                    <wa-button id="saveButton"
+                    <wa-button class="disabled:r-opacity-25"
+                               id="saveButton"
                                size="small"
-                               th:text="#{voucher_update}" type="submit"
-                               variant="success"
-                    />
+                               type="submit"
+                               variant="success">
+                        <span th:text="#{voucher_update}"></span>
+                        <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
+                    </wa-button>
                 </div>
             </wa-card>
         </form>
-
 
     </div>
 </main>
@@ -211,11 +213,11 @@
         // Clear form if success flag is set
         const clearForm = /*[[${clearForm ?: false}]]*/ false;
 
-        // Initialize comboboxes for existing postings
-        const accounts = /*[[${accounts ?: {}}]]*/ [];
-        const vatCodes = /*[[${vatCodes ?: {}}]]*/ [];
+        let vatCodes = [];
     </script>
-
+    <script th:src="@{/assets/cache-config.js}"></script>
+    <script th:src="@{/assets/accounts.js}"></script>
+    <script th:src="@{/assets/vat-codes.js}"></script>
     <script th:src="@{/assets/voucher/advanced-voucher.js}"></script>
 </th:block>
 </body>

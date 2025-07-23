@@ -8,41 +8,36 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface CustomerRepository : CustomJpaRepository<Customer, Long> {
-    @Query(
-        """
-        SELECT c FROM Customer c
-        LEFT JOIN FETCH c.company company
-        LEFT JOIN FETCH c.person person
-        WHERE c.tenantId = :tenantId
-    """
-    )
-    fun findCustomersByTenantId(@Param("tenantId") tenantId: Long): List<Customer>
 
     @Query(
         """
         SELECT c FROM Customer c
         LEFT JOIN FETCH c.company company
         LEFT JOIN FETCH c.person person
-        WHERE c.tenantId = :tenantId
-        AND (
+    """
+    )
+    fun findCustomers(): List<Customer>
+
+    @Query(
+        """
+        SELECT c FROM Customer c
+        LEFT JOIN FETCH c.company company
+        LEFT JOIN FETCH c.person person
+        WHERE (
                 (person.name ILIKE '%' || :name || '%') 
                 OR 
                 (company.name ILIKE '%' || :name || '%')
             )
     """
     )
-    fun findCustomersByNameContainingIgnoreCaseAndTenantId(
-        @Param("name") name: String,
-        @Param("tenantId") tenantId: Long
+    fun findCustomersByNameContainingIgnoreCase(
+        @Param("name") name: String
     ): List<Customer>
 
-    fun existsByIdAndTenantId(id: Long, tenantId: Long): Boolean
-
-    fun existsCustomersByCompany_NameAndCompany_OrganizationNumberAndTenantId(
+    fun existsCustomersByCompany_NameAndCompany_OrganizationNumber(
         companyName: String,
         companyOrganizationNumber: String,
-        tenantId: Long
     ): Boolean
 
-    fun existsCustomersByPerson_NameAndTenantId(personName: String, tenantId: Long): Boolean
+    fun existsCustomersByPerson_Name(personName: String): Boolean
 }

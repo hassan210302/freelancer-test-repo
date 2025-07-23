@@ -4,7 +4,7 @@ import com.respiroc.common.payload.NewContactPayload
 import com.respiroc.common.service.BaseService
 import com.respiroc.supplier.domain.model.Supplier
 import com.respiroc.supplier.domain.repository.SupplierRepository
-import com.respiroc.tenant.domain.model.Tenant
+import com.respiroc.util.context.ContextAwareApi
 import com.respiroc.util.exception.ContactExistException
 import com.respiroc.util.exception.ContactNotFoundException
 import org.springframework.stereotype.Service
@@ -13,33 +13,30 @@ import org.springframework.stereotype.Service
 class SupplierService(
     private val supplierRepository: SupplierRepository,
     private val baseService: BaseService
-) {
+) : ContextAwareApi {
 
     fun createNewSupplier(
-        payload: NewContactPayload,
-        tenantId: Long
+        payload: NewContactPayload
     ): Supplier {
-        val tenant = Tenant().apply { id = tenantId }
-        return if (payload.privateContact) createPrivateSupplier(payload, tenant)
-        else createCompanySupplier(payload, tenant)
+        return if (payload.privateContact) createPrivateSupplier(payload)
+        else createCompanySupplier(payload)
     }
 
-    private fun createPrivateSupplier(payload: NewContactPayload, tenant: Tenant): Supplier {
+    private fun createPrivateSupplier(payload: NewContactPayload): Supplier {
         val person = baseService.getOrCreatePerson(payload)
-        if (supplierRepository.existsSuppliersByPerson_NameAndTenantId(person.name, tenant.id))
+        if (supplierRepository.existsSuppliersByPerson_Name(person.name))
             throw ContactExistException("Supplier already exists")
         return supplierRepository.save(
             Supplier().apply {
                 this.person = person
-                this.tenant = tenant
             }
         )
     }
 
-    private fun createCompanySupplier(payload: NewContactPayload, tenant: Tenant): Supplier {
+    private fun createCompanySupplier(payload: NewContactPayload): Supplier {
         val company = baseService.getOrCreateCompany(payload)
-        if (supplierRepository.existsSuppliersByCompany_NameAndCompany_OrganizationNumberAndTenantId(
-                company.name, company.organizationNumber, tenant.id
+        if (supplierRepository.existsSuppliersByCompany_NameAndCompany_OrganizationNumber(
+                company.name, company.organizationNumber
             )
         ) {
             throw ContactExistException("Supplier already exists")
@@ -47,23 +44,22 @@ class SupplierService(
         return supplierRepository.save(
             Supplier().apply {
                 this.company = company
-                this.tenant = tenant
             }
         )
     }
 
-    fun deleteByIdAndTenantId(id: Long, tenantId: Long) {
-        val exists = supplierRepository.existsByIdAndTenantId(id, tenantId)
+    fun deleteById(id: Long) {
+        val exists = supplierRepository.existsById(id)
         if (!exists)
-            throw ContactNotFoundException("Supplier with id=$id and tenantId=$tenantId not found.")
+            throw ContactNotFoundException("Supplier with id=$id and tenantId=${tenantId()} not found.")
         supplierRepository.deleteById(id)
     }
 
-    fun findAllSupplierByTenantId(tenantId: Long): List<Supplier> {
-        return supplierRepository.findSuppliersByTenantId(tenantId)
+    fun findAllSupplier(): List<Supplier> {
+        return supplierRepository.findSuppliers()
     }
 
-    fun findByNameContainingAndTenantId(name: String, tenantId: Long): List<Supplier> {
-        return supplierRepository.findSuppliersByNameContainingIgnoreCaseAndTenantId(name, tenantId)
+    fun findByNameContaining(name: String): List<Supplier> {
+        return supplierRepository.findSuppliersByNameContainingIgnoreCase(name)
     }
 }

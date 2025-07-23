@@ -4,9 +4,13 @@ import com.respiroc.tenant.application.TenantService
 import com.respiroc.tenant.domain.model.Tenant
 import com.respiroc.util.repository.CustomJpaRepository
 import com.respiroc.webapp.controller.BaseController
+import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Repository
@@ -14,6 +18,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.util.*
 
@@ -130,16 +136,72 @@ class VoucherReceptionDocument {
 @Controller
 @RequestMapping("/voucher-reception")
 class VoucherReceptionWebController(
-    private val voucherReceptionDocumentRepository: VoucherReceptionDocumentRepository
+    private val voucherReceptionDocumentRepository: VoucherReceptionDocumentRepository,
+    private val voucherReceptionService: VoucherReceptionService,
+    private val tenantService: TenantService
 ) : BaseController() {
 
     @GetMapping(value = ["", "/"])
     fun overview(model: Model): String {
-        val springUser = springUser()
+        val currentUser = springUser()
         val documents = voucherReceptionDocumentRepository.findAll()
+
+        val pdfDataMap = documents.associate { doc ->
+            doc.id to Base64.getEncoder().encodeToString(doc.attachment.fileData)
+        }
+
         addCommonAttributesForCurrentTenant(model, "Voucher Reception")
         model.addAttribute("documents", documents)
-        model.addAttribute("tenantSlug", springUser.ctx.currentTenant?.tenantSlug)
+        model.addAttribute("pdfDataMap", pdfDataMap)
+        model.addAttribute("tenantSlug", currentUser.ctx.currentTenant?.tenantSlug)
         return "voucher-reception/overview"
     }
+
+    @GetMapping("/document/{id}/pdf")
+    fun getDocumentData(@PathVariable id: Long): ResponseEntity<String> {
+        val document = voucherReceptionDocumentRepository.findById(id)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found") }
+
+        val base64Data = Base64.getEncoder().encodeToString(document.attachment.fileData)
+        val dataUrl = "data:application/pdf;base64,$base64Data"
+        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
+            .body("""<embed id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""");
+    }
+
+    @PostMapping("/upload")
+    @HxRequest
+    fun uploadFiles(
+        @RequestParam("files") files: List<MultipartFile>,
+        @RequestParam("tenantSlug") tenantSlug: String,
+        model: Model): String {
+        val tenant = tenantService.findTenantBySlug(tenantSlug) ?: return "Tenant not found."
+        val currentUser = springUser()
+
+        try {
+            files.forEach { file ->
+                val fileData = file.bytes
+                val filename = file.originalFilename ?: "unnamed"
+                val mimeType = file.contentType ?: "application/octet-stream"
+
+                voucherReceptionService.saveDocument(
+                    fileData = fileData,
+                    filename = filename,
+                    mimeType = mimeType,
+                    senderEmail = currentUser.username,
+                    tenant = tenant
+                )
+            }
+
+            val updatedDocuments = voucherReceptionDocumentRepository.findAll()
+            model.addAttribute("documents", updatedDocuments)
+
+            return "voucher-reception/overview :: documentTableBody"
+        } catch (e: Exception) {
+            return "Error saving files"
+        }
+    }
+
+
+
+
 }

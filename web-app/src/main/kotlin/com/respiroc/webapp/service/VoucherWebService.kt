@@ -126,24 +126,16 @@ class VoucherWebService(
         voucherId: Long,
         request: CreateVoucherRequest,
         companyCurrencyCode: String
-    ): Callout {
-        return try {
-            val validPostingLines = request.getValidPostingLines()
-            val postingCommands = convertToPostingCommands(validPostingLines, companyCurrencyCode)
+    ) {
+        val validPostingLines = request.getValidPostingLines()
+        val postingCommands = convertToPostingCommands(validPostingLines, companyCurrencyCode)
 
-            val result = voucherService.updateVoucherWithPostings(UpdateVoucherPayload(
-                id = voucherId,
-                date = request.voucherDate,
-                description = request.voucherDescription,
-                postings = postingCommands
-            ))
-
-            Callout.Success(
-                message = "Voucher ${result.number} updated successfully!"
-            )
-        } catch (e: Exception) {
-            Callout.Error(message = "Failed to update voucher: ${e.message}")
-        }
+        voucherService.updateVoucherWithPostings(UpdateVoucherPayload(
+            id = voucherId,
+            date = request.voucherDate,
+            description = request.voucherDescription,
+            postings = postingCommands
+        ))
     }
 
     private fun convertToPostingCommands(

@@ -1,33 +1,41 @@
 package com.respiroc.webapp.config
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret
 import com.respiroc.user.application.UserService
 import com.respiroc.util.context.SpringUser
-import jakarta.servlet.FilterChain
+import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod
+import org.springframework.core.convert.converter.Converter
+import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.core.AuthenticationException
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
+import org.springframework.security.oauth2.core.OAuth2TokenValidator
+import org.springframework.security.oauth2.jwt.*
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver
+import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import org.springframework.web.filter.OncePerRequestFilter
+import java.time.Duration
+import java.util.*
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
 
 @Configuration
 @EnableWebSecurity
-class WebSecurityConfig {
+class WebSecurityConfig(
+    @param:Value("\${jwt.secret}") private val secret: String
+) {
 
-    @Autowired
-    lateinit var userService: UserService
+    companion object {
+        const val JWT_COOKIE_NAME = "token"
+    }
 
     private val publicPaths = arrayOf(
         "/",
@@ -39,79 +47,97 @@ class WebSecurityConfig {
         "/htmx/auth/signup",
         "/error/**",
         "/actuator/**",
-        // Cloudflare worker calls this to add attachment to a tenant's voucher reception
         "/api/voucher-reception"
     )
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(
+        http: HttpSecurity,
+        userService: UserService
+    ): SecurityFilterChain {
         return http
             .authorizeHttpRequests { requests ->
                 requests
                     .requestMatchers(*publicPaths).permitAll()
                     .anyRequest().authenticated()
             }
-            .cors { }
+            .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .csrf { it.disable() }
-            .httpBasic { it.disable() }
-            .formLogin { it.disable() }
-            .addFilterBefore(
-                TokenAuthenticationFilter(userService),
-                UsernamePasswordAuthenticationFilter::class.java
-            )
-            .exceptionHandling {
-                it.authenticationEntryPoint { request, response, authException ->
-                    response.sendRedirect(
-                        "/auth/login"
-                    )
-                }
+            .oauth2ResourceServer { oauth2 ->
+                oauth2
+                    .jwt { jwt ->
+                        jwt
+                            .jwtAuthenticationConverter(UserJwtAuthenticationConverter(userService))
+                            .decoder(jwtDecoder())
+                    }
+                    .bearerTokenResolver(JwtCookieBearerTokenResolver())
+                    .authenticationEntryPoint(JwtAuthenticationEntryPoint())
             }
             .build()
     }
 
     @Bean
-    fun corsConfigurationSource(): CorsConfigurationSource {
-        val configuration = CorsConfiguration()
-        configuration.applyPermitDefaultValues()
-        configuration.allowedMethods = listOf(
-            HttpMethod.GET.name(),
-            HttpMethod.HEAD.name(),
-            HttpMethod.POST.name(),
-            HttpMethod.PATCH.name(),
-            HttpMethod.PUT.name(),
-            HttpMethod.DELETE.name()
+    fun jwtDecoder(): JwtDecoder {
+        val jwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey()).build()
+
+        // Set custom JWT token validator
+        val withClockSkew: OAuth2TokenValidator<Jwt> = DelegatingOAuth2TokenValidator(
+            JwtTimestampValidator(Duration.ofSeconds(0))
         )
-        val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/**", configuration)
-        return source
+
+        jwtDecoder.setJwtValidator(withClockSkew)
+
+        return jwtDecoder
     }
 
-    class TokenAuthenticationFilter(private val userService: UserService) : OncePerRequestFilter() {
-        override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
-            if (SecurityContextHolder.getContext().authentication == null) {
-                var token = ""
+    @Bean
+    fun jwtEncoder(): JwtEncoder =
+        NimbusJwtEncoder(ImmutableSecret(secretKey()))
 
-                val cookies = request.cookies
-                if (cookies != null) {
-                    val jwtCookie = cookies.find { it.name == "token" }
-                    if (jwtCookie != null && !jwtCookie.value.isNullOrEmpty()) {
-                        token = jwtCookie.value
-                    }
-                }
+    private fun secretKey(): SecretKey {
+        val decoded = Base64.getDecoder().decode(secret)
+        return SecretKeySpec(decoded, "HmacSHA256")
+    }
 
-                if (token.isNotEmpty()) {
-                    val user = userService.findByToken(token)
-                    if (user != null) {
-                        val userDetails: UserDetails = SpringUser(user)
-                        val usernamePasswordAuthenticationToken =
-                            UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
-                        usernamePasswordAuthenticationToken.details =
-                            WebAuthenticationDetailsSource().buildDetails(request)
-                        SecurityContextHolder.getContext().authentication = usernamePasswordAuthenticationToken
-                    }
-                }
-            }
-            chain.doFilter(request, response)
+    // --------------------------------
+    // Inner classes
+    // --------------------------------
+
+    internal class JwtAuthenticationEntryPoint : AuthenticationEntryPoint {
+
+        override fun commence(
+            request: HttpServletRequest,
+            response: HttpServletResponse,
+            authException: AuthenticationException
+        ) {
+            val expiredCookie = Cookie(JWT_COOKIE_NAME, null)
+            expiredCookie.maxAge = 0
+            expiredCookie.path = "/"
+            expiredCookie.isHttpOnly = true
+            response.addCookie(expiredCookie)
+
+            response.sendRedirect("/auth/login")
         }
     }
-} 
+
+    internal class UserJwtAuthenticationConverter(
+        private val userService: UserService
+    ) : Converter<Jwt, AbstractAuthenticationToken> {
+
+        override fun convert(source: Jwt): AbstractAuthenticationToken? {
+            val userId = source.subject.toLong()
+            val tenantId = source.getClaim<Long>("tenantId")
+            val ctx = userService.findByIdAndTenantId(userId, tenantId) ?: return null
+            val principal = SpringUser(ctx)
+            return UsernamePasswordAuthenticationToken(principal, source.tokenValue, principal.authorities)
+        }
+    }
+
+    internal class JwtCookieBearerTokenResolver : BearerTokenResolver {
+
+        override fun resolve(request: HttpServletRequest?): String? {
+            val cookies = request?.cookies ?: return null
+            return cookies.find { it.name == JWT_COOKIE_NAME }?.value
+        }
+    }
+}

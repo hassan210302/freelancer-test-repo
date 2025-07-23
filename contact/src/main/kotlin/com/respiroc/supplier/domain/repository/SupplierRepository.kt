@@ -8,37 +8,33 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface SupplierRepository : CustomJpaRepository<Supplier, Long> {
-    @Query(
-        """
-        SELECT s FROM Supplier s
-        LEFT JOIN FETCH s.company company
-        LEFT JOIN FETCH s.person person
-        WHERE s.tenantId = :tenantId
-        """
-    )
-    fun findSuppliersByTenantId(@Param("tenantId") tenantId: Long): List<Supplier>
 
     @Query(
         """
         SELECT s FROM Supplier s
         LEFT JOIN FETCH s.company company
         LEFT JOIN FETCH s.person person
-        WHERE s.tenantId = :tenantId
-        AND (
+        """
+    )
+    fun findSuppliers(): List<Supplier>
+
+    @Query(
+        """
+        SELECT s FROM Supplier s
+        LEFT JOIN FETCH s.company company
+        LEFT JOIN FETCH s.person person
+        WHERE (
                 (person.name ILIKE '%' || :name || '%') 
                 OR 
                 (company.name ILIKE '%' || :name || '%')
             )
     """
     )
-    fun findSuppliersByNameContainingIgnoreCaseAndTenantId(
-        @Param("name") name: String,
-        @Param("tenantId") tenantId: Long
+    fun findSuppliersByNameContainingIgnoreCase(
+        @Param("name") name: String
     ): List<Supplier>
 
-    fun existsByIdAndTenantId(id: Long, tenantId: Long): Boolean
+    fun existsSuppliersByCompany_NameAndCompany_OrganizationNumber(companyName: String, companyOrganizationNumber: String): Boolean
 
-    fun existsSuppliersByCompany_NameAndCompany_OrganizationNumberAndTenantId(companyName: String, companyOrganizationNumber: String, tenantId: Long): Boolean
-
-    fun existsSuppliersByPerson_NameAndTenantId(personName: String, tenantId: Long): Boolean
+    fun existsSuppliersByPerson_Name(personName: String): Boolean
 }

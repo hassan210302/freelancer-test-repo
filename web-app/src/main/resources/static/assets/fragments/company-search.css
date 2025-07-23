@@ -1,12 +1,11 @@
 .search-dropdown {
-    top: 100%;
+    position: absolute;
     left: 0;
     right: 0;
     background: var(--wa-color-surface-default);
     border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
     border-radius: var(--wa-border-radius-m);
     box-shadow: var(--wa-shadow-l);
-    z-index: 1000;
     max-height: 200px;
     overflow-y: auto;
     display: none;

@@ -1,6 +1,23 @@
 let rowCounter = 0;
 
-document.addEventListener('DOMContentLoaded', function () {
+function waitForFunctions() {
+    return new Promise((resolve) => {
+        const checkFunctions = () => {
+            if (typeof window.getAccounts === 'function' && 
+                typeof window.getVatCodes === 'function') {
+                resolve();
+            } else {
+                setTimeout(checkFunctions, 50);
+            }
+        };
+        checkFunctions();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+    // Wait for functions to be available
+    await waitForFunctions();
+    
     // Only add a posting line if there are no existing posting lines
     const existingPostings = document.querySelectorAll('.posting-line-row');
     if (existingPostings.length === 0) {
@@ -19,32 +36,58 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-function initializeExistingPostingComboboxes() {
-    // Setup account comboboxes
-    const accountItems = accounts.map(account => ({
-        value: account.noAccountNumber,
-        title: account.noAccountNumber,
-        subtitle: account.accountName,
-        displayText: account.noAccountNumber + ' - ' + account.accountName
-    }));
+const shortcutMap = {
+    'saveVoucher': () => document.getElementById("saveButton")?.click(),
+    'addNewRow': () => addPostingLine(),
+};
 
-    // Setup VAT code comboboxes
-    const vatItems = vatCodes.map(vat => ({
-        value: vat.code,
-        title: vat.code,
-        subtitle: '(' + vat.rate + '%) - ' + vat.description,
-        displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
-    }));
-
-    // Initialize all existing comboboxes
-    document.querySelectorAll('r-combobox').forEach(combobox => {
-        if (combobox.id.includes('account')) {
-            combobox.items = accountItems;
-        } else if (combobox.id.includes('vat')) {
-            combobox.items = vatItems;
+async function initializeExistingPostingComboboxes() {
+    try {
+        // Check if functions are available
+        if (typeof window.getAccounts !== 'function') {
+            console.error('getAccounts function is not available');
+            return;
         }
-        combobox.addEventListener('change', () => updateBalance());
-    });
+        if (typeof window.getVatCodes !== 'function') {
+            console.error('getVatCodes function is not available');
+            return;
+        }
+
+        const accounts = await window.getAccounts();
+        const vatCodes = await window.getVatCodes();
+        
+        if (!accounts || !vatCodes) {
+            console.error('Failed to load accounts or vat codes');
+            return;
+        }
+        
+        const accountItems = accounts.map(account => ({
+            value: account.noAccountNumber,
+            title: account.noAccountNumber,
+            subtitle: account.accountName,
+            displayText: account.noAccountNumber + ' - ' + account.accountName
+        }));
+
+        // Setup VAT code comboboxes
+        const vatItems = vatCodes.map(vat => ({
+            value: vat.code,
+            title: vat.code,
+            subtitle: '(' + vat.rate + '%) - ' + vat.description,
+            displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
+        }));
+
+        // Initialize all existing comboboxes
+        document.querySelectorAll('r-combobox').forEach(combobox => {
+            if (combobox.id.includes('account')) {
+                combobox.items = accountItems;
+            } else if (combobox.id.includes('vat')) {
+                combobox.items = vatItems;
+            }
+            combobox.addEventListener('change', () => updateBalance());
+        });
+    } catch (error) {
+        console.error('Error initializing posting comboboxes:', error);
+    }
 }
 
 function addPostingLine() {

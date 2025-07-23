@@ -2,6 +2,7 @@ package com.respiroc.webapp.controller.web
 
 import com.respiroc.user.application.UserService
 import com.respiroc.webapp.controller.BaseController
+import com.respiroc.webapp.service.JwtService
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
@@ -20,9 +21,7 @@ data class SignupRequest(val email: String, val password: String)
 
 @Controller
 @RequestMapping("/auth")
-class AuthWebController(
-    private val userService: UserService
-) : BaseController() {
+class AuthWebController : BaseController() {
 
     @GetMapping("/login")
     fun loginPage(model: Model): String {
@@ -45,8 +44,6 @@ class AuthWebController(
         @CookieValue("token", required = true) token: String,
         response: HttpServletResponse
     ): String {
-        userService.logout(token)
-
         val jwtCookie = Cookie("token", "")
         jwtCookie.isHttpOnly = true
         jwtCookie.secure = false
@@ -61,7 +58,8 @@ class AuthWebController(
 @Controller
 @RequestMapping("/htmx/auth")
 class AuthHTMXController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val jwt: JwtService
 ) : BaseController() {
 
     @PostMapping("/login")
@@ -77,7 +75,8 @@ class AuthHTMXController(
                 password = loginRequest.password
             )
 
-            setJwtCookie(result.token, response)
+            val token = jwt.generateToken(subject = result.id.toString(), tenantId = result.tenantId)
+            setJwtCookie(token, response)
             return "redirect:htmx:/"
         } catch (e: Exception) {
             e.printStackTrace()
@@ -99,7 +98,8 @@ class AuthHTMXController(
                 signupRequest.password
             )
 
-            setJwtCookie(result.token, response)
+            val token = jwt.generateToken(subject = result.id.toString(), tenantId = result.tenantId)
+            setJwtCookie(token, response)
             return "redirect:htmx:/"
         } catch (e: Exception) {
             model.addAttribute(errorMessageAttributeName, e.message ?: "An error occurred during registration")
@@ -111,11 +111,12 @@ class AuthHTMXController(
     @HxRequest
     fun selectTenant(
         @RequestParam(value = "tenantId", required = true) tenantId: Long,
-        @CookieValue("token", required = true) token: String,
         response: HttpServletResponse
     ): String {
-        val result = userService.selectTenant(user(), tenantId, token)
-        setJwtCookie(result.token, response)
+        val user = user()
+        userService.selectTenant(user, tenantId)
+        val token = jwt.generateToken(subject = user.id.toString(), tenantId = tenantId)
+        setJwtCookie(token, response)
         return "redirect:htmx:/"
     }
 }

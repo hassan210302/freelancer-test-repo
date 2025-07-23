@@ -5,11 +5,8 @@ import com.respiroc.tenant.domain.model.Tenant
 import com.respiroc.tenant.domain.model.TenantPermission
 import com.respiroc.tenant.domain.model.TenantRole
 import com.respiroc.user.application.payload.LoginPayload
-import com.respiroc.user.application.jwt.JwtUtils
-import com.respiroc.user.application.payload.SelectTenantPayload
 import com.respiroc.user.domain.model.*
 import com.respiroc.user.domain.repository.UserRepository
-import com.respiroc.user.domain.repository.UserSessionRepository
 import com.respiroc.user.domain.repository.UserTenantRepository
 import com.respiroc.user.domain.repository.UserTenantRoleRepository
 import com.respiroc.util.constant.TenantRoleCode
@@ -24,23 +21,19 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.nio.file.attribute.UserPrincipalNotFoundException
 import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 @Transactional
 class UserService(
     private val userRepository: UserRepository,
     private val tenantService: TenantService,
-    private val userSessionRepository: UserSessionRepository,
     private val userTenantRoleRepository: UserTenantRoleRepository,
     private val userTenantRepository: UserTenantRepository,
-    private val jwt: JwtUtils,
     private val currencyService: CurrencyService
 ) {
 
     private val passwordEncoder = BCryptPasswordEncoder()
-
-    private val JWT_TOKEN_PERIOD: Long = 24 * 60 * 60 * 1000
 
     fun signupByEmailPassword(email: String, password: String): LoginPayload {
         val existUser = userRepository.findByEmail(email)
@@ -64,41 +57,14 @@ class UserService(
         return login(user)
     }
 
-    fun selectTenant(user: UserContext, tenatId: Long, token: String): SelectTenantPayload {
-        val userSession = userSessionRepository.findByToken(token)
-        if (userSession != null) {
-            val newToken = jwt.generateToken(user.email, tenatId, JWT_TOKEN_PERIOD)
-
-            userSession.token = newToken
-            userSessionRepository.save(userSession)
-
-            val user = userSession.user
-            user.lastTenantId = tenatId
-            userRepository.save(user)
-
-            return SelectTenantPayload(newToken)
-        }
-        throw BadCredentialsException("Token is not valid")
+    fun selectTenant(user: UserContext, tenatId: Long) {
+        val userDb = userRepository.findById(user.id).get()
+        userDb.lastTenantId = tenatId
+        userRepository.save(userDb)
     }
 
-    fun logout(token: String): Boolean {
-        return userSessionRepository.findByToken(token)?.let { session ->
-            session.tokenRevokedAt = Instant.now()
-            userSessionRepository.save(session)
-            true
-        } ?: false
-    }
-
-
-    fun findByToken(token: String): UserContext? {
-        return userRepository.findByToken(token, Instant.now())?.let { user ->
-            if (jwt.isTokenValid(token = token, subject = user.email)) {
-                val tenantId = jwt.extractTenantId(token)
-                user.toUserContext(tenantId)
-            } else {
-                null
-            }
-        }
+    fun findByIdAndTenantId(id: Long, tenantId: Long?): UserContext? {
+        return userRepository.findById(id).getOrNull()?.toUserContext(tenantId)
     }
 
     fun findTenantRoles(userId: Long, tenantId: Long): List<TenantRoleContext> {
@@ -123,9 +89,8 @@ class UserService(
         role: TenantRole,
         user: UserContext
     ) {
-        val existUser = userRepository.findByEmail(user.email) ?: throw UserPrincipalNotFoundException("User not found")
-        val userTenant = getOrCreateUserTenant(existUser.id, tenant.id)
-        val userTenantRoleId = UserTenantRoleId(tenant.id, existUser.id)
+        val userTenant = getOrCreateUserTenant(user.id, tenant.id)
+        val userTenantRoleId = UserTenantRoleId(tenant.id, user.id)
         val userTenantRole = UserTenantRole(userTenantRoleId, userTenant, role)
         userTenantRoleRepository.save(userTenantRole)
     }
@@ -133,13 +98,9 @@ class UserService(
     fun getOrCreateUserTenant(userId: Long, tenantId: Long): UserTenant {
         return userTenantRepository.findUserTenantByUserIdAndTenantId(userId, tenantId)
             ?: run {
-                val tenant = Tenant()
-                tenant.id = tenantId
-                val user = User()
-                user.id = userId
                 val userTenant = UserTenant()
-                userTenant.tenant = tenant
-                userTenant.user = user
+                userTenant.tenantId = tenantId
+                userTenant.userId = userId
                 userTenantRepository.save(userTenant)
             }
     }
@@ -157,19 +118,10 @@ class UserService(
         val springUser = SpringUser(user.toUserContext(user.lastTenantId))
         AccountStatusUserDetailsChecker().check(springUser)
 
-        val token = jwt.generateToken(user.email, user.lastTenantId, JWT_TOKEN_PERIOD)
-
-        val userSession = UserSession()
-        userSession.user = user
-        userSession.token = token
-        userSession.tokenIssueAt = Instant.now()
-        userSession.tokenExpireAt = Instant.now().plus(1, ChronoUnit.DAYS)
-        userSessionRepository.save(userSession)
-
         user.lastLoginAt = Instant.now()
         userRepository.save(user)
 
-        return LoginPayload(token)
+        return LoginPayload(id = user.id, tenantId = user.lastTenantId)
     }
 
     private fun User.toUserContext(tenantId: Long?): UserContext {

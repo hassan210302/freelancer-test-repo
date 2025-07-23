@@ -3,13 +3,12 @@
       layout:decorate="~{layout/base}">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" th:href="@{/assets/contact/contact.css}">
     <link rel="stylesheet" th:href="@{/assets/fragments/contact-table.css}">
 </head>
 <body>
 <main layout:fragment="content">
     <div>
-        <div class="r-table-toolbar">
+        <div class="wa-split wa-gap-s">
             <form th:hx-get="@{/htmx/contact/{type}/search(type=${type.toLowerCase()})}"
                   hx-trigger="keyup changed delay:500ms"
                   hx-target="#customer-table"

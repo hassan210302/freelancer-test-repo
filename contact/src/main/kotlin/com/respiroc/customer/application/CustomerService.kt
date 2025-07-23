@@ -4,7 +4,7 @@ import com.respiroc.common.payload.NewContactPayload
 import com.respiroc.common.service.BaseService
 import com.respiroc.customer.domain.model.Customer
 import com.respiroc.customer.domain.repository.CustomerRepository
-import com.respiroc.tenant.domain.model.Tenant
+import com.respiroc.util.context.ContextAwareApi
 import com.respiroc.util.exception.ContactExistException
 import com.respiroc.util.exception.ContactNotFoundException
 import org.springframework.stereotype.Service
@@ -15,34 +15,30 @@ import org.springframework.transaction.annotation.Transactional
 class CustomerService(
     private val customerRepository: CustomerRepository,
     private val baseService: BaseService
-) {
+): ContextAwareApi {
 
     fun createNewCustomer(
-        payload: NewContactPayload,
-        tenantId: Long
+        payload: NewContactPayload
     ): Customer {
-        val tenant = Tenant().apply { id = tenantId }
-        return if (payload.privateContact) createPrivateCustomer(payload, tenant)
-        else createCompanyCustomer(payload, tenant)
+        return if (payload.privateContact) createPrivateCustomer(payload)
+        else createCompanyCustomer(payload)
     }
 
-
-    private fun createPrivateCustomer(payload: NewContactPayload, tenant: Tenant): Customer {
+    private fun createPrivateCustomer(payload: NewContactPayload): Customer {
         val person = baseService.getOrCreatePerson(payload)
-        if (customerRepository.existsCustomersByPerson_NameAndTenantId(person.name, tenant.id))
+        if (customerRepository.existsCustomersByPerson_Name(person.name))
             throw ContactExistException("Customer already exists")
         return customerRepository.save(
             Customer().apply {
                 this.person = person
-                this.tenant = tenant
             }
         )
     }
 
-    private fun createCompanyCustomer(payload: NewContactPayload, tenant: Tenant): Customer {
+    private fun createCompanyCustomer(payload: NewContactPayload): Customer {
         val company = baseService.getOrCreateCompany(payload)
-        if (customerRepository.existsCustomersByCompany_NameAndCompany_OrganizationNumberAndTenantId(
-                company.name, company.organizationNumber, tenant.id
+        if (customerRepository.existsCustomersByCompany_NameAndCompany_OrganizationNumber(
+                company.name, company.organizationNumber
             )
         ) {
             throw ContactExistException("Customer already exists")
@@ -50,23 +46,22 @@ class CustomerService(
         return customerRepository.save(
             Customer().apply {
                 this.company = company
-                this.tenant = tenant
             }
         )
     }
 
-    fun deleteByIdAndTenantId(id: Long, tenantId: Long) {
-        val exists = customerRepository.existsByIdAndTenantId(id, tenantId)
+    fun deleteById(id: Long) {
+        val exists = customerRepository.existsById(id)
         if (!exists)
-            throw ContactNotFoundException("Customer with id=$id and tenantId=$tenantId not found.")
+            throw ContactNotFoundException("Customer with id=$id and tenantId=${tenantId()} not found.")
         customerRepository.deleteById(id)
     }
 
-    fun findAllCustomerByTenantId(tenantId: Long): List<Customer> {
-        return customerRepository.findCustomersByTenantId(tenantId)
+    fun findAllCustomer(): List<Customer> {
+        return customerRepository.findCustomers()
     }
 
-    fun findByNameContainingAndTenantId(name: String, tenantId: Long): List<Customer> {
-        return customerRepository.findCustomersByNameContainingIgnoreCaseAndTenantId(name, tenantId)
+    fun findByNameContaining(name: String): List<Customer> {
+        return customerRepository.findCustomersByNameContainingIgnoreCase(name)
     }
 }

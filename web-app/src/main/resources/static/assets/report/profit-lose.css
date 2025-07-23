@@ -7,7 +7,7 @@
 
 .r-filters-section {
     background: var(--wa-color-surface-raised);
-    padding: 1.5rem;
+    padding: var(--wa-space-l);
     border-bottom: 1px solid var(--wa-color-gray-90);
 }
 
@@ -26,19 +26,19 @@
 
 .r-filter-label {
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: var(--wa-font-size-s);
     color: var(--wa-color-gray-30);
 }
 
 .r-profit-lose-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: var(--wa-font-size-s);
 }
 
 .r-profit-lose-table th {
     background: var(--wa-color-surface-raised);
-    padding: 1rem 0.75rem;
+    padding: var(--wa-space-m) var(--wa-space-s);
     text-align: left;
     font-weight: 600;
     color: var(--wa-color-gray-30);
@@ -51,7 +51,7 @@
 }
 
 .r-profit-lose-table td {
-    padding: 0.875rem 0.75rem;
+    padding: var(--wa-space-s) var(--wa-space-s);
     border-bottom: 1px solid var(--wa-color-surface-raised);
 }
 
@@ -85,18 +85,18 @@
 .r-total-row td {
     font-weight: 600;
     color: var(--wa-color-blue-40);
-    padding: 1rem 0.75rem;
+    padding: var(--wa-space-m) var(--wa-space-s);
 }
 
 .r-empty-state {
     text-align: center;
-    padding: 3rem;
+    padding: var(--wa-space-4xl);
     color: var(--wa-color-gray-50);
 }
 
 .r-empty-state-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: var(--wa-font-size-4xl);
+    margin-bottom: var(--wa-space-m);
     opacity: 0.5;
 }
 
@@ -104,17 +104,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2rem;
+    padding: var(--wa-space-xl);
     color: var(--wa-color-gray-50);
-}
-
-.htmx-indicator {
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.htmx-request .htmx-indicator {
-    opacity: 1;
 }
 
 @media (max-width: 768px) {
@@ -124,11 +115,11 @@
     }
 
     .r-profit-lose-table {
-        font-size: 0.75rem;
+        font-size: var(--wa-font-size-xs);
     }
 
     .r-profit-lose-table th,
     .r-profit-lose-table td {
-        padding: 0.5rem 0.375rem;
+        padding: var(--wa-space-s) var(--wa-space-2xs);
     }
 }

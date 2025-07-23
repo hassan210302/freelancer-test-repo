@@ -10,11 +10,15 @@ import org.springframework.stereotype.Component
 @Component
 class TenantIdentifierResolver : CurrentTenantIdentifierResolver<Long>, HibernatePropertiesCustomizer {
 
-    override fun resolveCurrentTenantIdentifier(): Long? {
-        val auth = SecurityContextHolder.getContext().authentication ?: return null
+    companion object {
+        private const val UNKNOWN_TENANT_ID = -1L
+    }
+
+    override fun resolveCurrentTenantIdentifier(): Long {
+        val auth = SecurityContextHolder.getContext().authentication ?: return UNKNOWN_TENANT_ID
         val principal = auth.principal
-        if (principal !is SpringUser) return null
-        return principal.ctx.currentTenant?.id ?: null
+        if (principal !is SpringUser) return UNKNOWN_TENANT_ID
+        return principal.ctx.currentTenant?.id ?: UNKNOWN_TENANT_ID
     }
 
     override fun validateExistingCurrentSessions(): Boolean {

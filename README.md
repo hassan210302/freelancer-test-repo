@@ -19,3 +19,19 @@ Some of the features:
 * Subsidiary ledgers: Employee, supplier, customer
 
 And finally agentic AI for automating all of the above. 
+
+## Development 
+
+We use a shared guidelines in [AI.md](AI.md), these are guidelines for developers and AI agents.
+
+Symlink the AI instructions to give these instructions to your preferred agent: 
+
+```shell
+# Leading agents will change over time
+ln AI.md CLAUDE.md # Claude code : https://www.anthropic.com/engineering/claude-code-best-practices
+ln AI.md AGENTS.md # Codex (OpenAI) : https://platform.openai.com/docs/codex/overview
+ln AI.md GEMINI.md # Gemini CLI
+ln AI.md .junie/guidelines.md # Jetbrains Junie
+```
+
+If using a browser UI for AI, you can make a project and include it in "project instructions"
