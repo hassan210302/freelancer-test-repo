@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":ledger"))
     implementation(project(":contact"))
     implementation(project(":bank"))
+    implementation(project(":invoice"))
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
