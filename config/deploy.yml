@@ -35,3 +35,11 @@ builder:
 # Use a different ssh user than root
 ssh:
   user: ubuntu
+
+# See here: https://kamal-deploy.org/docs/configuration/environment-variables/
+env:
+  secret:
+    - JWT_SECRET
+    - DB_URL_PROD
+    - DB_USERNAME_PROD
+    - DB_PASSWORD_PROD

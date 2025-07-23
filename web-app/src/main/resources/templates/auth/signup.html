@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" class="wa-cloak wa-theme-matter">
+<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" class="wa-theme-matter wa-palette-mild wa-brand-purple">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="#{signup.page.title}" />
     <th:block th:replace="~{layout/libs :: common-libs}"></th:block>
-    <link rel="stylesheet" th:href="@{/assets/signup/signup.css}">
 </head>
 
 <body>
-<div class="main">
-    <div class="wa-center">
-        <wa-card style="max-width: 45ch; margin: 0 auto">
+<div class="wa-stack wa-align-items-center" style="justify-content: center; height: 100vh">
+    <div style="width: 340px">
+        <wa-card style="width: 100%">
             <div id="message-container">
             </div>
 
@@ -24,12 +23,12 @@
                     <wa-input th:label="#{email.label}" type="email" id="email" name="email" required></wa-input>
                     <wa-input th:label="#{password.label}" type="password" id="password" name="password" required></wa-input>
                     <a href="/auth/login" th:text="#{signup.form.login.link}" />
-                    <wa-button type="submit" th:text="#{signup}"></wa-button>
+                    <wa-button type="submit" variant="brand" th:text="#{signup}"></wa-button>
                 </div>
             </form>
         </wa-card>
 
-        <div style="text-align: center; margin-top: 0.5rem">
+        <div style="text-align: center; margin-top: var(--wa-space-s)">
             <p class="wa-body-xs" th:text="#{signup.footer.security.message}" />
         </div>
     </div>

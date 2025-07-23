@@ -26,15 +26,14 @@ class PostingService(
 
     @Transactional(readOnly = true)
     fun getTrialBalance(startDate: LocalDate, endDate: LocalDate): TrialBalanceDTO {
-        val tenantId = tenantId()
-        val accountNumbers = postingRepository.findDistinctAccountNumbersByTenant(tenantId)
+        val accountNumbers = postingRepository.findDistinctAccountNumbers()
         val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
 
         val trialBalanceEntries = accountNumbers.mapNotNull { accountNumber ->
             val account = accounts[accountNumber]
             if (account != null) {
-                val openingBalance = postingRepository.getAccountBalanceBeforeDate(accountNumber, tenantId, startDate)
-                val movement = postingRepository.getAccountMovementInPeriod(accountNumber, tenantId, startDate, endDate)
+                val openingBalance = postingRepository.getAccountBalanceBeforeDate(accountNumber, startDate)
+                val movement = postingRepository.getAccountMovementInPeriod(accountNumber, startDate, endDate)
                 val closingBalance = openingBalance + movement
 
                 // Only include accounts that have activity or balance
@@ -67,10 +66,9 @@ class PostingService(
 
     @Transactional(readOnly = true)
     fun getPostingsForProfitLoss(startDate: LocalDate, endDate: LocalDate): Map<AccountType, ProfitLossDTO> {
-        val tenantId = tenantId()
         val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
 
-        val profitLossPostings = postingRepository.findProfitLossPostings(tenantId, startDate, endDate)
+        val profitLossPostings = postingRepository.findProfitLossPostings(startDate, endDate)
 
         val groupedByType = profitLossPostings.groupBy { row ->
             when (row[0] as String) {
@@ -101,10 +99,9 @@ class PostingService(
 
     @Transactional(readOnly = true)
     fun getPostingsForBalanceSheet(startDate: LocalDate, endDate: LocalDate): Map<AccountType, BalanceSheetDTO> {
-        val tenantId = tenantId()
         val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
 
-        val balanceSheetPostings = postingRepository.findBalanceSheetPostings(tenantId, startDate, endDate)
+        val balanceSheetPostings = postingRepository.findBalanceSheetPostings(startDate, endDate)
 
         val groupedByType = balanceSheetPostings.groupBy { row ->
             when (row[0] as String) {
@@ -139,10 +136,9 @@ class PostingService(
         endDate: LocalDate,
         accountNumber: String?
     ): GeneralLedgerPayload {
-        val tenantId = tenantId()
         val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
 
-        val summaryData = postingRepository.getGeneralLedgerSummary(accountNumber, tenantId, startDate, endDate)
+        val summaryData = postingRepository.getGeneralLedgerSummary(accountNumber, startDate, endDate)
 
         val accountEntries = summaryData.mapNotNull { row ->
             val accNumber = row[0] as String
@@ -156,7 +152,7 @@ class PostingService(
 
                 // Only get detailed postings if needed for display
                 val postings = if (transactionCount > 0) {
-                    postingRepository.findPostingsByAccountAndDateRange(accNumber, tenantId, startDate, endDate)
+                    postingRepository.findPostingsByAccountAndDateRange(accNumber, startDate, endDate)
                         .map { posting ->
                             GeneralLedgerPostingEntry(
                                 id = posting.id,

@@ -4,6 +4,7 @@ import com.respiroc.company.domain.model.Company
 import com.respiroc.tenant.domain.model.Tenant
 import com.respiroc.util.domain.person.PrivatePerson
 import jakarta.persistence.*
+import org.hibernate.annotations.TenantId
 
 @Entity
 @Table(name = "customers")
@@ -14,11 +15,12 @@ open class Customer {
     @Column(name = "id", nullable = false)
     open var id: Long = -1
 
-    @Column(name = "tenant_id", nullable = false, updatable = false, insertable = false)
-    open var tenantId: Long = -1
+    @TenantId
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    open var tenantId: Long? = null
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id", nullable = false, updatable = false, insertable = false)
     open lateinit var tenant: Tenant
 
     @Column(name = "company_id", nullable = true, updatable = false, insertable = false)

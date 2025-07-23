@@ -5,6 +5,7 @@ import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import org.hibernate.annotations.TenantId
 import org.hibernate.annotations.UpdateTimestamp
 import java.math.BigDecimal
 import java.time.Instant
@@ -34,6 +35,7 @@ open class Expense {
     @Column(name = "created_by", nullable = false, length = 100)
     open lateinit var createdBy: String
 
+    @TenantId
     @Column(name = "tenant_id", nullable = false)
     open var tenantId: Long = -1
 

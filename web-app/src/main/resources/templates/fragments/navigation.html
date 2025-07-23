@@ -1,17 +1,16 @@
 <nav slot="navigation" id="navigation" th:fragment="navigation(sections,user)">
-    <wa-details appearance="outlined" variant="brand" th:if="${user.ctx.currentTenant != null}"
-                th:each="section : ${sections}">
-        <div slot="summary" style="display: flex; align-items: center; gap: 0.5rem;">
+    <wa-details appearance="outlined" th:if="${user.ctx.currentTenant != null}" th:each="section : ${sections}">
+        <div slot="summary" class="wa-gap-xs wa-align-items-center">
             <wa-icon th:name="${section.icon}" aria-hidden="true"></wa-icon>
             <span th:text="${section.title}"></span>
         </div>
-        <ul style="list-style: none; padding: 0; margin: 0;" th:each="item : ${section.items}">
-            <li class="wa-body-s">
+        <div class="wa-stack wa-align-items-start wa-gap-m" style="padding:var(--wa-space-xs)">
+            <div class="wa-body-s" th:each="item : ${section.items}">
                 <a th:href="${item.url}"
-                style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem;">
+                   style="text-decoration: none; color: inherit;">
                     <span th:text="${item.label}"></span>
                 </a>
-            </li>
-        </ul>
+            </div>
+        </div>
     </wa-details>
 </nav>

@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Size
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import org.hibernate.annotations.TenantId
 import org.hibernate.annotations.UpdateTimestamp
 import java.io.Serializable
 import java.math.BigDecimal
@@ -57,8 +58,9 @@ open class Posting : Serializable {
     @Column(name = "description", length = Integer.MAX_VALUE)
     open var description: String? = null
 
-    @Column(name = "tenant_id", nullable = false)
-    open var tenantId: Long = -1
+    @TenantId
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    open var tenantId: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

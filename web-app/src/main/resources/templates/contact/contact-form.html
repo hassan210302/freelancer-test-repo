@@ -3,6 +3,7 @@
       layout:decorate="~{layout/base}">
 <head>
     <link rel="stylesheet" th:href="@{/assets/contact/contact-form.css}">
+    <link rel="stylesheet" th:href="@{/assets/fragments/company-search.css}">
 </head>
 <body>
 <main layout:fragment="content">
@@ -112,7 +113,7 @@
                                        th:text="|#{contact.create} ${type}|">
                             </wa-button>
                             <wa-spinner id="loading-indicator" class="htmx-indicator"
-                                        style="font-size: var(--wa-space-xl)"></wa-spinner>
+                                        style="font-size: var(--wa-font-size-xl)"></wa-spinner>
                         </div>
                     </div>
                 </form>

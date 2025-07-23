@@ -54,8 +54,8 @@ class RCombobox extends LitElement {
 
         .combobox-input {
             width: 13rem;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
+            padding: var(--wa-space-xs) var(--wa-space-s);
+            font-size: var(--wa-font-size-s);
             border: 1px solid var(--wa-color-gray-90);
             border-radius: 0.375rem;
             background-color: white;
@@ -96,7 +96,7 @@ class RCombobox extends LitElement {
         }
 
         .dropdown-item {
-            padding: 0.5rem 0.75rem;
+            padding: var(--wa-space-xs) var(--wa-space-s);
             cursor: pointer;
             transition: background-color 0.15s ease-in-out;
             border-bottom: 1px solid var(--wa-color-gray-95);
@@ -120,16 +120,16 @@ class RCombobox extends LitElement {
 
         .item-title {
             font-weight: 500;
-            font-size: 0.875rem;
+            font-size: var(--wa-font-size-s);
             color: var(--wa-color-gray-10);
-            margin-bottom: 0.125rem;
+            margin-bottom: var(--wa-space-2xs);
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
 
         .item-description {
-            font-size: 0.75rem;
+            font-size: var(--wa-font-size-xs);
             color: var(--wa-color-gray-40);
             line-height: 1.4;
             overflow: hidden;
@@ -138,20 +138,20 @@ class RCombobox extends LitElement {
         }
 
         .item-meta {
-            font-size: 0.7rem;
+            font-size: var(--wa-font-size-2xs);
             color: var(--wa-color-gray-50);
-            margin-top: 0.125rem;
+            margin-top: var(--wa-space-2xs);
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
 
         .no-results {
-            padding: 1rem;
+            padding: var(--wa-space-m);
             text-align: center;
             color: var(--wa-color-gray-50);
             font-style: italic;
-            font-size: 0.875rem;
+            font-size: var(--wa-font-size-s);
         }
 
         .clear-button {
@@ -163,7 +163,7 @@ class RCombobox extends LitElement {
             border: none;
             color: var(--wa-color-gray-50);
             cursor: pointer;
-            padding: 0.25rem;
+            padding: var(--wa-space-xs);
             display: none;
         }
 

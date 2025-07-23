@@ -5,6 +5,7 @@ import com.respiroc.user.application.UserService
 import com.respiroc.util.payload.CreateCompanyPayload
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateCompanyRequest
+import com.respiroc.webapp.service.JwtService
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
@@ -35,7 +36,8 @@ class TenantWebController : BaseController() {
 @RequestMapping("/htmx/tenant")
 class TenantHTMXController(
     private val userService: UserService,
-    private val companyLookupApi: CompanyLookupInternalApi
+    private val companyLookupApi: CompanyLookupInternalApi,
+    private val jwt: JwtService
 ) : BaseController() {
 
     @PostMapping("/create")
@@ -72,8 +74,11 @@ class TenantHTMXController(
             )
 
             val tenant = userService.createTenantForUser(payload, user())
-            val result = userService.selectTenant(user(), tenant.id, token)
-            setJwtCookie(result.token, response)
+
+            val user = user()
+            userService.selectTenant(user, tenant.id)
+            val token = jwt.generateToken(subject = user.id.toString(), tenantId = tenant.id)
+            setJwtCookie(token, response)
             return "redirect:htmx:/"
 
         } catch (e: Exception) {

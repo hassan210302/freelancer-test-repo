@@ -38,18 +38,6 @@ function selectCompanyFromSearch(element) {
 // Variable to track if company selection is in progress
 let isSelectingCompany = false;
 
-// Show loading state on form submission
-document.getElementById('createCompanyForm').addEventListener('htmx:beforeRequest', function(e) {
-    // Only handle actual form submission, not search requests
-    if (e.detail.elt.tagName === 'FORM') {
-        const submitButton = document.getElementById('submitButton');
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<wa-spinner style="margin-right: 0.5rem;"></wa-spinner> Creating Company...';
-        }
-    }
-});
-
 // Prevent form submission during company selection
 document.getElementById('createCompanyForm').addEventListener('submit', function(e) {
     if (isSelectingCompany) {
@@ -66,7 +54,7 @@ document.getElementById('createCompanyForm').addEventListener('htmx:afterRequest
             const submitButton = document.getElementById('submitButton');
             if (submitButton && submitButton.disabled) {
                 submitButton.disabled = false;
-                submitButton.innerHTML = '<wa-icon name="plus" style="margin-right: 0.5rem;"></wa-icon>Create Company';
+                submitButton.innerHTML = '<wa-icon name="plus" style="margin-right: var(--wa-space-s);"></wa-icon>Create Company';
             }
         }, 100);
     }

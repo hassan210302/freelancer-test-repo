@@ -48,13 +48,6 @@ main {
     font-size: var(--wa-font-size-s);
 }
 
-/* Auth layout styling */
-.wa-center main {
-    max-width: 400px;
-    width: 100%;
-    padding: var(--wa-space-xl);
-}
-
 /* Dynamic aside width based on content */
 wa-page[data-aside-visible="false"] {
     --aside-width: 0;
@@ -72,4 +65,29 @@ wa-page[data-aside-visible="false"] [slot="aside"] {
 /* Expand main content when aside is hidden */
 wa-page[data-aside-visible="false"] main {
     max-inline-size: 80rem;
+}
+
+.r-opacity-25 {
+    opacity: 0.25;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.block {
+    display: block !important;
+}
+
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 500ms ease-in;
+}
+
+.htmx-request .htmx-indicator {
+    opacity: 1;
+}
+
+.htmx-request.htmx-indicator {
+    opacity: 1;
 }

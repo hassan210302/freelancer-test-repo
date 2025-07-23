@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.TenantId
 
 @Entity
 @Table(name = "suppliers")
@@ -24,11 +25,12 @@ open class Supplier {
     @Column(name = "id", nullable = false)
     open var id: Long = -1
 
-    @Column(name = "tenant_id", nullable = false, updatable = false, insertable = false)
-    open var tenantId: Long = -1
+    @TenantId
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    open var tenantId: Long? = null
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id", nullable = false, updatable = false, insertable = false)
     open lateinit var tenant: Tenant
 
     @Column(name = "company_id", nullable = true, updatable = false, insertable = false)

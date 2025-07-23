@@ -7,30 +7,35 @@
 
 <div th:fragment="error" th:if="${error}" id="name-dropdown">
     <div class="search-dropdown" style="display: block;">
-        <div class="search-item" style="color: #dc2626;">
-            <div class="search-item-name" th:text="#{company.search.error.title}" />
-            <div class="search-item-details" th:text="${error}" />
+        <div class="search-item" style="color: var(--wa-color-danger);">
+            <div class="search-item-name" th:text="#{company.search.error.title}"/>
+            <div class="search-item-details" th:text="${error}"/>
         </div>
     </div>
 </div>
 
-<div th:fragment="results" id="name-dropdown">
-    <div th:if="${companies}" class="search-dropdown" style="display: block;">
-        <div th:each="company : ${companies}" 
-             class="search-item" 
-             th:attr="data-name=${company.name}, data-org-number=${company.registrationNumber}, data-country-code='NO'"
-             onclick="selectCompanyFromSearch(this)"
-             style="cursor: pointer;">
-            <div class="search-item-name" th:text="${company.name}" />
-                    <div class="search-item-details">
-            <span th:if="${!#strings.isEmpty(company.registrationNumber)}" th:text="'Org. Nr: ' + ${company.registrationNumber}" />
-            <span th:if="${!#strings.isEmpty(company.address) and !#strings.isEmpty(company.registrationNumber)}" th:text="' • ' + ${company.address}" />
-            <span th:if="${!#strings.isEmpty(company.address) and #strings.isEmpty(company.registrationNumber)}" th:text="${company.address}" />
-        </div>
-        </div>
-        <div th:if="${#lists.isEmpty(companies)}" class="search-item">
-            <div class="search-item-name" th:text="#{company.search.no.results.title}" />
-            <div class="search-item-details" th:text="#{company.search.no.results.message}" />
+<div th:fragment="results" style="position: relative; z-index: 10">
+    <div id="name-dropdown">
+        <div th:if="${companies}" class="search-dropdown" style="display: block;">
+            <div th:each="company : ${companies}"
+                 class="search-item"
+                 th:attr="data-name=${company.name}, data-org-number=${company.registrationNumber}, data-country-code='NO'"
+                 onclick="selectCompanyFromSearch(this)"
+                 style="cursor: pointer;">
+                <div class="search-item-name" th:text="${company.name}"/>
+                <div class="search-item-details">
+                    <span th:if="${!#strings.isEmpty(company.registrationNumber)}"
+                          th:text="'Org. Nr: ' + ${company.registrationNumber}"/>
+                    <span th:if="${!#strings.isEmpty(company.address) and !#strings.isEmpty(company.registrationNumber)}"
+                          th:text="' • ' + ${company.address}"/>
+                    <span th:if="${!#strings.isEmpty(company.address) and #strings.isEmpty(company.registrationNumber)}"
+                          th:text="${company.address}"/>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(companies)}" class="search-item">
+                <div class="search-item-name" th:text="#{company.search.no.results.title}"/>
+                <div class="search-item-details" th:text="#{company.search.no.results.message}"/>
+            </div>
         </div>
     </div>
 </div>
