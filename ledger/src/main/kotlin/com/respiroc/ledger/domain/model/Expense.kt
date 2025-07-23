@@ -35,7 +35,6 @@ open class Expense {
     @Column(name = "created_by", nullable = false, length = 100)
     open lateinit var createdBy: String
 
-
     @TenantId
     @Column(name = "tenant_id", nullable = false)
     open var tenantId: Long = -1
