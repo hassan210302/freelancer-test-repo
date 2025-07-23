@@ -55,11 +55,12 @@
                 </tbody>
             </table>
 
-            <div class="wa-center" th:if="${#lists.isEmpty(documents)}">
-                <div class="wa-stack wa-center wa-gap-m">
-                    <wa-icon name="document-text" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
-                    <h2 class="wa-heading-m" th:text="#{no_voucher_reception_found}"/>
+            <div class="r-empty-state" th:if="${#lists.isEmpty(documents)}">
+                <div class="r-empty-state-icon">
+                    <wa-icon name="table"></wa-icon>
                 </div>
+                <h3 th:text="#{no_Data_available}"/>
+                <p th:text="#{no_voucher_reception_found}"/>
             </div>
         </div>
 

@@ -156,8 +156,7 @@ class VoucherHTMXController(
                 countryCode()
             )
 
-            model.addAttribute(calloutAttributeName, Callout.Success("Voucher saved"))
-            return "fragments/callout-message"
+            return "fragments/empty"
         } catch (e: Exception) {
             model.addAttribute(calloutAttributeName, Callout.Error("Failed to update voucher: ${e.message}"))
             return "fragments/callout-message"
