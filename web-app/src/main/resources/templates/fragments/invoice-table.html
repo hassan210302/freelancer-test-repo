@@ -26,7 +26,7 @@
         <td th:data-label="#{invoice.table.actions}" style="text-align: right;">
             <wa-button
                     size="small"
-                    variant="outline"
+                    variant="brand"
                     th:hx-get="@{/invoice/{id}/pdf(id=${invoice.id})}"
                     hx-target="body"
                     th:text="#{invoice.table.view_pdf}">
