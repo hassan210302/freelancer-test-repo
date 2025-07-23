@@ -52,6 +52,14 @@ class NavigationProvider {
                 items = listOf(
                     NavigationSectionItem(label = "Bank Accounts Overview", url = "/bank/account"),
                 )
+            ),
+
+            NavigationSection(
+                title = "Invoice", icon = "file-invoice",
+                items = listOf(
+                    NavigationSectionItem(label = "Invoices", url = "/invoice"),
+                    NavigationSectionItem(label = "New Invoice", url = "/invoice/new"),
+                )
             )
         )
     }
