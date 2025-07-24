@@ -1,34 +1,28 @@
 package com.respiroc.webapp.controller.web
 
 import com.respiroc.invoice.application.InvoiceService
-import com.respiroc.invoice.application.payload.NewInvoicePayload
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.NewInvoiceRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.bind.annotation.*
 
 @Controller
 @RequestMapping(value = ["/invoice"])
-class InvoiceWebController(private val invoiceService: InvoiceService): BaseController() {
+class InvoiceWebController(private val invoiceService: InvoiceService) : BaseController() {
 
     @GetMapping
     fun getInvoices(model: Model): String {
         addCommonAttributesForCurrentTenant(model, "Invoices")
-        model.addAttribute("invoices", emptyList<Any>()) // TODO: Replace with invoiceService.getAll()
+        // TODO handle pagination
+        model.addAttribute("invoices", invoiceService.getInvoicesWithLines(0, 1000).content)
         return "invoice/invoice"
     }
 
     @GetMapping("/new")
     fun getInvoiceForm(model: Model): String {
         addCommonAttributesForCurrentTenant(model, "New Invoice")
-        model.addAttribute("invoice", NewInvoiceRequest())
+//        model.addAttribute("invoice", NewInvoiceRequest())
         return "invoice/invoice-form"
     }
 
@@ -50,7 +44,7 @@ class InvoiceWebController(private val invoiceService: InvoiceService): BaseCont
 
 @Controller
 @RequestMapping(value = ["/htmx/invoice"])
-class InvoiceHTNXWebController(private val invoiceService: InvoiceService): BaseController() {
+class InvoiceHTNXWebController(private val invoiceService: InvoiceService) : BaseController() {
 
     @PostMapping
     fun registerInvoice(@ModelAttribute request: NewInvoiceRequest): String {
@@ -63,6 +57,15 @@ class InvoiceHTNXWebController(private val invoiceService: InvoiceService): Base
             customerId = request.customerId
             // TODO: Add line items if applicable
         )
+//        val payload = NewInvoicePayload(
+//            number = request.number,
+//            issueDate = request.issueDate!!,
+//            dueDate = request.dueDate,
+//            currencyCode = request.currencyCode,
+//            supplierId = request.supplierId,
+//            customerId = request.customerId
+//            // TODO: Add line items if applicable
+//        )
 //        invoiceService.save(payload)
         return "redirect:htmx:/invoice"
     }

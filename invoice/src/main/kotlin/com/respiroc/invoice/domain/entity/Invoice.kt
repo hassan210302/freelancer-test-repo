@@ -1,45 +1,68 @@
 package com.respiroc.invoice.domain.entity
 
+import com.respiroc.customer.domain.model.Customer
+import com.respiroc.supplier.domain.model.Supplier
 import com.respiroc.tenant.domain.model.Tenant
 import jakarta.persistence.*
 import org.hibernate.annotations.TenantId
+import java.math.BigDecimal
 import java.time.LocalDate
 
 @Entity
 @Table(name = "invoices")
-open class Invoice {
+class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Long = -1
+    var id: Long = -1
 
     @TenantId
-    @Column(name = "tenant_id", nullable = false, updatable = false)
-    open var tenantId: Long? = null
+    @Column(name = "tenant_id", nullable = false)
+    var tenantId: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false, updatable = false, insertable = false)
-    open lateinit var tenant: Tenant
+    lateinit var tenant: Tenant
 
-    @Column(name = "number", nullable = false, unique = true, length = 10)
-    open lateinit var number: String
+    @Column(name = "number", nullable = false, unique = true)
+    lateinit var number: String
 
     @Column(name = "issue_date", nullable = false)
-    open lateinit var issueDate: LocalDate
+    lateinit var issueDate: LocalDate
 
     @Column(name = "due_date")
-    open var dueDate: LocalDate? = null
+    var dueDate: LocalDate? = null
 
-    @Column(name = "currency_code", nullable = false, length = 5)
-    open lateinit var currencyCode: String
+    @Column(name = "currency_code", nullable = false)
+    var currencyCode: String = ""
 
-    @Column(name = "supplier_id", nullable = false)
-    open var supplierId: Long = -1
+    @Column(name = "supplier_id")
+    var supplierId: Long? = null
 
-    @Column(name = "customer_id", nullable = false)
-    open var customerId: Long = -1
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "supplier_id", updatable = false, insertable = false)
+    lateinit var supplier: Supplier
+
+    @Column(name = "customer_id")
+    var customerId: Long? = null
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", updatable = false, insertable = false)
+    lateinit var customer: Customer
 
     @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true)
-    open var lines: MutableList<InvoiceLine> = mutableListOf()
+    var lines: MutableList<InvoiceLine> = mutableListOf()
+
+    @Transient
+    lateinit var totalAmount: BigDecimal
+
+    fun isSaleInvoice(): Boolean {
+        return supplierId == null
+    }
+
+    fun getPartyName(): String{
+        return if(isSaleInvoice()) customer.getName()
+        else supplier.getName()
+    }
 }
