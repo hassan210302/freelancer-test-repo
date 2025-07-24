@@ -20,6 +20,26 @@
 
                     <div class="wa-stack wa-gap-m">
                         <div>
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Title *</label>
+                            <wa-input name="title"
+                                      type="text"
+                                      size="small"
+                                      required
+                                      placeholder="Expense title">
+                            </wa-input>
+                        </div>
+
+                        <div>
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description *</label>
+                            <wa-textarea name="description"
+                                         size="small"
+                                         required
+                                         placeholder="Enter expense description..."
+                                         rows="3">
+                            </wa-textarea>
+                        </div>
+
+                        <div>
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Date *</label>
                             <wa-input name="expenseDate"
                                       type="date"
@@ -40,26 +60,59 @@
                             </wa-select>
                         </div>
 
+                        <wa-divider></wa-divider>
+                        <h5>Cost Details</h5>
+
                         <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Amount *</label>
-                            <wa-input name="amount"
-                                      type="number"
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Cost Title *</label>
+                            <wa-input name="costTitle"
+                                      type="text"
                                       size="small"
-                                      step="0.01"
-                                      min="0.01"
                                       required
-                                      placeholder="0.00">
+                                      placeholder="Cost description">
                             </wa-input>
                         </div>
 
+                        <div class="wa-cluster wa-gap-m">
+                            <div style="flex: 1;">
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Amount *</label>
+                                <wa-input name="costAmount"
+                                          type="number"
+                                          size="small"
+                                          step="0.01"
+                                          min="0.01"
+                                          required
+                                          placeholder="0.00">
+                                </wa-input>
+                            </div>
+
+                            <div style="flex: 0 0 100px;">
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">VAT %</label>
+                                <wa-input name="costVat"
+                                          type="number"
+                                          size="small"
+                                          min="0"
+                                          max="100"
+                                          value="0">
+                                </wa-input>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description *</label>
-                            <wa-textarea name="description"
-                                         size="small"
-                                         required
-                                         placeholder="Enter expense description..."
-                                         rows="3">
-                            </wa-textarea>
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Payment Type *</label>
+                            <wa-select name="costPaymentType" size="small" required>
+                                <wa-option value="">Select payment type...</wa-option>
+                                <wa-option th:each="paymentType : ${paymentTypes}"
+                                           th:value="${paymentType}"
+                                           th:text="${paymentType}">
+                                </wa-option>
+                            </wa-select>
+                        </div>
+
+                        <div>
+                            <wa-checkbox name="costChargeable" value="true">
+                                <span>Chargeable to client</span>
+                            </wa-checkbox>
                         </div>
 
                         <div class="wa-cluster wa-gap-m">

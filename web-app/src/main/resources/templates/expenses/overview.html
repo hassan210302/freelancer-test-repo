@@ -6,7 +6,6 @@
 <main layout:fragment="content">
     <div class="wa-container">
         <div class="wa-stack wa-gap-s">
-
             <wa-card>
                 <div class="wa-stack wa-gap-m">
                     <h2 class="wa-heading-l">Expenses</h2>
@@ -42,26 +41,44 @@
                     <table th:unless="${#lists.isEmpty(expenses)}">
                         <thead>
                         <tr>
+                            <th>ID</th>
+                            <th>Title</th>
                             <th>Date</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Amount</th>
+                            <th>Project</th>
+                            <th>Chargeable</th>
+                            <th>Total</th>
+                            <th>Status</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="expense : ${expenses}">
+                            <td th:text="${expense.id}"></td>
+                            <td th:text="${expense.title}"></td>
                             <td th:text="${expense.expenseDate}"></td>
-                            <td th:text="${expense.description}"></td>
-                            <td th:text="${expense.categoryName}"></td>
+                            <td th:text="${expense.project}"></td>
+                            <td>
+                                <wa-checkbox th:checked="${expense.chargeable}" disabled></wa-checkbox>
+                            </td>
                             <td th:text="${expense.amount}"></td>
+                            <td>
+                                <div class="wa-cluster wa-gap-xs" style="align-items: center;">
+                                    <span th:if="${expense.status.name() == 'OPEN'}" 
+                                          style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #22c55e;"></span>
+                                    <span th:if="${expense.status.name() == 'DELIVERED'}" 
+                                          style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #eab308;"></span>
+                                    <span th:if="${expense.status.name() == 'APPROVED'}" 
+                                          style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #3b82f6;"></span>
+                                    <span th:text="${#strings.toLowerCase(expense.status.name()).substring(0,1).toUpperCase() + #strings.toLowerCase(expense.status.name()).substring(1)}"></span>
+                                </div>
+                            </td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+                </div>
             </wa-card>
             </div>
         </div>
-    </div>
 </main>
 </body>
 </html>

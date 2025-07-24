@@ -1,11 +1,10 @@
 package com.respiroc.ledger.application
 
-import com.respiroc.ledger.application.payload.CreateExpensePayload
-import com.respiroc.ledger.application.payload.CreatePostingPayload
-import com.respiroc.ledger.application.payload.CreateVoucherPayload
-import com.respiroc.ledger.application.payload.ExpensePayload
+import com.respiroc.ledger.application.payload.*
+import com.respiroc.ledger.domain.model.Cost
 import com.respiroc.ledger.domain.model.Expense
 import com.respiroc.ledger.domain.model.ExpenseCategory
+import com.respiroc.ledger.domain.model.ExpenseStatus
 import com.respiroc.ledger.domain.repository.ExpenseRepository
 import com.respiroc.ledger.domain.repository.ExpenseCategoryRepository
 import com.respiroc.util.context.ContextAwareApi
@@ -20,17 +19,17 @@ class ExpenseService(
     private val expenseRepository: ExpenseRepository,
     private val expenseCategoryRepository: ExpenseCategoryRepository,
     private val accountService: AccountService,
-    private val voucherService: VoucherService  // Add this injection
+    private val voucherService: VoucherService
 ) : ContextAwareApi {
 
     @Transactional(readOnly = true)
     fun findAllExpensesByTenant(): List<ExpensePayload> {
-        val expenses = expenseRepository.findByTenantId(tenantId())
+        val expenses = expenseRepository.findByTenantIdWithCosts(tenantId())
         return expenses.map { expense -> toExpensePayload(expense) }
     }
 
     fun findExpensesByDate(startDate: LocalDate, endDate: LocalDate): List<ExpensePayload> {
-        val expenses = expenseRepository.findByTenantIdAndDateRange(tenantId(), startDate, endDate)
+        val expenses = expenseRepository.findByTenantIdAndDateRangeWithCosts(tenantId(), startDate, endDate)
         return expenses.map { expense -> toExpensePayload(expense) }
     }
 
@@ -47,32 +46,46 @@ class ExpenseService(
     fun createExpense(payload: CreateExpensePayload, createdBy: String): ExpensePayload {
         val expense = createExpenseEntity(payload, createdBy)
         val savedExpense = expenseRepository.save(expense)
-
-        // Create voucher with postings for proper accounting
         createVoucherForExpense(savedExpense)
-
         return toExpensePayload(savedExpense)
     }
 
     private fun createExpenseEntity(payload: CreateExpensePayload, createdBy: String): Expense {
         val expense = Expense()
         expense.tenantId = tenantId()
-        expense.categoryId = payload.categoryId
-        expense.amount = payload.amount
+        expense.title = payload.title
         expense.description = payload.description
         expense.expenseDate = payload.expenseDate
+        expense.status = ExpenseStatus.OPEN
+        expense.categoryId = payload.categoryId
         expense.receiptPath = payload.receiptPath
         expense.createdBy = createdBy
         expense.accountNumber = mapCategoryToAccount(payload.categoryId)
+        
+        val costs = payload.costs.map { costPayload ->
+            val cost = Cost()
+            cost.title = costPayload.title
+            cost.date = costPayload.date
+            cost.amount = costPayload.amount
+            cost.vat = costPayload.vat
+            cost.currency = costPayload.currency
+            cost.paymentType = costPayload.paymentType
+            cost.chargeable = costPayload.chargeable
+            cost.expense = expense
+            cost
+        }
+        
+        expense.costs.addAll(costs)
+        expense.amount = costs.sumOf { it.amount }
+        
         return expense
     }
 
     private fun createVoucherForExpense(expense: Expense) {
         val voucherPayload = CreateVoucherPayload(
             date = expense.expenseDate,
-            description = "Expense: ${expense.description}",
+            description = "Expense: ${expense.title}",
             postings = listOf(
-                // Debit expense account
                 CreatePostingPayload(
                     accountNumber = expense.accountNumber ?: "7790",
                     amount = expense.amount,
@@ -84,13 +97,12 @@ class ExpenseService(
                     vatCode = null,
                     rowNumber = 1
                 ),
-                // Credit bank account (cash paid)
                 CreatePostingPayload(
-                    accountNumber = "1920", // Bank deposits
+                    accountNumber = "1920",
                     amount = expense.amount.negate(),
                     currency = "NOK",
                     postingDate = expense.expenseDate,
-                    description = "Payment: ${expense.description}",
+                    description = "Payment: ${expense.title}",
                     originalAmount = expense.amount.negate(),
                     originalCurrency = "NOK",
                     vatCode = null,
@@ -98,13 +110,11 @@ class ExpenseService(
                 )
             )
         )
-
         voucherService.createVoucher(voucherPayload)
     }
 
     private fun mapCategoryToAccount(categoryId: Long): String {
         val category = expenseCategoryRepository.findById(categoryId).orElse(null)
-
         val accountNumber = when (category?.name) {
             "Travel" -> "7140"
             "Meals & Entertainment" -> "7350"
@@ -114,25 +124,37 @@ class ExpenseService(
             "Utilities" -> "6200"
             else -> "7790"
         }
-
-        // Verify account exists in chart of accounts
         val account = accountService.findAccountByNumber(accountNumber)
-        return if (account != null) {
-            accountNumber
-        } else {
-            "7790" // Fallback to miscellaneous if account not found
-        }
+        return if (account != null) accountNumber else "7790"
     }
 
     private fun toExpensePayload(expense: Expense): ExpensePayload {
         val category = expenseCategoryRepository.findById(expense.categoryId).orElse(null)
+        val costPayloads = expense.costs.map { cost ->
+            CostPayload(
+                id = cost.id,
+                title = cost.title,
+                date = cost.date,
+                amount = cost.amount,
+                vat = cost.vat,
+                currency = cost.currency,
+                paymentType = cost.paymentType,
+                chargeable = cost.chargeable
+            )
+        }
+        
         return ExpensePayload(
             id = expense.id,
-            categoryId = expense.categoryId,
-            categoryName = category?.name ?: "Unknown",
-            amount = expense.amount,
+            title = expense.title,
             description = expense.description,
             expenseDate = expense.expenseDate,
+            status = expense.status,
+            categoryId = expense.categoryId,
+            categoryName = category?.name ?: "Unknown",
+            project = "-",
+            chargeable = expense.costs.any { it.chargeable },
+            amount = expense.amount,
+            costs = costPayloads,
             receiptPath = expense.receiptPath,
             createdBy = expense.createdBy
         )

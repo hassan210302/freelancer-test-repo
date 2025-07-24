@@ -2,6 +2,8 @@ package com.respiroc.webapp.controller.web
 
 import com.respiroc.ledger.application.ExpenseService
 import com.respiroc.ledger.application.payload.CreateExpensePayload
+import com.respiroc.ledger.application.payload.CreateCostPayload
+import com.respiroc.ledger.domain.model.PaymentType
 import com.respiroc.webapp.controller.BaseController
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Controller
@@ -49,23 +51,40 @@ class ExpenseWebController(
         addCommonAttributesForCurrentTenant(model, "New Expense")
         model.addAttribute("categories", categories)
         model.addAttribute("expenseDate", LocalDate.now())
+        model.addAttribute("paymentTypes", PaymentType.entries)
         return "expenses/new"
     }
 
     @PostMapping("/create")
     fun createExpense(
-        @RequestParam categoryId: Long,
-        @RequestParam amount: BigDecimal,
+        @RequestParam title: String,
         @RequestParam description: String,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expenseDate: LocalDate,
+        @RequestParam categoryId: Long,
+        @RequestParam costTitle: String,
+        @RequestParam costAmount: BigDecimal,
+        @RequestParam costVat: Int,
+        @RequestParam costPaymentType: PaymentType,
+        @RequestParam(defaultValue = "false") costChargeable: Boolean,
         model: Model
     ): String {
         return try {
+            val costPayload = CreateCostPayload(
+                title = costTitle,
+                date = expenseDate,
+                amount = costAmount,
+                vat = costVat,
+                currency = "NOK",
+                paymentType = costPaymentType,
+                chargeable = costChargeable
+            )
+
             val payload = CreateExpensePayload(
-                categoryId = categoryId,
-                amount = amount,
+                title = title,
                 description = description,
-                expenseDate = expenseDate
+                expenseDate = expenseDate,
+                categoryId = categoryId,
+                costs = listOf(costPayload)
             )
 
             expenseService.createExpense(payload, springUser().username ?: "system")
@@ -74,6 +93,7 @@ class ExpenseWebController(
             val categories = expenseService.findAllActiveCategories()
             addCommonAttributesForCurrentTenant(model, "New Expense")
             model.addAttribute("categories", categories)
+            model.addAttribute("paymentTypes", PaymentType.entries)
             model.addAttribute("error", "Failed to create expense: ${e.message}")
             "expenses/new"
         }
