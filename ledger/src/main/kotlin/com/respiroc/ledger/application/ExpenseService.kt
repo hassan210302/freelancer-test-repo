@@ -12,6 +12,7 @@ import com.respiroc.util.context.ContextAwareApi
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @Service
 @Transactional
@@ -25,6 +26,11 @@ class ExpenseService(
     @Transactional(readOnly = true)
     fun findAllExpensesByTenant(): List<ExpensePayload> {
         val expenses = expenseRepository.findByTenantId(tenantId())
+        return expenses.map { expense -> toExpensePayload(expense) }
+    }
+
+    fun findExpensesByDate(startDate: LocalDate, endDate: LocalDate): List<ExpensePayload> {
+        val expenses = expenseRepository.findByTenantIdAndDateRange(tenantId(), startDate, endDate)
         return expenses.map { expense -> toExpensePayload(expense) }
     }
 

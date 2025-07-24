@@ -22,11 +22,23 @@ class ExpenseWebController(
     }
 
     @GetMapping("/overview")
-    fun overview(model: Model): String {
-        val expenses = expenseService.findAllExpensesByTenant()
+    fun overview(
+        @RequestParam(name = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        startDate: LocalDate?,
+        @RequestParam(name = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        endDate: LocalDate?,
+        model: Model
+    ): String {
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val expenses = expenseService.findExpensesByDate(startDate = effectiveStartDate, endDate = effectiveEndDate)
 
         addCommonAttributesForCurrentTenant(model, "Expenses")
         model.addAttribute("expenses", expenses)
+        model.addAttribute("startDate", effectiveStartDate)
+        model.addAttribute("endDate", effectiveEndDate)
         return "expenses/overview"
     }
 
@@ -65,5 +77,32 @@ class ExpenseWebController(
             model.addAttribute("error", "Failed to create expense: ${e.message}")
             "expenses/new"
         }
+    }
+}
+
+@Controller
+@RequestMapping("htmx/expense")
+class ExpenseHTMXController(
+    private val expenseService: ExpenseService
+) : BaseController() {
+    @GetMapping("/overview")
+    fun overviewHTMX(
+        @RequestParam(name = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        startDate: LocalDate?,
+        @RequestParam(name = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        endDate: LocalDate?,
+        model: Model
+    ): String {
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val expenses = expenseService.findExpensesByDate(startDate = effectiveStartDate, endDate = effectiveEndDate)
+
+        addCommonAttributesForCurrentTenant(model, "Expenses")
+        model.addAttribute("expenses", expenses)
+        model.addAttribute("startDate", effectiveStartDate)
+        model.addAttribute("endDate", effectiveEndDate)
+        return "expenses/overview :: tableContent"
     }
 }
