@@ -5,8 +5,8 @@
         <th th:text="#{invoice.table.issue_date}"></th>
         <th th:text="#{invoice.table.due_date}"></th>
         <th th:text="#{invoice.table.currency}"></th>
-        <th th:text="#{invoice.table.supplier}"></th>
-        <th th:text="#{invoice.table.customer}"></th>
+        <th th:text="#{invoice.table.invoice_type}"></th>
+        <th th:text="#{invoice.table.party_name}"></th>
         <th th:text="#{invoice.table.amount}"></th>
         <th style="text-align: right;" th:text="#{invoice.table.actions}"></th>
     </tr>
@@ -16,13 +16,15 @@
         <td colspan="8" class="r-no-data" th:text="#{invoice.table.not_found}" style="text-align: center"></td>
     </tr>
     <tr th:each="invoice : ${invoices}" th:id="'row-' + ${invoice.id}">
-        <td th:data-label="#{invoice.table.number}" th:text="${invoice.number}"></td>
+        <td th:data-label="#{invoice.table.number}">
+            <a th:href="@{/invoice/{id}(id=${invoice.id})}" th:text="${invoice.number}"></a>
+        </td>
         <td th:data-label="#{invoice.table.issue_date}" th:text="${invoice.issueDate}"></td>
         <td th:data-label="#{invoice.table.due_date}" th:text="${invoice.dueDate}"></td>
         <td th:data-label="#{invoice.table.currency}" th:text="${invoice.currencyCode}"></td>
-        <td th:data-label="#{invoice.table.supplier}" th:text="${invoice.supplierId}"></td>
-        <td th:data-label="#{invoice.table.customer}" th:text="${invoice.customerId}"></td>
-        <td th:data-label="#{invoice.table.amount}" th:text="${invoice.payableAmount}"></td>
+        <td th:data-label="#{invoice.table.invoice_type}" th:text="${invoice.isSaleInvoice()? 'Sale' : 'Purchase'}"></td>
+        <td th:data-label="#{invoice.table.party_name}" th:text="${invoice.getPartyName()}"></td>
+        <td th:data-label="#{invoice.table.amount}" th:text="${invoice.totalAmount}"></td>
         <td th:data-label="#{invoice.table.actions}" style="text-align: right;">
             <wa-button
                     size="small"
