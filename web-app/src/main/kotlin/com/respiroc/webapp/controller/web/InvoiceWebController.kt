@@ -19,6 +19,13 @@ class InvoiceWebController(private val invoiceService: InvoiceService) : BaseCon
         return "invoice/invoice"
     }
 
+    @GetMapping("/{id}")
+    fun getInvoice(model: Model, @PathVariable id: Long): String {
+        addCommonAttributesForCurrentTenant(model, "Invoice")
+        model.addAttribute("invoice", invoiceService.getInvoiceWithLines(id))
+        return "invoice/invoice-detail"
+    }
+
     @GetMapping("/new")
     fun getInvoiceForm(model: Model): String {
         addCommonAttributesForCurrentTenant(model, "New Invoice")
@@ -48,15 +55,6 @@ class InvoiceHTNXWebController(private val invoiceService: InvoiceService) : Bas
 
     @PostMapping
     fun registerInvoice(@ModelAttribute request: NewInvoiceRequest): String {
-        val payload = NewInvoicePayload(
-            number = request.number,
-            issueDate = request.issueDate!!,
-            dueDate = request.dueDate,
-            currencyCode = request.currencyCode,
-            supplierId = request.supplierId,
-            customerId = request.customerId
-            // TODO: Add line items if applicable
-        )
 //        val payload = NewInvoicePayload(
 //            number = request.number,
 //            issueDate = request.issueDate!!,
