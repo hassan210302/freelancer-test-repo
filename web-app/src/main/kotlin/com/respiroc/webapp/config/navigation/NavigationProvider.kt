@@ -25,6 +25,7 @@ class NavigationProvider {
                 items = listOf(
                     NavigationSectionItem(label = "General Ledger", url = "/ledger/general"),
                     NavigationSectionItem(label = "Chart of Accounts", url = "/ledger/chart-of-accounts"),
+                    NavigationSectionItem(label = "Supplier", url = "/ledger/suppliers"),
                 )
             ),
 
