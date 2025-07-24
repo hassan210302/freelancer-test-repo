@@ -3,22 +3,12 @@ package com.respiroc.supplier.domain.model
 import com.respiroc.company.domain.model.Company
 import com.respiroc.tenant.domain.model.Tenant
 import com.respiroc.util.domain.person.PrivatePerson
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.TenantId
 
 @Entity
 @Table(name = "suppliers")
 open class Supplier {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +36,13 @@ open class Supplier {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "private_person_id", nullable = true)
     open var person: PrivatePerson? = null
+
+    fun isPrivateSupplier(): Boolean {
+        return companyId == null
+    }
+
+    fun getName(): String {
+        return if (isPrivateSupplier()) person!!.name
+        else company!!.name
+    }
 }
