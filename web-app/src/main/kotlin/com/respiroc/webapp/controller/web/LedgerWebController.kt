@@ -60,6 +60,41 @@ class LedgerWebController(
         model.addAttribute("accounts", accountService.findAllAccounts())
         return "ledger/chart-of-accounts"
     }
+
+    @GetMapping(value = ["/suppliers"])
+    fun suppliers(
+        @RequestParam(name = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        startDate: LocalDate?,
+        @RequestParam(name = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        endDate: LocalDate?,
+        @RequestParam(name = "accountNumber", required = false)
+        accountNumber: String?,
+        model: Model
+    ): String {
+        return try {
+            val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+            val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+
+            val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
+
+            model.addAttribute("generalLedgerData", generalLedgerData)
+            model.addAttribute("startDate", effectiveStartDate)
+            model.addAttribute("endDate", effectiveEndDate)
+            model.addAttribute("selectedAccountNumber", accountNumber)
+
+            addCommonAttributesForCurrentTenant(model, "General Ledger")
+            val accounts = accountService.findAllAccounts().sortedBy { it.noAccountNumber }
+            model.addAttribute("accounts", accounts)
+
+            "ledger/suppliers"
+        } catch (e: Exception) {
+            model.addAttribute(calloutAttributeName, Callout.Error("Error loading general ledger: ${e.message}"))
+            "ledger/general"
+        }
+    }
+
 }
 
 @Controller
@@ -71,6 +106,39 @@ class LedgerHTMXController(
     @GetMapping("/general")
     @HxRequest
     fun generalLedgerHTMX(
+        @RequestParam(name = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        startDate: LocalDate?,
+        @RequestParam(name = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        endDate: LocalDate?,
+        @RequestParam(name = "accountNumber", required = false)
+        accountNumber: String?,
+        model: Model
+    ): String {
+        return try {
+            val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+            val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+
+            val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
+
+            model.addAttribute("generalLedgerData", generalLedgerData)
+            model.addAttribute("startDate", effectiveStartDate)
+            model.addAttribute("endDate", effectiveEndDate)
+            model.addAttribute("selectedAccountNumber", accountNumber)
+            model.addAttribute(userAttributeName, springUser())
+            model.addAttribute("companyCurrency", countryCode())
+
+            "ledger/general :: tableContent"
+        } catch (e: Exception) {
+            model.addAttribute(calloutAttributeName, Callout.Error("Error loading general ledger: ${e.message}"))
+            "ledger/general :: error-message"
+        }
+    }
+
+    @GetMapping("/suppliers")
+    @HxRequest
+    fun suppliers(
         @RequestParam(name = "startDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         startDate: LocalDate?,

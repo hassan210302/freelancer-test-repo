@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+
+<body>
+<main layout:fragment="content">
+    <div class="wa-container">
+        <div class="wa-stack wa-gap-s">
+
+            <wa-card>
+                <div class="wa-cluster">
+                    <div class="wa-stack wa-gap-xs">
+                        <label class="wa-body-s" style="font-weight: 500;">Start Date 13213</label>
+                        <wa-input type="date"
+                                  name="startDate"
+                                  size="small"
+                                  th:value="${startDate}"
+                                  th:hx-get="'/htmx/ledger/general'"
+                                  th:hx-target="'#tableContent'"
+                                  th:hx-indicator="'#loading-indicator'"
+                                  th:hx-trigger="'change'"
+                                  th:hx-include="'[name=\'endDate\'], [name=\'accountNumber\']'"></wa-input>
+                    </div>
+
+                    <div class="wa-stack wa-gap-xs">
+                        <label class="wa-body-s" style="font-weight: 500;">End Date</label>
+                        <wa-input type="date"
+                                  name="endDate"
+                                  size="small"
+                                  th:value="${endDate}"
+                                  th:hx-get="'/htmx/ledger/general'"
+                                  th:hx-target="'#tableContent'"
+                                  th:hx-indicator="'#loading-indicator'"
+                                  th:hx-trigger="'change'"
+                                  th:hx-include="'[name=\'startDate\'], [name=\'accountNumber\']'"></wa-input>
+                    </div>
+
+
+                </div>
+            </wa-card>
+
+
+        </div>
+    </div>
+</main>
+</body>
+</html>
