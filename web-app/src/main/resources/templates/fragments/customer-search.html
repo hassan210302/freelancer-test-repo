@@ -1,0 +1,83 @@
+<div th:fragment="customerSearch">
+    <div style="position: relative;">
+        <wa-input placeholder="Search customer"
+                  size="small"
+                  name="name"
+                  type="text"
+                  id="search-input"
+                  hx-get="/htmx/contact/customer/search/dropdown"
+                  hx-trigger="keyup changed delay:500ms"
+                  hx-target="#customer-dropdown"
+                  hx-swap="innerHTML">
+            <wa-icon name="search" slot="start"></wa-icon>
+        </wa-input>
+
+        <div id="customer-dropdown"
+             class="dropdown"
+             style="position: absolute; width: 100%; background: white;
+                 box-shadow: var(--wa-shadow-m);
+                 border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-neutral-90);
+                 max-height: 300px; overflow-y: auto; z-index: 10; display: none;">
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('search-input');
+            const dropdown = document.getElementById('customer-dropdown');
+
+            document.body.addEventListener('htmx:afterSwap', function (e) {
+                if (e.target.id === 'customer-dropdown') {
+                    dropdown.style.display = 'block';
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.customer-search-container')) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            dropdown.addEventListener('click', function (e) {
+                const item = e.target.closest('.dropdown-item');
+                if (item) {
+                    const customerId = item.getAttribute('data-customer-id');
+                    const customerName = item.getAttribute('data-customer-name');
+
+                    input.value = customerName;
+
+                    const event = new CustomEvent('customerSelected', {
+                        detail: {id: customerId, name: customerName}
+                    });
+                    input.dispatchEvent(event);
+
+                    dropdown.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</div>
+
+<div th:fragment="items">
+    <div th:if="${customers == null or #lists.isEmpty(customers)}"
+         style="padding: var(--wa-space-xs); color: var(--wa-color-neutral-60);">
+        No customers found.
+    </div>
+
+    <div th:each="customer : ${customers}"
+         onmouseover="this.style.backgroundColor='var(--wa-color-neutral-80)'"
+         onmouseout="this.style.backgroundColor='transparent'"
+         class="dropdown-item wa-split"
+         th:attr="data-customer-id=${customer.id}, data-customer-name=${customer.name}"
+         style="padding: var(--wa-space-xs); cursor: pointer; border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-neutral-80);">
+        <span th:text="${customer.name}"></span>
+        <span style="color: var(--wa-color-neutral-60); font-size: var(--wa-font-size-small);"
+              th:text="${customer.privateCustomer} ? 'Person' : 'Company'">
+  </span>
+    </div>
+</div>

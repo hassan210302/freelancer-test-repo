@@ -11,11 +11,16 @@
         <wa-tab panel="sending">Sending</wa-tab>
         <wa-tab-panel name="details">
             <div class="wa-stack">
-                <wa-card>customer</wa-card>
+                <wa-card>
+                    <div style="max-width: 300px">
+                        <div th:replace="fragments/customer-search :: customerSearch"></div>
+                    </div>
+                </wa-card>
                 <wa-card>
                     <wa-input id="daysUntilDue" name="daysUntilDue" value="0" min="0" size="small"
                               label="days until due" type="number"
-                              style="width: 300px"></wa-input>
+                              style="width: 300px">
+                    </wa-input>
                 </wa-card>
                 <wa-card>
                     <div slot="header" class="wa-split">
