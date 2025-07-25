@@ -12,7 +12,7 @@
         <wa-tab-panel name="details">
             <div class="wa-stack">
                 <wa-card>
-                    <div slot="header" class="wa-split">
+                    <div slot="header">
                         Customer
                     </div>
                     <div style="max-width: 300px">
@@ -20,16 +20,20 @@
                     </div>
                 </wa-card>
                 <wa-card>
-                    <div slot="header" class="wa-split">
+                    <div slot="header">
                         Date
                     </div>
-                    <wa-input id="daysUntilDue" name="daysUntilDue" value="0" min="0" size="small"
-                              label="days until due" type="number"
-                              style="width: 300px">
-                    </wa-input>
+                    <div class="wa-cluster wa-gap-s">
+                        <wa-input id="invoiceDate" name="invoiceDate" type="date"
+                                  label="invoice date" size="small">
+                        </wa-input>
+                        <wa-input id="daysUntilDue" name="daysUntilDue" value="14" min="0" size="small"
+                                  label="days until due" type="number">
+                        </wa-input>
+                    </div>
                 </wa-card>
                 <wa-card>
-                    <div slot="header" class="wa-split">
+                    <div slot="header">
                         Lines
                     </div>
                     <table id="invoiceTable" border="1">
@@ -73,10 +77,10 @@
                             <td class="amount">0.00</td>
                             <td>
                                 <wa-button size="small" variant="neutral" onclick="duplicateRow(this)">
-                                    <wa-icon name="copy" variant="solid" title="Duplicate"></wa-icon>
+                                    <wa-icon label="duplicate" name="copy" variant="solid" title="Duplicate"></wa-icon>
                                 </wa-button>
                                 <wa-button size="small" variant="danger" onclick="deleteRow(this)">
-                                    <wa-icon name="trash" variant="solid" title="Delete"></wa-icon>
+                                    <wa-icon label="delete" name="trash" variant="solid" title="Delete"></wa-icon>
                                 </wa-button>
                             </td>
                         </tr>
@@ -106,16 +110,27 @@
     <script th:src="@{/assets/fragments/customer-search.js}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('daysUntilDue');
-            if (!input) return;
-            const updateLabel = () => {
-                const days = parseInt(input.value, 10) || 0;
-                const futureDate = new Date();
-                futureDate.setDate(futureDate.getDate() + days);
-                const formattedDate = futureDate.toLocaleDateString();
-                input.setAttribute('label', `days until due: ${formattedDate}`);
+            const daysInput = document.getElementById('daysUntilDue');
+            const invoiceDateInput = document.getElementById('invoiceDate');
+            if (!daysInput || !invoiceDateInput) return;
+            const getInvoiceDate = () =>
+                invoiceDateInput.value ? new Date(invoiceDateInput.value) : new Date();
+            const getDaysUntilDue = () => {
+                const raw = daysInput.value ?? daysInput.getAttribute('value') ?? '0';
+                return parseInt(raw, 10) || 0;
             };
-            input.addEventListener('input', updateLabel);
+            const calculateDueDate = (start, days) => {
+                const date = new Date(start);
+                date.setDate(date.getDate() + days);
+                return date;
+            };
+            const updateLabel = () => {
+                const dueDate = calculateDueDate(getInvoiceDate(), getDaysUntilDue());
+                daysInput.setAttribute('label', `days until due: ${dueDate.toLocaleDateString()}`);
+            };
+            if (!invoiceDateInput.value) invoiceDateInput.value = new Date().toISOString().split('T')[0];
+            daysInput.addEventListener('input', updateLabel);
+            invoiceDateInput.addEventListener('change', updateLabel);
             updateLabel();
         });
     </script>
