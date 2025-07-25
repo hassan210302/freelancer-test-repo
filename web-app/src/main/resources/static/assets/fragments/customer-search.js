@@ -4,19 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = input?.closest('div');
     if (!input || !dropdown || !container) return;
     let lastSelectedCustomer = { id: '', name: '' };
-
+    let lastDispatchedCustomer = { id: '', name: '' };
     const dropdownHasResults = () => dropdown.querySelectorAll('.dropdown-item').length > 0;
 
     const dispatchSelection = (id, name) => {
+        if (id === lastDispatchedCustomer.id && name === lastDispatchedCustomer.name) return;
         input.dispatchEvent(new CustomEvent('customerSelected', {
             detail: { id, name },
             bubbles: true,
         }));
+        lastDispatchedCustomer = { id, name };
     };
 
     const handleDropdownClose = () => {
         dropdown.style.display = 'none';
-        const currentInput = input.value.trim();
+        const currentInput = input?.value?.trim();
+
         if (!lastSelectedCustomer.id && !dropdownHasResults()) {
             input.value = '';
             dispatchSelection('', '');
@@ -60,13 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdown.addEventListener('click', e => {
         const item = e.target.closest('.dropdown-item');
         if (!item) return;
-
-        lastSelectedCustomer = {
-            id: item.dataset.customerId,
-            name: item.dataset.customerName
-        };
-        input.value = lastSelectedCustomer.name;
-        dispatchSelection(lastSelectedCustomer.id, lastSelectedCustomer.name);
+        const id = item.dataset.customerId;
+        const name = item.dataset.customerName;
+        input.value = name;
+        lastSelectedCustomer = { id, name };
+        dispatchSelection(id, name);
         dropdown.style.display = 'none';
     });
 
