@@ -63,8 +63,6 @@ class LedgerWebController(
         @RequestParam(name = "endDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         endDate: LocalDate?,
-        @RequestParam(name = "accountNumber", required = false)
-        accountNumber: String?,
         model: Model
     ): String {
 
@@ -128,21 +126,21 @@ class LedgerHTMXController(
         @RequestParam(name = "endDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         endDate: LocalDate?,
-        @RequestParam(name = "accountNumber", required = false)
-        accountNumber: String?,
+        @RequestParam(name = "supplierName", required = false)
+        supplierName: String?,
         model: Model
     ): String {
 
             val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
             val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val supplierData = postingService.getSuppliers(effectiveStartDate, effectiveEndDate)
+            val supplierData = postingService.getSuppliersBySupplierName(effectiveStartDate, effectiveEndDate,supplierName)
 
             model.addAttribute("supplierData", supplierData)
             model.addAttribute("startDate", effectiveStartDate)
             model.addAttribute("endDate", effectiveEndDate)
 
-            return "ledger/general :: tableContent"
+            return "ledger/suppliers :: tableContent"
 
     }
 }

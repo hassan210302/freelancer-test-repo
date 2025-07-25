@@ -27,7 +27,7 @@
                                       th:hx-target="'#tableContent'"
                                       th:hx-indicator="'#loading-indicator'"
                                       th:hx-trigger="'change'"
-                                      th:hx-include="'[name=\'endDate\'], [name=\'accountNumber\']'"></wa-input>
+                                      th:hx-include="'[name=\'endDate\'], [name=\'supplierName\']'"></wa-input>
                         </div>
 
                         <div class="r-filter-group">
@@ -41,16 +41,24 @@
                                       th:hx-target="'#tableContent'"
                                       th:hx-indicator="'#loading-indicator'"
                                       th:hx-trigger="'change'"
-                                      th:hx-include="'[name=\'startDate\'], [name=\'accountNumber\']'"></wa-input>
+                                      th:hx-include="'[name=\'startDate\'], [name=\'supplierName\']'"></wa-input>
                         </div>
 
                         <div class="r-filter-group">
                             <label class="wa-body-s" style="font-weight: 500;">Supplier</label>
-                                                    <wa-select name="supplier"
-                                                               size="small"
-                                                    >
-                                                        <wa-option value="All" selected>(All)</wa-option>
-                                                    </wa-select>
+                            <wa-select name="supplierName"
+                                       size="small"
+                                       th:hx-get="'/htmx/ledger/suppliers'"
+                                       th:hx-target="'#tableContent'"
+                                       th:hx-indicator="'#loading-indicator'"
+                                       th:hx-trigger="'change'"
+                                       th:hx-include="'[name=\'startDate\'], [name=\'endDate\']'"
+                                       th:each="supplier : ${supplierData}">
+
+                                <wa-option th:value="${supplier.name}" th:text="${supplier.name}"></wa-option>
+
+                                <wa-option value="All" selected>(All)</wa-option>
+                            </wa-select>
                         </div>
 
                         <div class="r-filter-group">
@@ -74,8 +82,8 @@
                                     <tr>
                                         <th style="width: 20%;" th:text="#{invoice_no}" />
                                         <th style="width: 20%;" th:text="#{date}" />
-                                        <th style="width: 20%;" th:text="#{date}" />
-                                        <th class="r-amount-header" style="width: 20%;" th:text="#{amount}" />
+                                        <th style="width: 20%;" th:text="#{description}" />
+                                        <th style="width: 20%;" th:text="#{amount}" />
                                         <th style="width: 20%;" th:text="#{currency}" />
                                     </tr>
 
@@ -83,13 +91,11 @@
                                     <tbody>
                                     <th:block th:each="supplier : ${supplierData}">
                                         <tr>
-                                            <td style="width: 25%" th:text="${supplier.name + ' (' + supplier.organizationNumber + ')'}"></td>
-                                            <td style="width: 20%;"></td>
-                                            <td style="width: 20%;"></td>
-                                            <td style="width: 20%;"></td>
-                                            <td class="r-amount-header" style="width: 20%;"></td>
+                                            <td colspan="5">
+                <span class="r-supplier-name" style="width: 80%"
+                      th:text="${supplier.name + ' (' + supplier.organizationNumber + ')'}"></span>
+                                            </td>
                                         </tr>
-
 
                                         <tr th:each="posting : ${supplier.postings}">
                                             <td th:text="${posting.accountNumber}"></td>
@@ -99,15 +105,18 @@
                                             <td th:text="${posting.currency}"></td>
                                         </tr>
 
-
-                                        <tr class="r-total-row" >
-                                            <td colspan="2" style="text-align: center;"><strong th:text="#{total}" /></td>
-                                            <td class="r-amount-cell">
-                                                <strong th:text="${#numbers.formatDecimal(supplier.totalAmount, 1, 2)}" />
+                                        <tr class="r-total-row">
+                                            <td><strong th:text="#{total}"></strong></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>
+                                                <strong th:text="${#numbers.formatDecimal(supplier.totalAmount, 1, 2)}"></strong>
                                             </td>
+                                            <td></td>
                                         </tr>
                                     </th:block>
                                     </tbody>
+
 
 
                                 </table>

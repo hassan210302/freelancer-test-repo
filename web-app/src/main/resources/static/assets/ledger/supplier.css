@@ -100,6 +100,12 @@
     opacity: 0.5;
 }
 
+.r-supplier-name {
+    font-weight: 900;
+    color: var(--wa-color-blue-40);
+    padding: var(--wa-space-m) var(--wa-space-s);
+}
+
 .r-loading-indicator {
     display: flex;
     justify-content: center;
