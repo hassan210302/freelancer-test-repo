@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="messageFragment">
+    <wa-callout th:if="${message}" 
+                th:variant="${messageType == 'success' ? 'success' : 'danger'}" 
+                open>
+        <wa-icon th:name="${messageType == 'success' ? 'check-circle' : 'exclamation-triangle'}" variant="regular"></wa-icon>
+        <span th:text="${message}"></span>
+    </wa-callout>
+</div>
+
+</html> 

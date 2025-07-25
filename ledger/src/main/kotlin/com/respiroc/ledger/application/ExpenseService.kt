@@ -3,10 +3,12 @@ package com.respiroc.ledger.application
 import com.respiroc.ledger.application.payload.*
 import com.respiroc.ledger.domain.model.Cost
 import com.respiroc.ledger.domain.model.Expense
+import com.respiroc.ledger.domain.model.ExpenseAttachment
 import com.respiroc.ledger.domain.model.ExpenseCategory
 import com.respiroc.ledger.domain.model.ExpenseStatus
 import com.respiroc.ledger.domain.repository.ExpenseRepository
 import com.respiroc.ledger.domain.repository.ExpenseCategoryRepository
+import com.respiroc.ledger.domain.repository.CostRepository
 import com.respiroc.util.context.ContextAwareApi
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,19 +20,28 @@ import java.time.LocalDate
 class ExpenseService(
     private val expenseRepository: ExpenseRepository,
     private val expenseCategoryRepository: ExpenseCategoryRepository,
+    private val costRepository: CostRepository,
     private val accountService: AccountService,
     private val voucherService: VoucherService
 ) : ContextAwareApi {
 
     @Transactional(readOnly = true)
     fun findAllExpensesByTenant(): List<ExpensePayload> {
-        val expenses = expenseRepository.findByTenantIdWithCosts(tenantId())
-        return expenses.map { expense -> toExpensePayload(expense) }
+        val expenses = expenseRepository.findByTenantIdWithCostsAndAttachments(tenantId())
+        return expenses.map { expense -> 
+            // Access attachments within transaction to avoid lazy loading issues
+            val attachmentCount = expense.attachments.size
+            toExpensePayload(expense, attachmentCount)
+        }
     }
 
     fun findExpensesByDate(startDate: LocalDate, endDate: LocalDate): List<ExpensePayload> {
-        val expenses = expenseRepository.findByTenantIdAndDateRangeWithCosts(tenantId(), startDate, endDate)
-        return expenses.map { expense -> toExpensePayload(expense) }
+        val expenses = expenseRepository.findByTenantIdAndDateRangeWithCostsAndAttachments(tenantId(), startDate, endDate)
+        return expenses.map { expense -> 
+            // Access attachments within transaction to avoid lazy loading issues
+            val attachmentCount = expense.attachments.size
+            toExpensePayload(expense, attachmentCount)
+        }
     }
 
     @Transactional(readOnly = true)
@@ -48,6 +59,77 @@ class ExpenseService(
         val savedExpense = expenseRepository.save(expense)
         createVoucherForExpense(savedExpense)
         return toExpensePayload(savedExpense)
+    }
+
+    fun updateExpense(id: Long, payload: CreateExpensePayload): ExpensePayload {
+        val expense = expenseRepository.findById(id)
+            .orElseThrow { IllegalArgumentException("Expense not found") }
+        
+        // Update expense fields
+        expense.title = payload.title
+        expense.description = payload.description
+        expense.expenseDate = payload.expenseDate
+        expense.categoryId = payload.categoryId
+        expense.accountNumber = mapCategoryToAccount(payload.categoryId)
+        expense.amount = payload.costs.sumOf { it.amount }
+        
+        // Delete all existing costs for this expense
+        expenseRepository.deleteCostsByExpenseId(id)
+        
+        // Create new costs
+        val costs = payload.costs.map { costPayload ->
+            val cost = Cost()
+            cost.title = costPayload.title
+            cost.date = costPayload.date
+            cost.amount = costPayload.amount
+            cost.vat = costPayload.vat
+            cost.currency = costPayload.currency
+            cost.paymentType = costPayload.paymentType
+            cost.chargeable = costPayload.chargeable
+            cost.expense = expense
+            cost
+        }
+        
+        // Save expense and costs
+        val savedExpense = expenseRepository.save(expense)
+        costRepository.saveAll(costs)
+        
+        val attachmentCount = expenseRepository.findByIdWithAttachments(savedExpense.id!!)?.attachments?.size ?: 0
+        return toExpensePayload(savedExpense, attachmentCount)
+    }
+
+    fun deleteExpense(id: Long) {
+        val expense = expenseRepository.findById(id)
+            .orElseThrow { IllegalArgumentException("Expense not found") }
+        expenseRepository.delete(expense)
+    }
+
+    @Transactional(readOnly = true)
+    fun findExpenseByIdForEdit(id: Long): ExpensePayload? {
+        val expense = expenseRepository.findByIdWithCosts(id) ?: return null
+        // Get attachment count separately since we can't fetch both collections at once
+        val attachmentCount = expenseRepository.findByIdWithAttachments(id)?.attachments?.size ?: 0
+        return toExpensePayload(expense, attachmentCount)
+    }
+
+    fun addAttachmentsToExpense(expenseId: Long, attachments: List<ByteArray>): ExpensePayload {
+        val expense = expenseRepository.findByIdWithAttachments(expenseId)
+            ?: throw IllegalArgumentException("Expense not found")
+        
+        attachments.forEach { fileData ->
+            val attachment = ExpenseAttachment()
+            attachment.fileData = fileData
+            attachment.expense = expense
+            expense.attachments.add(attachment)
+        }
+        
+        val savedExpense = expenseRepository.save(expense)
+        return toExpensePayload(savedExpense)
+    }
+
+    @Transactional(readOnly = true)
+    fun findExpenseById(id: Long): Expense? {
+        return expenseRepository.findByIdWithAttachments(id)
     }
 
     private fun createExpenseEntity(payload: CreateExpensePayload, createdBy: String): Expense {
@@ -128,7 +210,7 @@ class ExpenseService(
         return if (account != null) accountNumber else "7790"
     }
 
-    private fun toExpensePayload(expense: Expense): ExpensePayload {
+    private fun toExpensePayload(expense: Expense, attachmentCount: Int = 0): ExpensePayload {
         val category = expenseCategoryRepository.findById(expense.categoryId).orElse(null)
         val costPayloads = expense.costs.map { cost ->
             CostPayload(
@@ -142,21 +224,19 @@ class ExpenseService(
                 chargeable = cost.chargeable
             )
         }
-        
+
         return ExpensePayload(
             id = expense.id,
             title = expense.title,
             description = expense.description,
             expenseDate = expense.expenseDate,
             status = expense.status,
-            categoryId = expense.categoryId,
-            categoryName = category?.name ?: "Unknown",
-            project = "-",
-            chargeable = expense.costs.any { it.chargeable },
+            category = category?.name ?: "Unknown",
             amount = expense.amount,
             costs = costPayloads,
             receiptPath = expense.receiptPath,
-            createdBy = expense.createdBy
+            createdBy = expense.createdBy,
+            attachmentCount = attachmentCount
         )
     }
 }

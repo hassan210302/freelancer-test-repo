@@ -1,0 +1,136 @@
+.r-expense-attachments-container {
+    background: var(--wa-color-surface-default);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-top: var(--wa-space-m);
+}
+
+.r-expense-attachments {
+    padding: var(--wa-space-m);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.r-expense-attachments-upload {
+    padding: var(--wa-space-m);
+    border-top: 1px solid var(--wa-color-surface-raised);
+    background: var(--wa-color-surface-raised);
+}
+
+.dropzone-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.2s ease-in-out;
+}
+
+.dropzone-overlay.visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+.dropzone-content {
+    background: var(--wa-color-surface-default);
+    border: 3px dashed var(--wa-color-primary-60);
+    border-radius: 16px;
+    padding: var(--wa-space-xl);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(0.9);
+    transition: transform 0.2s ease-in-out;
+}
+
+.dropzone-overlay.visible .dropzone-content {
+    transform: scale(1);
+}
+
+.dropzone-icon {
+    font-size: 4rem;
+    color: var(--wa-color-primary-60);
+    margin-bottom: var(--wa-space-m);
+    opacity: 0.8;
+}
+
+.dropzone-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--wa-color-gray-20);
+    margin-bottom: var(--wa-space-s);
+}
+
+.dropzone-subtext {
+    font-size: 1rem;
+    color: var(--wa-color-gray-50);
+    opacity: 0.8;
+}
+
+.r-expense-upload-area {
+    border: 2px dashed var(--wa-color-gray-70);
+    border-radius: 8px;
+    padding: var(--wa-space-l);
+    text-align: center;
+    background: var(--wa-color-surface-default);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.r-expense-upload-area:hover {
+    border-color: var(--wa-color-primary-60);
+    background: var(--wa-color-primary-95);
+}
+
+.r-expense-upload-area.dragging {
+    border-color: var(--wa-color-primary-50);
+    background: var(--wa-color-primary-90);
+}
+
+.r-expense-upload-icon {
+    font-size: 3rem;
+    color: var(--wa-color-gray-60);
+    margin-bottom: var(--wa-space-s);
+}
+
+.r-expense-upload-text {
+    color: var(--wa-color-gray-40);
+    font-size: var(--wa-font-size-s);
+    margin-bottom: var(--wa-space-s);
+}
+
+.r-expense-upload-button {
+    margin-top: var(--wa-space-s);
+}
+
+#attachment-messages {
+    margin-top: var(--wa-space-s);
+}
+
+@media (max-width: 768px) {
+    .r-expense-attachments-container {
+        margin-top: var(--wa-space-s);
+    }
+
+    .r-expense-attachments,
+    .r-expense-attachments-upload {
+        padding: var(--wa-space-s);
+    }
+
+    .r-expense-upload-area {
+        padding: var(--wa-space-m);
+    }
+
+    .r-expense-upload-icon {
+        font-size: 2rem;
+    }
+} 

@@ -22,12 +22,10 @@ data class ExpensePayload(
     val description: String,
     val expenseDate: LocalDate,
     val status: ExpenseStatus,
-    val categoryId: Long,
-    val categoryName: String,
-    val project: String,
-    val chargeable: Boolean,
+    val category: String,
     val amount: BigDecimal,
     val costs: List<CostPayload>,
-    val receiptPath: String?,
-    val createdBy: String
+    val receiptPath: String? = null,
+    val createdBy: String,
+    val attachmentCount: Int = 0
 )

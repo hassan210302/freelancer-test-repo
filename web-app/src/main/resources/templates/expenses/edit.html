@@ -1,9 +1,28 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/assets/expenses/expense-attachments.css}">
+    <script src="/assets/expenses/expense-edit.js"></script>
+</head>
 
 <body>
 <main layout:fragment="content">
+    <!-- Drag & Drop Zone -->
+    <div id="dropzone" class="dropzone-overlay">
+        <div id="textnode" class="dropzone-content">
+            <div class="dropzone-icon">
+                <wa-icon name="cloud-upload"></wa-icon>
+            </div>
+            <div class="dropzone-text">
+                Drop files to add to expense
+            </div>
+            <div class="dropzone-subtext">
+                Release to upload
+            </div>
+        </div>
+    </div>
+
     <div class="wa-container">
         <div class="wa-stack wa-gap-m">
 
@@ -12,10 +31,10 @@
                 <span th:text="${error}"></span>
             </div>
 
-            <form th:action="@{/expenses/create}" method="post">
+            <form th:action="@{/expenses/update/{id}(id=${expense.id})}" method="post">
                 <wa-card>
                     <div slot="header">
-                        <h4>New Expense</h4>
+                        <h4>Edit Expense</h4>
                     </div>
 
                     <div class="wa-stack wa-gap-m">
@@ -25,7 +44,8 @@
                                       type="text"
                                       size="small"
                                       required
-                                      placeholder="Expense title">
+                                      placeholder="Expense title"
+                                      th:value="${expense.title}">
                             </wa-input>
                         </div>
 
@@ -35,7 +55,8 @@
                                          size="small"
                                          required
                                          placeholder="Enter expense description..."
-                                         rows="3">
+                                         rows="3"
+                                         th:value="${expense.description}">
                             </wa-textarea>
                         </div>
 
@@ -45,7 +66,7 @@
                                       type="date"
                                       size="small"
                                       required
-                                      th:value="${expenseDate}">
+                                      th:value="${expense.expenseDate}">
                             </wa-input>
                         </div>
 
@@ -55,7 +76,8 @@
                                 <wa-option value="">Select category...</wa-option>
                                 <wa-option th:each="category : ${categories}"
                                            th:value="${category.id}"
-                                           th:text="${category.name}">
+                                           th:text="${category.name}"
+                                           th:selected="${category.name == expense.category}">
                                 </wa-option>
                             </wa-select>
                         </div>
@@ -69,7 +91,8 @@
                                       type="text"
                                       size="small"
                                       required
-                                      placeholder="Cost description">
+                                      placeholder="Cost description"
+                                      th:value="${costTitle}">
                             </wa-input>
                         </div>
 
@@ -82,7 +105,8 @@
                                           step="0.01"
                                           min="0.01"
                                           required
-                                          placeholder="0.00">
+                                          placeholder="0.00"
+                                          th:value="${costAmount}">
                                 </wa-input>
                             </div>
 
@@ -93,39 +117,71 @@
                                           size="small"
                                           min="0"
                                           max="100"
-                                          value="0">
+                                          th:value="${costVat}">
                                 </wa-input>
                             </div>
                         </div>
 
                         <div>
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Payment Type *</label>
-                            <wa-select name="costPaymentType" size="small" required>
+                            <wa-select name="costPaymentType" size="small" required th:value="${costPaymentType}">
                                 <wa-option value="">Select payment type...</wa-option>
                                 <wa-option th:each="paymentType : ${paymentTypes}"
                                            th:value="${paymentType}"
-                                           th:text="${paymentType}">
+                                           th:text="${paymentType}"
+                                           th:selected="${paymentType.toString() == costPaymentType.toString()}">
                                 </wa-option>
                             </wa-select>
                         </div>
 
                         <div>
-                            <wa-checkbox name="costChargeable" value="true">
+                            <wa-checkbox name="costChargeable" 
+                                         value="true"
+                                         th:checked="${costChargeable}">
                                 <span>Chargeable to client</span>
                             </wa-checkbox>
                         </div>
 
                         <wa-divider></wa-divider>
-                        
-                        <div class="wa-callout wa-callout--info">
-                            <wa-icon name="info-circle"></wa-icon>
-                            <span>📎 Attachments can be added after creating the expense from the expense overview page.</span>
+                        <h5>Attachments</h5>
+
+                        <!-- Current Attachments Display -->
+                        <div th:if="${expense.attachmentCount > 0}" class="wa-stack wa-gap-s">
+                            <div class="wa-cluster wa-gap-s" style="align-items: center;">
+                                <wa-icon name="paperclip"></wa-icon>
+                                <span th:text="${expense.attachmentCount + ' attachment(s)'}"></span>
+                            </div>
                         </div>
+                        
+                        <div th:if="${expense.attachmentCount == 0}" class="wa-text-s" style="color: var(--wa-color-gray-50);">
+                            No attachments uploaded yet
+                        </div>
+
+                        <!-- File Upload Area -->
+                        <div class="r-expense-upload-area" onclick="document.getElementById('file-input-edit').click()">
+                            <div class="r-expense-upload-icon">
+                                <wa-icon name="cloud-upload"></wa-icon>
+                            </div>
+                            <div class="r-expense-upload-text">
+                                Drop files anywhere or click to browse
+                            </div>
+                            <wa-button type="button" variant="neutral" size="small" class="r-expense-upload-button">
+                                <wa-icon name="paperclip"></wa-icon>
+                                Choose Files
+                            </wa-button>
+                        </div>
+
+                        <!-- Hidden File Input -->
+                        <input type="file" id="file-input-edit" multiple accept="image/*,application/pdf" style="display:none" />
+                        <input type="hidden" name="expenseId" th:value="${expense.id}" />
+
+                        <!-- Upload Messages -->
+                        <div id="attachment-messages-edit"></div>
 
                         <div class="wa-cluster wa-gap-m">
                             <wa-button type="submit" variant="success">
-                                <wa-icon name="plus" style="margin-right: 0.5rem;"></wa-icon>
-                                Create Expense
+                                <wa-icon name="save" style="margin-right: 0.5rem;"></wa-icon>
+                                Update Expense
                             </wa-button>
 
                             <wa-button type="button" variant="neutral" onclick="window.location.href='/expenses/overview'">
@@ -140,4 +196,4 @@
     </div>
 </main>
 </body>
-</html>
+</html> 
