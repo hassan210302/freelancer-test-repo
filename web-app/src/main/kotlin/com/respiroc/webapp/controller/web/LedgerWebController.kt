@@ -71,9 +71,9 @@ class LedgerWebController(
             val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
             val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
+            val supplierData = postingService.getSuppliers(effectiveStartDate, effectiveEndDate)
 
-            model.addAttribute("generalLedgerData", generalLedgerData)
+            model.addAttribute("supplierData", supplierData)
             model.addAttribute("startDate", effectiveStartDate)
             model.addAttribute("endDate", effectiveEndDate)
 
