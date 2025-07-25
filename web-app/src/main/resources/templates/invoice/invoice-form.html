@@ -12,7 +12,11 @@
         <wa-tab-panel name="details">
             <div class="wa-stack">
                 <wa-card>customer</wa-card>
-                <wa-card>date</wa-card>
+                <wa-card>
+                    <wa-input id="daysUntilDue" name="daysUntilDue" value="0" min="0" size="small"
+                              label="days until due" type="number"
+                              style="width: 300px"></wa-input>
+                </wa-card>
                 <wa-card>
                     <div slot="header" class="wa-split">
                         Lines
@@ -49,11 +53,12 @@
                             </td>
                             <td>
                                 <r-combobox
-                                            name="vat"
-                                            placeholder="Select VAT code..."
-                                            style="font-size: var(--wa-font-size-xs);">
+                                        name="vat"
+                                        placeholder="Select VAT code..."
+                                        style="font-size: var(--wa-font-size-xs);">
                                 </r-combobox>
-                                <wa-input name="hidden-vat" type="number" value="0" class="wa-visually-hidden" ></wa-input>
+                                <wa-input name="hidden-vat" type="number" value="0"
+                                          class="wa-visually-hidden"></wa-input>
                             </td>
                             <td class="amount">0.00</td>
                             <td>
@@ -88,7 +93,21 @@
     </script>
     <script th:src="@{/assets/cache-config.js}"></script>
     <script th:src="@{/assets/vat-codes.js}"></script>
-
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('daysUntilDue');
+            if (!input) return;
+            const updateLabel = () => {
+                const days = parseInt(input.value, 10) || 0;
+                const futureDate = new Date();
+                futureDate.setDate(futureDate.getDate() + days);
+                const formattedDate = futureDate.toLocaleDateString();
+                input.setAttribute('label', `days until due: ${formattedDate}`);
+            };
+            input.addEventListener('input', updateLabel);
+            updateLabel();
+        });
+    </script>
     <script>
         async function initializeExistingPostingComboboxes() {
             try {
@@ -114,6 +133,7 @@
                 console.error('Error initializing posting comboboxes:', error);
             }
         }
+
         window.addEventListener('vat-codes-cached', (e) => {
             initializeExistingPostingComboboxes();
         });
