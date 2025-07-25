@@ -106,4 +106,34 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
     ): List<Array<Any>>
+
+    @Query(
+        """
+    SELECT 
+        c.name,
+        p.accountNumber,
+        p.amount,
+        p.postingDate,
+        p.currency
+        
+    FROM
+        Supplier s
+    JOIN
+        Company c ON s.companyId = c.id
+    JOIN
+        Tenant t ON c.id = t.companyId
+    JOIN
+        Posting p ON t.id = p.tenantId
+    WHERE 
+        p.accountNumber = '2400'
+    AND 
+        p.postingDate BETWEEN :startDate AND :endDate
+    ORDER BY
+        c.name
+"""
+    )
+    fun findSuppliersByDateRange(
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate
+    ): List<Array<Any>>
 }

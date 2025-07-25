@@ -9,6 +9,8 @@ import com.respiroc.ledger.application.payload.GeneralLedgerAccountEntry
 import com.respiroc.ledger.application.payload.GeneralLedgerPostingEntry
 import com.respiroc.ledger.application.payload.ProfitLossEntry
 import com.respiroc.ledger.application.payload.ProfitLossDTO
+import com.respiroc.ledger.application.payload.SupplierDTO
+import com.respiroc.ledger.application.payload.SupplierPostingDTO
 import com.respiroc.ledger.domain.model.AccountType
 import com.respiroc.ledger.domain.repository.PostingRepository
 import com.respiroc.util.context.ContextAwareApi
@@ -188,4 +190,42 @@ class PostingService(
             totalAmount = totalAmount
         )
     }
+
+    @Transactional(readOnly = true)
+    fun getSuppliers(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): List<SupplierDTO> {
+
+        val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
+        val rawData = postingRepository.findSuppliersByDateRange(startDate, endDate)
+
+        val grouped = rawData.groupBy { row -> row[0] as String }
+
+        return grouped.map { (supplierName, rows) ->
+            val postings = rows.mapNotNull { row ->
+                val accountNumber = row[1] as String
+                val amount = row[2] as BigDecimal
+                val postingDate = row[3] as LocalDate
+                val currency = row[4] as String
+                val account = accounts[accountNumber]
+
+                if (account != null) {
+                    SupplierPostingDTO(
+                        accountNumber = row[1] as String,
+                        accountName = account.accountName,
+                        amount = amount,
+                        postingDate = postingDate,
+                        currency = currency
+                    )
+                } else null
+            }
+            SupplierDTO(
+                name = supplierName,
+                postings = postings,
+                totalAmount = postings.sumOf { it.amount }
+            )
+        }
+    }
+
 }
