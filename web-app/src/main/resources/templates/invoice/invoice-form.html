@@ -12,11 +12,17 @@
         <wa-tab-panel name="details">
             <div class="wa-stack">
                 <wa-card>
+                    <div slot="header" class="wa-split">
+                        Customer
+                    </div>
                     <div style="max-width: 300px">
                         <div th:replace="fragments/customer-search :: customerSearch"></div>
                     </div>
                 </wa-card>
                 <wa-card>
+                    <div slot="header" class="wa-split">
+                        Date
+                    </div>
                     <wa-input id="daysUntilDue" name="daysUntilDue" value="0" min="0" size="small"
                               label="days until due" type="number"
                               style="width: 300px">
@@ -26,7 +32,6 @@
                     <div slot="header" class="wa-split">
                         Lines
                     </div>
-
                     <table id="invoiceTable" border="1">
                         <thead>
                         <tr>
