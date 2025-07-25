@@ -13,6 +13,7 @@ data class SupplierPostingDTO(
 
 data class SupplierDTO(
     val name: String,
+    val organizationNumber: String,
     val postings: List<SupplierPostingDTO>,
     val totalAmount: BigDecimal
 )

@@ -200,9 +200,13 @@ class PostingService(
         val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
         val rawData = postingRepository.findSuppliersByDateRange(startDate, endDate)
 
-        val grouped = rawData.groupBy { row -> row[0] as String }
+        val grouped = rawData.groupBy { row ->
+            Pair(row[0] as String, row[5] as String)
+        }
 
-        return grouped.map { (supplierName, rows) ->
+        return grouped.map { (key, rows) ->
+            val (supplierName, organizationNumber) = key
+
             val postings = rows.mapNotNull { row ->
                 val accountNumber = row[1] as String
                 val amount = row[2] as BigDecimal
@@ -212,7 +216,7 @@ class PostingService(
 
                 if (account != null) {
                     SupplierPostingDTO(
-                        accountNumber = row[1] as String,
+                        accountNumber = accountNumber,
                         accountName = account.accountName,
                         amount = amount,
                         postingDate = postingDate,
@@ -220,8 +224,10 @@ class PostingService(
                     )
                 } else null
             }
+
             SupplierDTO(
                 name = supplierName,
+                organizationNumber = organizationNumber,
                 postings = postings,
                 totalAmount = postings.sumOf { it.amount }
             )

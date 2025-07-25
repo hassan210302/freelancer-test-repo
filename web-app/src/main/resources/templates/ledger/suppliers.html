@@ -1,46 +1,137 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
+<head>
+    <link rel="stylesheet" th:href="@{/assets/ledger/supplier.css}">
+</head>
 
 <body>
 <main layout:fragment="content">
-    <div class="wa-container">
-        <div class="wa-stack wa-gap-s">
+    <div >
 
-            <wa-card>
-                <div class="wa-cluster">
-                    <div class="wa-stack wa-gap-xs">
-                        <label class="wa-body-s" style="font-weight: 500;">Start Date 13213</label>
-                        <wa-input type="date"
-                                  name="startDate"
-                                  size="small"
-                                  th:value="${startDate}"
-                                  th:hx-get="'/htmx/ledger/general'"
-                                  th:hx-target="'#tableContent'"
-                                  th:hx-indicator="'#loading-indicator'"
-                                  th:hx-trigger="'change'"
-                                  th:hx-include="'[name=\'endDate\'], [name=\'accountNumber\']'"></wa-input>
+
+            <div class="r-supplier-container">
+
+                <div class="r-filters-section">
+
+                    <div div class="r-filters-form" th:if="${user != null and user.ctx.currentTenant != null}">
+
+                        <div class="r-filter-group">
+                            <label class="r-filter-label" for="startDate" th:text="#{start_date}" />
+                            <wa-input type="date"
+                                      name="startDate"
+                                      id="startDate"
+                                      size="small"
+                                      th:value="${startDate}"
+                                      th:hx-get="'/htmx/ledger/suppliers'"
+                                      th:hx-target="'#tableContent'"
+                                      th:hx-indicator="'#loading-indicator'"
+                                      th:hx-trigger="'change'"
+                                      th:hx-include="'[name=\'endDate\'], [name=\'accountNumber\']'"></wa-input>
+                        </div>
+
+                        <div class="r-filter-group">
+                            <label class="r-filter-label" for="endDate" th:text="#{end_date}" />
+                            <wa-input type="date"
+                                      name="endDate"
+                                      id="endDate"
+                                      size="small"
+                                      th:value="${endDate}"
+                                      th:hx-get="'/htmx/ledger/suppliers'"
+                                      th:hx-target="'#tableContent'"
+                                      th:hx-indicator="'#loading-indicator'"
+                                      th:hx-trigger="'change'"
+                                      th:hx-include="'[name=\'startDate\'], [name=\'accountNumber\']'"></wa-input>
+                        </div>
+
+                        <div class="r-filter-group">
+                            <label class="wa-body-s" style="font-weight: 500;">Supplier</label>
+                                                    <wa-select name="supplier"
+                                                               size="small"
+                                                    >
+                                                        <wa-option value="All" selected>(All)</wa-option>
+                                                    </wa-select>
+                        </div>
+
+                        <div class="r-filter-group">
+                            <div id="loading-indicator" class="htmx-indicator r-loading-indicator">
+                                <wa-spinner size="small"></wa-spinner>
+                                <span style="margin-left: var(--wa-space-s);" th:text="#{loading}" />
+                            </div>
+                        </div>
+
                     </div>
-
-                    <div class="wa-stack wa-gap-xs">
-                        <label class="wa-body-s" style="font-weight: 500;">End Date</label>
-                        <wa-input type="date"
-                                  name="endDate"
-                                  size="small"
-                                  th:value="${endDate}"
-                                  th:hx-get="'/htmx/ledger/general'"
-                                  th:hx-target="'#tableContent'"
-                                  th:hx-indicator="'#loading-indicator'"
-                                  th:hx-trigger="'change'"
-                                  th:hx-include="'[name=\'startDate\'], [name=\'accountNumber\']'"></wa-input>
-                    </div>
-
-
                 </div>
-            </wa-card>
+
+                <div id="content-area">
+                    <div th:fragment="tableContent">
+                        <div th:unless="${#lists.isEmpty(supplierData)}">
+                            <div style="overflow-x: auto;">
+
+                                <table class="r-supplier-table">
+                                    <thead>
+
+                                    <tr>
+                                        <th style="width: 20%;" th:text="#{invoice_no}" />
+                                        <th style="width: 20%;" th:text="#{date}" />
+                                        <th style="width: 20%;" th:text="#{date}" />
+                                        <th class="r-amount-header" style="width: 20%;" th:text="#{amount}" />
+                                        <th style="width: 20%;" th:text="#{currency}" />
+                                    </tr>
+
+                                    </thead>
+                                    <tbody>
+                                    <th:block th:each="supplier : ${supplierData}">
+                                        <tr>
+                                            <td style="width: 25%" th:text="${supplier.name + ' (' + supplier.organizationNumber + ')'}"></td>
+                                            <td style="width: 20%;"></td>
+                                            <td style="width: 20%;"></td>
+                                            <td style="width: 20%;"></td>
+                                            <td class="r-amount-header" style="width: 20%;"></td>
+                                        </tr>
 
 
-        </div>
+                                        <tr th:each="posting : ${supplier.postings}">
+                                            <td th:text="${posting.accountNumber}"></td>
+                                            <td th:text="${posting.postingDate}"></td>
+                                            <td th:text="${posting.accountName}"></td>
+                                            <td class="r-amount-header" th:text="${posting.amount}"></td>
+                                            <td th:text="${posting.currency}"></td>
+                                        </tr>
+
+
+                                        <tr class="r-total-row" >
+                                            <td colspan="2" style="text-align: center;"><strong th:text="#{total}" /></td>
+                                            <td class="r-amount-cell">
+                                                <strong th:text="${#numbers.formatDecimal(supplier.totalAmount, 1, 2)}" />
+                                            </td>
+                                        </tr>
+                                    </th:block>
+                                    </tbody>
+
+
+                                </table>
+
+
+
+                            </div>
+                        </div>
+
+
+                        <div th:if="${#lists.isEmpty(supplierData)}" class="r-empty-state">
+                            <div class="r-empty-state-icon">
+                                <wa-icon name="table"></wa-icon>
+                            </div>
+                            <h3 th:text="#{no_Data_available}" />
+                            <p th:text="#{no_posting_found}" />
+                            <p th:text="#{try_adjusting_date}" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
     </div>
 </main>
 </body>
