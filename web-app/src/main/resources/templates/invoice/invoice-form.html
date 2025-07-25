@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
+<head>
+    <th:block th:replace="~{fragments/r-combobox :: r-combobox-dependencies}"></th:block>
+</head>
 <body>
-
 <main layout:fragment="content">
     <wa-tab-group>
         <wa-tab panel="details">Details</wa-tab>
         <wa-tab panel="sending">Sending</wa-tab>
         <wa-tab-panel name="details">
             <div class="wa-stack">
-                <wa-card>1</wa-card>
-                <wa-card>2</wa-card>
+                <wa-card>customer</wa-card>
+                <wa-card>date</wa-card>
                 <wa-card>
                     <div slot="header" class="wa-split">
                         Lines
@@ -31,19 +33,27 @@
                         <tbody id="invoiceBody">
                         <tr>
                             <td>
-                                <wa-input name="productName" size="small" style="width: 400px;"></wa-input>
+                                <wa-input name="productName" size="small" style="width: 300px;"></wa-input>
                             </td>
                             <td>
-                                <wa-input name="quantity" type="number" value="1" size="small" style="width: 80px;"></wa-input>
+                                <wa-input name="quantity" min="0" type="number" value="1" size="small"
+                                          style="width: 80px;"></wa-input>
                             </td>
                             <td>
-                                <wa-input name="unitPrice" type="number" value="0" size="small" style="width: 120px;"></wa-input>
+                                <wa-input name="unitPrice" type="number" value="0" size="small"
+                                          style="width: 120px;"></wa-input>
                             </td>
                             <td>
-                                <wa-input name="discount" type="number" value="0" size="small" style="width: 80px;"></wa-input>
+                                <wa-input name="discount" min="0" type="number" value="0" size="small"
+                                          style="width: 80px;"></wa-input>
                             </td>
                             <td>
-                                <wa-input name="vat" type="number" value="0" size="small" style="width: 80px;"></wa-input>
+                                <r-combobox
+                                            name="vat"
+                                            placeholder="Select VAT code..."
+                                            style="font-size: var(--wa-font-size-xs);">
+                                </r-combobox>
+                                <wa-input name="hidden-vat" type="number" value="0" class="wa-visually-hidden" ></wa-input>
                             </td>
                             <td class="amount">0.00</td>
                             <td>
@@ -73,86 +83,118 @@
 </main>
 
 <th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        let vatCodes = [];
+    </script>
+    <script th:src="@{/assets/cache-config.js}"></script>
+    <script th:src="@{/assets/vat-codes.js}"></script>
+
     <script>
+        async function initializeExistingPostingComboboxes() {
+            try {
+                const vatCodes = await window.getVatCodes();
+                const vatItems = vatCodes.map(vat => ({
+                    value: vat.code,
+                    title: vat.code,
+                    subtitle: '(' + vat.rate + '%) - ' + vat.description,
+                    displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
+                }));
+
+                document.querySelectorAll('r-combobox').forEach(combobox => {
+                    combobox.items = vatItems;
+                    combobox.addEventListener('change', (e) => {
+                        const row = e.target.closest('tr');
+                        const input = row.querySelector('wa-input[name="hidden-vat"]');
+                        console.log(vatCodes);
+                        input.value = vatCodes.find(v => v.code === e.detail.value).rate;
+                        updateAmount(row);
+                    });
+                });
+            } catch (error) {
+                console.error('Error initializing posting comboboxes:', error);
+            }
+        }
+        window.addEventListener('vat-codes-cached', (e) => {
+            initializeExistingPostingComboboxes();
+        });
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            await initializeExistingPostingComboboxes();
+        });
+    </script>
+    <script>
+        const tbody = document.getElementById('invoiceBody');
+
         function getValue(row, name) {
-            const input = row.querySelector(`wa-input[name="${name}"]`);
-            return parseFloat(input?.value || input?.getAttribute("value") || 0);
+            const input = row.querySelector(`wa-input[name*="${name}"]`);
+            return parseFloat(input?.value || input?.getAttribute('value') || 0);
         }
 
-        function updateAmount(el) {
-            const row = el.closest('tr');
+        function updateAmount(row) {
             const qty = getValue(row, 'quantity');
             const price = getValue(row, 'unitPrice');
             const discount = getValue(row, 'discount');
-            const vat = getValue(row, 'vat');
+            const vat = getValue(row, 'hidden-vat');
 
             const discounted = price * (1 - discount / 100);
             const subtotal = qty * discounted;
-            const totalWithVat = subtotal * (1 + vat / 100);
+            const total = subtotal * (1 + vat / 100);
 
-            row.querySelector('.amount').textContent = totalWithVat.toFixed(2);
+            row.querySelector('.amount').textContent = total.toFixed(2);
         }
 
-        function attachEvents(row) {
-            row.querySelectorAll('wa-input').forEach(input => {
-                input.addEventListener('input', () => updateAmount(input));
-            });
-            // Initial calculation on attach
-            updateAmount(row.querySelector('wa-input'));
-        }
+        tbody.addEventListener('input', e => {
+            if (e.target.tagName.toLowerCase() === 'wa-input') {
+                const row = e.target.closest('tr');
+                updateAmount(row);
+            }
+        });
 
         function deleteRow(icon) {
-            const tbody = icon.closest('tbody');
             const rows = tbody.querySelectorAll('tr');
             if (rows.length > 1) {
-                const row = icon.closest('tr');
-                row.remove();
+                icon.closest('tr').remove();
             } else {
                 alert("Cannot delete the last remaining row.");
             }
         }
 
         function duplicateRow(icon) {
-            const originalRow = icon.closest('tr');
-            const newRow = originalRow.cloneNode(false); // clone row only
+            const original = icon.closest('tr');
+            const clone = original.cloneNode(true);
 
-            originalRow.querySelectorAll('td').forEach(td => {
-                const newTd = td.cloneNode(false);
-                const waInput = td.querySelector('wa-input');
-
-                if (waInput) {
-                    const inputClone = waInput.cloneNode(true);
-                    // copy current live value to new input's value attribute
-                    inputClone.setAttribute('value', waInput.value || waInput.getAttribute('value') || '');
-                    newTd.appendChild(inputClone);
-                } else {
-                    newTd.innerHTML = td.innerHTML; // amount and actions
-                }
-                newRow.appendChild(newTd);
+            original.querySelectorAll('wa-input').forEach((input, i) => {
+                const cloneInput = clone.querySelectorAll('wa-input')[i];
+                cloneInput.setAttribute('value', input.value || input.getAttribute('value') || '');
+            });
+            original.querySelectorAll('r-combobox').forEach((input, i) => {
+                const cloneInput = clone.querySelectorAll('r-combobox')[i];
+                cloneInput.setAttribute('value', input.value || input.getAttribute('value') || '');
             });
 
-            attachEvents(newRow);
-            originalRow.parentNode.insertBefore(newRow, originalRow.nextSibling);
+            tbody.insertBefore(clone, original.nextSibling);
+            updateAmount(clone);
+            initializeExistingPostingComboboxes()
         }
 
         function addRow() {
-            const rowTemplate = document.querySelector('#invoiceBody tr');
-            const clone = rowTemplate.cloneNode(true);
+            const template = tbody.querySelector('tr');
+            const clone = template.cloneNode(true);
+
             clone.querySelectorAll('wa-input').forEach(input => {
                 const name = input.getAttribute('name');
-                if (name === 'quantity') input.setAttribute('value', '1');
-                else if (name === 'discount') input.setAttribute('value', '0'); // zero discount
+                if (name.includes('quantity')) input.setAttribute('value', '1');
+                else if (name.includes('discount')) input.setAttribute('value', '0');
                 else input.setAttribute('value', '0');
             });
+
             clone.querySelector('.amount').textContent = '0.00';
-            attachEvents(clone);
-            document.querySelector('#invoiceBody').appendChild(clone);
+            tbody.appendChild(clone);
+            updateAmount(clone);
+            initializeExistingPostingComboboxes()
         }
 
-
-        // Initialize event listeners and calculation for all existing rows on page load
-        document.querySelectorAll('#invoiceBody tr').forEach(row => attachEvents(row));
-
+        tbody.querySelectorAll('tr').forEach(updateAmount);
     </script>
 </th:block>
 </body>
