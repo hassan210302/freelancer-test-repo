@@ -88,7 +88,7 @@ class ExpenseWebController(
         return "expenses/edit"
     }
 
-    @PostMapping("/create")
+    @PostMapping("/create", consumes = ["multipart/form-data"])
     fun createExpense(
         @RequestParam title: String,
         @RequestParam description: String,
@@ -99,6 +99,7 @@ class ExpenseWebController(
         @RequestParam costVat: Int,
         @RequestParam costPaymentType: PaymentType,
         @RequestParam(defaultValue = "false") costChargeable: Boolean,
+        @RequestParam(name = "attachments", required = false) attachments: List<MultipartFile>?,
         model: Model
     ): String {
         return try {
@@ -120,7 +121,11 @@ class ExpenseWebController(
                 costs = listOf(costPayload)
             )
 
-            expenseService.createExpense(payload, springUser().username ?: "system")
+            val created = expenseService.createExpense(payload, springUser().username ?: "system")
+
+            if (!attachments.isNullOrEmpty()) {
+                expenseService.addAttachmentsToExpense(created.id, attachments.map { it.bytes })
+            }
             "redirect:/expenses/overview"
         } catch (e: Exception) {
             val categories = expenseService.findAllActiveCategories()
@@ -132,7 +137,7 @@ class ExpenseWebController(
         }
     }
 
-    @PostMapping("/update/{id}")
+    @PostMapping("/update/{id}", consumes = ["multipart/form-data"])
     fun updateExpense(
         @PathVariable id: Long,
         @RequestParam title: String,
@@ -144,6 +149,7 @@ class ExpenseWebController(
         @RequestParam costVat: Int,
         @RequestParam costPaymentType: PaymentType,
         @RequestParam(defaultValue = "false") costChargeable: Boolean,
+        @RequestParam(name = "attachments", required = false) attachments: List<MultipartFile>?,
         model: Model
     ): String {
         return try {
@@ -166,6 +172,10 @@ class ExpenseWebController(
             )
 
             expenseService.updateExpense(id, payload)
+
+            if (!attachments.isNullOrEmpty()) {
+                expenseService.addAttachmentsToExpense(id, attachments.map { it.bytes })
+            }
             "redirect:/expenses/overview"
         } catch (e: Exception) {
             val categories = expenseService.findAllActiveCategories()

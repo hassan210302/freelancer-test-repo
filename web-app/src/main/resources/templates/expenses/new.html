@@ -2,8 +2,65 @@
 <html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:th="http://www.thymeleaf.org">
 
+<head>
+    <script src="/assets/expenses/expense-drag-drop.js"></script>
+    <style>
+        #dropzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+        }
+        #textnode {
+            background: var(--wa-color-surface-default);
+            border: 3px dashed var(--wa-color-primary-60);
+            border-radius: 16px;
+            padding: var(--wa-space-xl);
+            text-align: center;
+            font-size: 42px;
+            font-weight: 600;
+            color: var(--wa-color-primary-60);
+        }
+        .attachment-upload-area {
+            border: 2px dashed var(--wa-color-gray-70);
+            border-radius: 8px;
+            padding: var(--wa-space-l);
+            text-align: center;
+            background: var(--wa-color-surface-default);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .attachment-upload-area:hover {
+            border-color: var(--wa-color-primary-60);
+            background: var(--wa-color-primary-95);
+        }
+        .upload-icon {
+            margin-bottom: var(--wa-space-s);
+        }
+        .upload-text {
+            color: var(--wa-color-gray-20);
+            margin-bottom: var(--wa-space-xs);
+        }
+        .upload-subtext {
+            color: var(--wa-color-gray-50);
+            font-size: var(--wa-font-size-s);
+        }
+    </style>
+</head>
+
 <body>
 <main layout:fragment="content">
+    <div style="visibility:hidden; opacity:0" id="dropzone">
+        <div id="textnode">Drop files anywhere</div>
+    </div>
+
     <div class="wa-container">
         <div class="wa-stack wa-gap-m">
 
@@ -12,7 +69,7 @@
                 <span th:text="${error}"></span>
             </div>
 
-            <form th:action="@{/expenses/create}" method="post">
+            <form th:action="@{/expenses/create}" method="post" enctype="multipart/form-data">
                 <wa-card>
                     <div slot="header">
                         <h4>New Expense</h4>
@@ -117,9 +174,27 @@
 
                         <wa-divider></wa-divider>
                         
-                        <div class="wa-callout wa-callout--info">
-                            <wa-icon name="info-circle"></wa-icon>
-                            <span>📎 Attachments can be added after creating the expense from the expense overview page.</span>
+                        <wa-divider></wa-divider>
+                        <h5>Attachments</h5>
+
+                        <div class="attachment-upload-area" onclick="document.getElementById('file-input').click()">
+                            <div class="upload-icon">
+                                <wa-icon name="cloud-upload" style="font-size: 2rem; color: var(--wa-color-primary-60);"></wa-icon>
+                            </div>
+                            <div class="upload-text">
+                                <strong>Drop files here or click to browse</strong>
+                            </div>
+                            <div class="upload-subtext">
+                                Supports PDF and image files
+                            </div>
+                        </div>
+
+                        <!-- Hidden File Input -->
+                        <input type="file" id="file-input" name="attachments" multiple accept="image/*,application/pdf" style="display: none;" />
+                        
+                        <!-- File Feedback -->
+                        <div class="file-feedback" style="margin-top: var(--wa-space-s); color: var(--wa-color-gray-40); font-size: var(--wa-font-size-s);">
+                            No files selected
                         </div>
 
                         <div class="wa-cluster wa-gap-m">

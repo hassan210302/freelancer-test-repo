@@ -87,7 +87,7 @@
                                 <td th:text="${#temporals.format(expense.expenseDate, 'dd.MM.yyyy')}"></td>
                                 <td th:text="${expense.description}"></td>
                                 <td>
-                                    <wa-tag size="small" th:text="${expense.categoryName}"></wa-tag>
+                                    <wa-tag size="small" th:text="${expense.category}"></wa-tag>
                                 </td>
                                 <td style="text-align: right; font-weight: 600;" th:text="${expense.amount + ' NOK'}"></td>
                             </tr>
