@@ -119,7 +119,7 @@ class LedgerHTMXController(
 
     @GetMapping("/suppliers")
     @HxRequest
-    fun suppliers(
+    fun suppliersHTMX(
         @RequestParam(name = "startDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         startDate: LocalDate?,
@@ -130,17 +130,20 @@ class LedgerHTMXController(
         supplierName: String?,
         model: Model
     ): String {
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
-            val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val supplierData = if (supplierName == null || supplierName == "All") {
+            postingService.getSuppliers(effectiveStartDate, effectiveEndDate)
+        } else {
+            postingService.getSuppliersBySupplierName(effectiveStartDate, effectiveEndDate, supplierName)
+        }
 
-            val supplierData = postingService.getSuppliersBySupplierName(effectiveStartDate, effectiveEndDate,supplierName)
+        model.addAttribute("supplierData", supplierData)
+        model.addAttribute("startDate", effectiveStartDate)
+        model.addAttribute("endDate", effectiveEndDate)
 
-            model.addAttribute("supplierData", supplierData)
-            model.addAttribute("startDate", effectiveStartDate)
-            model.addAttribute("endDate", effectiveEndDate)
-
-            return "ledger/suppliers :: tableContent"
-
+        return "ledger/suppliers :: tableContent"
     }
+
 }
