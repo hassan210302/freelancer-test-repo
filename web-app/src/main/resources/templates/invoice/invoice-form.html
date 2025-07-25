@@ -211,6 +211,7 @@
                 const name = input.getAttribute('name');
                 if (name.includes('quantity')) input.setAttribute('value', '1');
                 else if (name.includes('discount')) input.setAttribute('value', '0');
+                else if (name.includes('productName')) input.setAttribute('value', '');
                 else input.setAttribute('value', '0');
             });
 
