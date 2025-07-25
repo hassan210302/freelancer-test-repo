@@ -33,8 +33,24 @@ window.addEventListener("dragover", function (e) {
     e.preventDefault();
 });
 
-function addSingleFile(file) {
-    selectedFiles = [file];
+function addFiles(files) {
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const existingFile = selectedFiles.find(f => f.name === file.name && f.size === file.size);
+        if (!existingFile) {
+            selectedFiles.push(file);
+        }
+    }
+    updateFileInput();
+}
+
+function removeFile(fileName) {
+    selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+    updateFileInput();
+}
+
+function clearSelectedFiles() {
+    selectedFiles = [];
     updateFileInput();
 }
 
@@ -56,8 +72,11 @@ function updateLabel() {
     
     if (selectedFiles.length === 0) {
         label.textContent = "No files selected";
-    } else {
+    } else if (selectedFiles.length === 1) {
         label.textContent = `1 file selected: ${selectedFiles[0].name}`;
+    } else {
+        const fileNames = selectedFiles.map(file => file.name).join(", ");
+        label.textContent = `${selectedFiles.length} files selected: ${fileNames}`;
     }
 }
 
@@ -68,7 +87,7 @@ window.addEventListener("drop", function (e) {
     document.querySelector("#textnode").style.fontSize = "42px";
 
     if (e.dataTransfer.files.length > 0) {
-        addSingleFile(e.dataTransfer.files[0]);
+        addFiles(Array.from(e.dataTransfer.files));
     } else {
         alert("No files dropped.");
     }
@@ -79,9 +98,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
-                addSingleFile(this.files[0]);
-                this.value = '';
+                addFiles(Array.from(this.files));
             }
         });
     }
+    
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById("file-input");
+        });
+    }
+    
+    document.addEventListener('submit', function(e) {
+        if (e.target.tagName === 'FORM') {
+            setTimeout(() => {
+                clearSelectedFiles();
+            }, 100);
+        }
+    });
 }); 
