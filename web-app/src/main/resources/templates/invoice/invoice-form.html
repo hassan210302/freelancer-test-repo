@@ -44,18 +44,18 @@
                     <tbody id="invoiceBody">
                     <tr>
                         <td>
-                            <wa-input size="small" style="width: 300px;" name="itemName"></wa-input>
+                            <wa-input size="small" style="width: 300px;" name="itemName" value=""></wa-input>
                         </td>
                         <td>
                             <wa-input type="number" min="0" value="1" size="small" style="width: 80px;"
                                       name="quantity"></wa-input>
                         </td>
                         <td>
-                            <wa-input type="number" min="0" value="0" size="small" style="width: 120px;"
+                            <wa-input type="number" value="0" size="small" style="width: 120px;"
                                       name="unitPrice"></wa-input>
                         </td>
                         <td>
-                            <wa-input type="number" min="0" value="0" size="small" style="width: 80px;"
+                            <wa-input type="number" min="0" max="100" value="0" size="small" style="width: 80px;"
                                       name="discount"></wa-input>
                         </td>
                         <td>
@@ -77,8 +77,16 @@
                     </tbody>
                     <tfoot>
                     <tr>
-                        <td colspan="7" style="text-align: left;">
-                            <wa-button type="button" variant="neutral" data-action="add-row">+ Add Row</wa-button>
+                        <td colspan="4"></td>
+                        <td style="text-align: right;">Total:</td>
+                        <td id="invoiceTotal">0.00</td>
+                        <td>
+                            <wa-button type="button" variant="neutral" data-action="add-row">
+                                <div class="wa-flank">
+                                    <wa-icon label="add" name="plus" variant="solid" title="add"></wa-icon>
+                                    <div>Add Row</div>
+                                </div>
+                            </wa-button>
                         </td>
                     </tr>
                     </tfoot>
@@ -121,6 +129,13 @@
             row.querySelector('.amount').textContent = total.toFixed(2);
         };
 
+        const updateTotal = () => {
+            const tbody = document.getElementById('invoiceBody');
+            const total = Array.from(tbody.querySelectorAll('tr'))
+                .reduce((sum, row) => sum + parseFloat(row.querySelector('.amount')?.textContent || 0), 0);
+            document.getElementById('invoiceTotal').textContent = total.toFixed(2);
+        };
+
         const setupRow = (row) => {
             const combobox = row.querySelector('r-combobox');
             if (combobox) {
@@ -134,6 +149,7 @@
                     const vatCodeInput = row.querySelector('wa-input[name="vatCode"]');
                     vatCodeInput.value = e.detail.value;
                     updateAmount(row);
+                    updateTotal();
                 });
             }
         };
@@ -180,7 +196,11 @@
             updateDueDate();
             invoiceDateInput.addEventListener('change', updateDueDate);
             daysInput.addEventListener('input', updateDueDate);
-            tbody.querySelectorAll('tr').forEach(setupRow);
+            tbody.querySelectorAll('tr').forEach(row => {
+                setupRow(row);
+                updateAmount(row);
+            });
+            updateTotal();
 
             form.addEventListener('submit', (event) => {
                 event.preventDefault();
@@ -209,6 +229,7 @@
                 if (e.target.closest('wa-input')) {
                     const row = e.target.closest('tr');
                     updateAmount(row);
+                    updateTotal();
                 }
             });
 
@@ -216,6 +237,8 @@
                 const newRow = cloneRow(tbody.querySelector('tr'));
                 tbody.appendChild(newRow);
                 setupRow(newRow);
+                updateAmount(newRow);
+                updateTotal();
             });
 
             tbody.addEventListener('click', (e) => {
@@ -227,6 +250,7 @@
 
                 if (action === 'delete') {
                     if (tbody.rows.length > 1) row.remove();
+                    updateTotal();
                 } else if (action === 'duplicate') {
                     const clone = row.cloneNode(true);
                     const origInputs = row.querySelectorAll('wa-input, r-combobox');
@@ -236,6 +260,8 @@
                     });
                     row.parentNode.insertBefore(clone, row.nextSibling);
                     setupRow(clone);
+                    updateAmount(clone);
+                    updateTotal();
                 }
             });
         };
