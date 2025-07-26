@@ -28,9 +28,7 @@
                 </div>
             </wa-card>
             <wa-card style="overflow: auto">
-                <div slot="header">
-                    Lines
-                </div>
+                <div slot="header">Lines</div>
                 <table id="invoiceTable">
                     <thead>
                     <tr>
@@ -77,10 +75,14 @@
                         </td>
                     </tr>
                     </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="7" style="text-align: left;">
+                            <wa-button type="button" variant="neutral" data-action="add-row">+ Add Row</wa-button>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
-                <wa-button type="button" variant="primary" data-action="add-row">
-                    + Add Row
-                </wa-button>
             </wa-card>
             <wa-input name="currencyCode" value="NOK" class="wa-visually-hidden" tabindex="-1"></wa-input>
             <wa-button type="submit" variant="success" style="width: fit-content">Submit Invoice</wa-button>
