@@ -1,8 +1,7 @@
 <div th:fragment="customerSearch">
     <div style="position: relative;">
         <wa-input placeholder="Search customer"
-                  size="small"
-                  name="name"
+                  autocomplete="off"
                   type="text"
                   id="customer-search-search-input"
                   hx-get="/htmx/contact/customer/search/dropdown"
@@ -19,6 +18,13 @@
                  max-height: 300px; overflow-y: auto; z-index: 10; display: none;">
         </div>
     </div>
+    <script>
+        document.getElementById('customer-search-search-input')
+            .addEventListener('htmx:configRequest', e =>
+                e.detail.parameters.name =
+                    e.target.value || e.target.getAttribute('value') || ''
+            );
+    </script>
 </div>
 
 <div th:fragment="items">

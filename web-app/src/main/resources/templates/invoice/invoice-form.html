@@ -6,99 +6,91 @@
 </head>
 <body>
 <main layout:fragment="content">
-    <wa-tab-group>
-        <wa-tab panel="details">Details</wa-tab>
-        <wa-tab panel="sending">Sending</wa-tab>
-        <wa-tab-panel name="details">
-            <div class="wa-stack">
-                <wa-card>
-                    <div slot="header">
-                        Customer
-                    </div>
-                    <div style="max-width: 300px">
-                        <div th:replace="fragments/customer-search :: customerSearch"></div>
-                    </div>
-                </wa-card>
-                <wa-card>
-                    <div slot="header">
-                        Date
-                    </div>
-                    <div class="wa-cluster wa-gap-s">
-                        <wa-input id="invoiceDate" name="invoiceDate" type="date"
-                                  label="invoice date" size="small">
-                        </wa-input>
-                        <wa-input id="daysUntilDue" name="daysUntilDue" value="14" min="0" size="small"
-                                  label="days until due" type="number">
-                        </wa-input>
-                    </div>
-                </wa-card>
-                <wa-card style="overflow: auto">
-                    <div slot="header">
-                        Lines
-                    </div>
-                    <table id="invoiceTable">
-                        <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Unit Price</th>
-                            <th>Discount (%)</th>
-                            <th>VAT (%)</th>
-                            <th>Amount (Incl. VAT)</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody id="invoiceBody">
-                        <tr>
-                            <td>
-                                <wa-input name="productName" size="small" style="width: 300px;"></wa-input>
-                            </td>
-                            <td>
-                                <wa-input name="quantity" min="0" type="number" value="1" size="small"
-                                          style="width: 80px;"></wa-input>
-                            </td>
-                            <td>
-                                <wa-input name="unitPrice" type="number" value="0" size="small"
-                                          style="width: 120px;"></wa-input>
-                            </td>
-                            <td>
-                                <wa-input name="discount" min="0" type="number" value="0" size="small"
-                                          style="width: 80px;"></wa-input>
-                            </td>
-                            <td>
-                                <r-combobox
-                                        name="vat"
-                                        placeholder="Select VAT code..."
-                                        style="font-size: var(--wa-font-size-xs);">
-                                </r-combobox>
-                                <wa-input name="hidden-vat" type="number" value="0"
-                                          class="wa-visually-hidden" tabindex="-1"></wa-input>
-                            </td>
-                            <td class="amount">0.00</td>
-                            <td>
-                                <wa-button size="small" variant="neutral" onclick="duplicateRow(this)">
-                                    <wa-icon label="duplicate" name="copy" variant="solid" title="Duplicate"></wa-icon>
-                                </wa-button>
-                                <wa-button size="small" variant="danger" onclick="deleteRow(this)">
-                                    <wa-icon label="delete" name="trash" variant="solid" title="Delete"></wa-icon>
-                                </wa-button>
-                            </td>
-                        </tr>
-                        </tbody>
-                        <tfoot>
-                        <tr>
-                            <td colspan="7" style="text-align: left;">
-                                <button type="button" onclick="addRow()">+ Add Row</button>
-                            </td>
-                        </tr>
-                        </tfoot>
-                    </table>
-                </wa-card>
-            </div>
-        </wa-tab-panel>
-        <wa-tab-panel name="sending">This is the sending tab panel.</wa-tab-panel>
-    </wa-tab-group>
-
+    <form id="invoiceForm">
+        <div class="wa-stack">
+            <wa-card>
+                <div slot="header">Customer</div>
+                <div style="max-width: 300px">
+                    <div th:replace="fragments/customer-search :: customerSearch"></div>
+                    <wa-input name="customerId" id="customerId" class="wa-visually-hidden"
+                              tabindex="-1"></wa-input>
+                </div>
+            </wa-card>
+            <wa-card>
+                <div slot="header">Date</div>
+                <div class="wa-cluster wa-gap-s">
+                    <wa-input id="invoiceDate" name="issueDate" type="date" label="invoice date"
+                              size="small"></wa-input>
+                    <wa-input id="daysUntilDue" value="14" min="0" size="small"
+                              label="days until due" type="number"></wa-input>
+                    <wa-input name="dueDate" required id="dueDate" class="wa-visually-hidden"
+                              tabindex="-1"></wa-input>
+                </div>
+            </wa-card>
+            <wa-card style="overflow: auto">
+                <div slot="header">
+                    Lines
+                </div>
+                <table id="invoiceTable">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Discount (%)</th>
+                        <th>VAT (%)</th>
+                        <th>Amount (Incl. VAT)</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="invoiceBody">
+                    <tr>
+                        <td>
+                            <wa-input size="small" style="width: 300px;" name="itemName"></wa-input>
+                        </td>
+                        <td>
+                            <wa-input type="number" min="0" value="1" size="small" style="width: 80px;"
+                                      name="quantity"></wa-input>
+                        </td>
+                        <td>
+                            <wa-input type="number" min="0" value="0" size="small" style="width: 120px;"
+                                      name="unitPrice"></wa-input>
+                        </td>
+                        <td>
+                            <wa-input type="number" min="0" value="0" size="small" style="width: 80px;"
+                                      name="discount"></wa-input>
+                        </td>
+                        <td>
+                            <r-combobox placeholder="Select VAT code..."
+                                        style="font-size: var(--wa-font-size-xs);"></r-combobox>
+                            <wa-input name="vatCode" type="number" value="0" class="wa-visually-hidden"
+                                      tabindex="-1"></wa-input>
+                        </td>
+                        <td class="amount">0.00</td>
+                        <td>
+                            <wa-button size="small" variant="neutral" onclick="duplicateRow(this)">
+                                <wa-icon label="duplicate" name="copy" variant="solid"
+                                         title="Duplicate"></wa-icon>
+                            </wa-button>
+                            <wa-button size="small" variant="danger" onclick="deleteRow(this)">
+                                <wa-icon label="delete" name="trash" variant="solid" title="Delete"></wa-icon>
+                            </wa-button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="7" style="text-align: left;">
+                            <button type="button" onclick="addRow()">+ Add Row</button>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </wa-card>
+            <wa-input name="currencyCode" value="NOK" class="wa-visually-hidden" tabindex="-1"></wa-input>
+            <wa-button type="submit" variant="success" style="width: fit-content">Submit Invoice</wa-button>
+        </div>
+    </form>
 </main>
 
 <th:block layout:fragment="scripts">
@@ -109,7 +101,15 @@
     <script th:src="@{/assets/vat-codes.js}"></script>
     <script th:src="@{/assets/fragments/customer-search.js}"></script>
     <script>
+        const customerIdElement = document.getElementById('customerId');
+        document.addEventListener('customerSelected', function (event) {
+            const {id, name} = event.detail;
+            customerIdElement.value = id;
+        });
+    </script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const dueDateElement = document.getElementById('dueDate');
             const daysInput = document.getElementById('daysUntilDue');
             const invoiceDateInput = document.getElementById('invoiceDate');
             if (!daysInput || !invoiceDateInput) return;
@@ -126,6 +126,7 @@
             };
             const updateLabel = () => {
                 const dueDate = calculateDueDate(getInvoiceDate(), getDaysUntilDue());
+                dueDateElement.value = dueDate.toISOString().slice(0, 10);
                 daysInput.setAttribute('label', `days until due: ${dueDate.toLocaleDateString()}`);
             };
             if (!invoiceDateInput.value) invoiceDateInput.value = new Date().toISOString().split('T')[0];
@@ -149,9 +150,8 @@
                     combobox.items = vatItems;
                     combobox.addEventListener('change', (e) => {
                         const row = e.target.closest('tr');
-                        const input = row.querySelector('wa-input[name="hidden-vat"]');
-                        console.log(vatCodes);
-                        input.value = vatCodes.find(v => v.code === e.detail.value).rate;
+                        const vatCodeElement = row.querySelector('wa-input[name="vatCode"]');
+                        vatCodeElement.value = e.detail.value
                         updateAmount(row);
                     });
                 });
@@ -180,68 +180,141 @@
             const qty = getValue(row, 'quantity');
             const price = getValue(row, 'unitPrice');
             const discount = getValue(row, 'discount');
-            const vat = getValue(row, 'hidden-vat');
-
+            const vatCode = getValue(row, 'vatCode');
+            const vatRate = vatCodes.find(v => Number(v.code) === vatCode)?.rate ?? 0
             const discounted = price * (1 - discount / 100);
             const subtotal = qty * discounted;
-            const total = subtotal * (1 + vat / 100);
-
+            const total = subtotal * (1 + vatRate / 100);
             row.querySelector('.amount').textContent = total.toFixed(2);
         }
 
+        async function initializeVATComboboxes() {
+            vatCodes = await window.getVatCodes();
+            const items = vatCodes.map(v => ({
+                value: v.code,
+                title: v.code,
+                subtitle: `${v.rate}% - ${v.description}`,
+                displayText: `${v.code} (${v.rate}%) - ${v.description}`
+            }));
+
+            tbody.querySelectorAll('r-combobox').forEach(combobox => {
+                combobox.items = items;
+                combobox.addEventListener('change', e => {
+                    const row = e.target.closest('tr');
+                    const vatCodeElement = row.querySelector('wa-input[name="vatCode"]');
+                    vatCodeElement.value = e.detail.value;
+                    updateAmount(row);
+                });
+            });
+        }
+
+        function deleteRow(btn) {
+            const row = btn.closest('tr');
+            if (tbody.rows.length > 1) {
+                row.remove();
+            } else {
+                alert('At least one row is required.');
+            }
+        }
+
+        function duplicateRow(btn) {
+            const original = btn.closest('tr');
+            const clone = original.cloneNode(true);
+
+            const origInputs = original.querySelectorAll('wa-input, r-combobox');
+            const cloneInputs = clone.querySelectorAll('wa-input, r-combobox');
+            origInputs.forEach((input, i) => {
+                cloneInputs[i].setAttribute('value', input.value || input.getAttribute('value') || '');
+            });
+
+            tbody.insertBefore(clone, original.nextSibling);
+
+            initializeVATComboboxes();
+            updateAmount(clone);
+        }
+
+        function addRow() {
+            const firstRow = tbody.querySelector('tr');
+            const clone = firstRow.cloneNode(true);
+
+            clone.querySelectorAll('wa-input').forEach(input => {
+                const name = input.getAttribute('name');
+                if (name.includes('productName') || name.includes('itemName')) input.setAttribute('value', '');
+                else if (name.includes('quantity')) input.setAttribute('value', '1');
+                else if (name.includes('discount')) input.setAttribute('value', '0');
+                else input.setAttribute('value', '0');
+            });
+
+            clone.querySelector('r-combobox')?.setAttribute('value', '');
+            clone.querySelector('.amount').textContent = '0.00';
+
+            tbody.appendChild(clone);
+            initializeVATComboboxes();
+            updateAmount(clone);
+        }
+
         tbody.addEventListener('input', e => {
-            if (e.target.tagName.toLowerCase() === 'wa-input') {
+            if (e.target.closest('wa-input')) {
                 const row = e.target.closest('tr');
                 updateAmount(row);
             }
         });
 
-        function deleteRow(icon) {
-            const rows = tbody.querySelectorAll('tr');
-            if (rows.length > 1) {
-                icon.closest('tr').remove();
-            } else {
-                alert("Cannot delete the last remaining row.");
-            }
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeVATComboboxes();
+            tbody.querySelectorAll('tr').forEach(updateAmount);
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('invoiceForm');
 
-        function duplicateRow(icon) {
-            const original = icon.closest('tr');
-            const clone = original.cloneNode(true);
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
 
-            original.querySelectorAll('wa-input').forEach((input, i) => {
-                const cloneInput = clone.querySelectorAll('wa-input')[i];
-                cloneInput.setAttribute('value', input.value || input.getAttribute('value') || '');
+                const tbody = document.getElementById('invoiceBody');
+                const customFormData = new FormData();
+
+                function getInputValue(input) {
+                    return input.shadowRoot?.querySelector('input')?.value
+                        || input.value
+                        || input.getAttribute('value')
+                        || '';
+                }
+
+                ['issueDate', 'dueDate', 'currencyCode', 'customerId', 'supplierId'].forEach(name => {
+                    const input = form.querySelector(`wa-input[name="${name}"]`);
+                    if (input) {
+                        const value = getInputValue(input);
+                        if (value !== '') customFormData.append(name, value);
+                    }
+                });
+
+                tbody.querySelectorAll('tr').forEach((row, index) => {
+                    const itemNameInput = row.querySelector('wa-input[name="itemName"]');
+                    const quantityInput = row.querySelector('wa-input[name="quantity"]');
+                    const unitPriceInput = row.querySelector('wa-input[name="unitPrice"]');
+                    const discountInput = row.querySelector('wa-input[name="discount"]');
+                    const vatCodeInput = row.querySelector('wa-input[name="vatCode"]');
+
+                    if (!itemNameInput || !quantityInput || !unitPriceInput || !discountInput || !vatCodeInput) {
+                        console.warn(`Row ${index} missing inputs`);
+                        return;
+                    }
+
+                    customFormData.append(`invoiceLines[${index}].itemName`, getInputValue(itemNameInput));
+                    customFormData.append(`invoiceLines[${index}].quantity`, getInputValue(quantityInput));
+                    customFormData.append(`invoiceLines[${index}].unitPrice`, getInputValue(unitPriceInput));
+                    const discountValue = getInputValue(discountInput);
+                    customFormData.append(`invoiceLines[${index}].discount`, discountValue || '');
+                    customFormData.append(`invoiceLines[${index}].vatCode`, getInputValue(vatCodeInput));
+                });
+
+                htmx.ajax('POST', '/htmx/invoice', {
+                    values: customFormData
+                });
             });
-            original.querySelectorAll('r-combobox').forEach((input, i) => {
-                const cloneInput = clone.querySelectorAll('r-combobox')[i];
-                cloneInput.setAttribute('value', input.value || input.getAttribute('value') || '');
-            });
-
-            tbody.insertBefore(clone, original.nextSibling);
-            updateAmount(clone);
-            initializeExistingPostingComboboxes()
-        }
-
-        function addRow() {
-            const template = tbody.querySelector('tr');
-            const clone = template.cloneNode(true);
-
-            clone.querySelectorAll('wa-input').forEach(input => {
-                const name = input.getAttribute('name');
-                if (name.includes('quantity')) input.setAttribute('value', '1');
-                else if (name.includes('discount')) input.setAttribute('value', '0');
-                else if (name.includes('productName')) input.setAttribute('value', '');
-                else input.setAttribute('value', '0');
-            });
-
-            clone.querySelector('.amount').textContent = '0.00';
-            tbody.appendChild(clone);
-            updateAmount(clone);
-            initializeExistingPostingComboboxes()
-        }
-
-        tbody.querySelectorAll('tr').forEach(updateAmount);
+        });
     </script>
 </th:block>
 </body>
