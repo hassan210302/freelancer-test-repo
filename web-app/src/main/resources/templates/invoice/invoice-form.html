@@ -99,11 +99,11 @@
     <script th:src="@{/assets/fragments/customer-search.js}"></script>
 
     <script th:inline="javascript">
-        const getInputValue = (input) =>
-            input?.shadowRoot?.querySelector('input')?.value
-            || input?.value
-            || input?.getAttribute('value')
-            || '';
+        const getInputValue = (input) => {
+            if (!input) return '';
+            if (typeof input.value !== 'undefined') return input.value;
+            return '';
+        };
 
         const getValue = (row, name) => {
             const input = row.querySelector(`wa-input[name="${name}"]`);
@@ -136,7 +136,6 @@
                     updateAmount(row);
                 });
             }
-            updateAmount(row);
         };
 
         const cloneRow = (sourceRow) => {
@@ -153,6 +152,7 @@
         };
 
         const initInvoiceForm = async () => {
+            vatCodes = await window.getVatCodes();
             const form = document.getElementById('invoiceForm');
             const tbody = document.getElementById('invoiceBody');
             const invoiceDateInput = document.getElementById('invoiceDate');
@@ -162,8 +162,10 @@
             const getInvoiceDate = () =>
                 invoiceDateInput.value ? new Date(invoiceDateInput.value) : new Date();
 
-            const getDaysUntilDue = () =>
-                parseInt(daysInput.value || daysInput.getAttribute('value') || '0', 10) || 0;
+            const getDaysUntilDue = () => {
+                const days = daysInput.value ?? daysInput.getAttribute('value')
+                return parseInt(days || '0', 10) || 0;
+            }
 
             const updateDueDate = () => {
                 const date = new Date(getInvoiceDate());
@@ -178,9 +180,6 @@
             updateDueDate();
             invoiceDateInput.addEventListener('change', updateDueDate);
             daysInput.addEventListener('input', updateDueDate);
-
-            vatCodes = await window.getVatCodes();
-
             tbody.querySelectorAll('tr').forEach(setupRow);
 
             form.addEventListener('submit', (event) => {
