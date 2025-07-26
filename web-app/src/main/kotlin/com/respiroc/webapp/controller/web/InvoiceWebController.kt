@@ -55,16 +55,7 @@ class InvoiceHTNXWebController(private val invoiceService: InvoiceService) : Bas
 
     @PostMapping
     fun registerInvoice(@ModelAttribute request: NewInvoiceRequest): String {
-//        val payload = NewInvoicePayload(
-//            number = request.number,
-//            issueDate = request.issueDate!!,
-//            dueDate = request.dueDate,
-//            currencyCode = request.currencyCode,
-//            supplierId = request.supplierId,
-//            customerId = request.customerId
-//            // TODO: Add line items if applicable
-//        )
-//        invoiceService.save(payload)
+        invoiceService.save(request.toPayload())
         return "redirect:htmx:/invoice"
     }
 }

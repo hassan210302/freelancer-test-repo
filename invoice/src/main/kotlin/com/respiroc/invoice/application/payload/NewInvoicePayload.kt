@@ -4,13 +4,12 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class NewInvoicePayload(
-    val number: String,
     val issueDate: LocalDate,
     val dueDate: LocalDate?,
     val currencyCode: String,
     val supplierId: Long?,
     val customerId: Long?,
-    val invoiceLines:List<NewInvoiceLinePayload>
+    val invoiceLines: List<NewInvoiceLinePayload>
 )
 
 data class NewInvoiceLinePayload(
