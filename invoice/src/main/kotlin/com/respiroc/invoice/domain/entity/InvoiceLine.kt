@@ -21,7 +21,7 @@ class InvoiceLine {
     lateinit var invoice: Invoice
 
     @Size(max = 25)
-    @Column(name = "item_name", nullable = false, length = 25)
+    @Column(name = "item_name", nullable = false)
     var itemName: String = ""
 
     @Column(name = "quantity", nullable = false)
@@ -33,7 +33,6 @@ class InvoiceLine {
     @Column(name = "discount", precision = 10, scale = 2)
     var discount: BigDecimal? = null
 
-    @Size(max = 10)
-    @Column(name = "vat_code", nullable = false, length = 10)
+    @Column(name = "vat_code", nullable = false)
     lateinit var vatCode: String
 }
