@@ -10,10 +10,16 @@
         <div class="wa-stack">
             <wa-card>
                 <div slot="header">Customer</div>
-                <div style="max-width: 300px">
+                <div class="wa-cluster wa-gap-s">
                     <div th:replace="fragments/customer-search :: customerSearch"></div>
                     <wa-input name="customerId" id="customerId" class="wa-visually-hidden"
                               tabindex="-1"></wa-input>
+                    <wa-select style="width: 5.6rem" size="small" value="NOK" name="currencyCode" required
+                               id="currencyCode">
+                        <wa-option th:each="currency : ${supportedCurrencies}"
+                                   th:value="${currency}" th:text="${currency}">
+                        </wa-option>
+                    </wa-select>
                 </div>
             </wa-card>
             <wa-card>
@@ -89,7 +95,6 @@
                     </tfoot>
                 </table>
             </wa-card>
-            <wa-input name="currencyCode" value="NOK" class="wa-visually-hidden" tabindex="-1"></wa-input>
             <wa-button type="submit" variant="success" style="width: fit-content">Submit Invoice</wa-button>
         </div>
     </form>
@@ -200,7 +205,7 @@
 
                 for (const row of tbody.querySelectorAll('tr')) {
                     const vat = getInputValue(row.querySelector('wa-input[name="vatCode"]'));
-                    if (!vat || vat === '0') {
+                    if (!vat) {
                         row.querySelector('r-combobox')?.scrollIntoView({behavior: 'smooth'});
                         alert('Please select a VAT code for each line.');
                         return event.preventDefault();
@@ -210,7 +215,7 @@
                 event.preventDefault();
                 const formData = new FormData();
                 ['issueDate', 'dueDate', 'currencyCode', 'customerId', 'supplierId'].forEach(name => {
-                    const input = form.querySelector(`wa-input[name="${name}"]`);
+                    const input = form.querySelector(`[name="${name}"]`);
                     const val = getInputValue(input);
                     if (val !== '') formData.append(name, val);
                 });
