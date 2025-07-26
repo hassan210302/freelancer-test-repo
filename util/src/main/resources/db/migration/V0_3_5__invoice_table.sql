@@ -25,6 +25,6 @@ CREATE TABLE invoice_lines
     item_name  VARCHAR(25)    NOT NULL,
     quantity   INTEGER        NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL,
-    discount   NUMERIC(10, 2),
+    discount   INTEGER,
     vat_code   VARCHAR(10)    NOT NULL
 );
