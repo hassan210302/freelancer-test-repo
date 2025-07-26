@@ -4,6 +4,7 @@ import com.respiroc.invoice.application.InvoiceService
 import com.respiroc.util.currency.CurrencyService
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.NewInvoiceRequest
+import com.respiroc.webapp.controller.request.toPayload
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
