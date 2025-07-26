@@ -19,9 +19,9 @@
             <wa-card>
                 <div slot="header">Date</div>
                 <div class="wa-cluster wa-gap-s">
-                    <wa-input id="invoiceDate" name="issueDate" type="date" label="invoice date"
+                    <wa-input id="invoiceDate" name="issueDate" type="date" label="invoice date" required
                               size="small"></wa-input>
-                    <wa-input id="daysUntilDue" value="14" min="0" size="small"
+                    <wa-input id="daysUntilDue" value="14" min="0" size="small" required
                               label="days until due" type="number"></wa-input>
                     <wa-input name="dueDate" required id="dueDate" class="wa-visually-hidden"
                               tabindex="-1"></wa-input>
@@ -44,14 +44,14 @@
                     <tbody id="invoiceBody">
                     <tr>
                         <td>
-                            <wa-input size="small" style="width: 300px;" name="itemName" value=""></wa-input>
+                            <wa-input size="small" style="width: 300px;" name="itemName" required value=""></wa-input>
                         </td>
                         <td>
-                            <wa-input type="number" min="0" value="1" size="small" style="width: 80px;"
+                            <wa-input type="number" min="0" value="1" size="small" required style="width: 80px;"
                                       name="quantity"></wa-input>
                         </td>
                         <td>
-                            <wa-input type="number" value="0" size="small" style="width: 120px;"
+                            <wa-input type="number" value="0" size="small" required style="width: 120px;"
                                       name="unitPrice"></wa-input>
                         </td>
                         <td>
@@ -59,7 +59,7 @@
                                       name="discount"></wa-input>
                         </td>
                         <td>
-                            <r-combobox placeholder="Select VAT code..."
+                            <r-combobox placeholder="Select VAT code..." value="0" data-default-value="0" required
                                         style="font-size: var(--wa-font-size-xs);"></r-combobox>
                             <wa-input name="vatCode" type="number" value="0" class="wa-visually-hidden"
                                       tabindex="-1"></wa-input>
@@ -82,10 +82,7 @@
                         <td id="invoiceTotal">0.00</td>
                         <td>
                             <wa-button type="button" variant="neutral" data-action="add-row">
-                                <div class="wa-flank">
-                                    <wa-icon label="add" name="plus" variant="solid" title="add"></wa-icon>
-                                    <div>Add Row</div>
-                                </div>
+                                Add Row
                             </wa-button>
                         </td>
                     </tr>
