@@ -51,6 +51,21 @@
             color: var(--wa-color-gray-50);
             font-size: var(--wa-font-size-s);
         }
+        .r-status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .r-status-open {
+            background-color: var(--wa-color-success-60);
+        }
+        .r-status-delivered {
+            background-color: var(--wa-color-warning-60);
+        }
+        .r-status-approved {
+            background-color: var(--wa-color-info-60);
+        }
     </style>
 </head>
 
@@ -68,55 +83,75 @@
                 <span th:text="${error}"></span>
             </div>
 
-            <form th:action="@{/expenses/update/{id}(id=${expense.id})}" method="post" enctype="multipart/form-data">
-                <wa-card>
-                    <div slot="header">
+            <wa-card>
+                <div slot="header">
+                    <div class="wa-cluster wa-gap-m" style="justify-content: space-between; align-items: center;">
                         <h4>Edit Expense</h4>
+                        <div class="wa-cluster wa-gap-s" style="align-items: center;">
+                            <div class="wa-cluster wa-gap-xs" style="align-items: center;">
+                                <div th:class="${'r-status-indicator ' + (expense.status.name() == 'OPEN' ? 'r-status-open' : expense.status.name() == 'DELIVERED' ? 'r-status-delivered' : 'r-status-approved')}"></div>
+                                <wa-tag th:variant="${expense.status.name() == 'OPEN' ? 'success' : expense.status.name() == 'DELIVERED' ? 'warning' : 'info'}"
+                                        th:text="${#strings.toLowerCase(expense.status.name()).substring(0,1).toUpperCase() + #strings.toLowerCase(expense.status.name()).substring(1)}">
+                                </wa-tag>
+                            </div>
+                            <form th:action="@{/expenses/update-status/{id}(id=${expense.id})}" method="post" style="display: inline;">
+                                <wa-button type="submit"
+                                           variant="primary"
+                                           size="small"
+                                           th:disabled="${expense.status.name() == 'APPROVED'}">
+                                    <span th:text="${expense.status.name() == 'OPEN' ? 'Mark as Delivered' : expense.status.name() == 'DELIVERED' ? 'Mark as Approved' : 'Already Approved'}"></span>
+                                </wa-button>
+                            </form>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="wa-stack wa-gap-m">
-                        <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Title *</label>
-                            <wa-input name="title"
-                                      type="text"
-                                      size="small"
-                                      required
-                                      placeholder="Expense title"
-                                      th:value="${expense.title}">
-                            </wa-input>
-                        </div>
+                <div class="wa-stack wa-gap-m">
+                    <form th:action="@{/expenses/update/{id}(id=${expense.id})}" method="post" enctype="multipart/form-data">
+                        <div class="wa-stack wa-gap-m">
+                            <div>
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Title *</label>
+                                <wa-input name="title"
+                                          type="text"
+                                          size="small"
+                                          required
+                                          placeholder="Expense title"
+                                          th:value="${expense.title}">
+                                </wa-input>
+                            </div>
 
-                        <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description *</label>
-                            <wa-textarea name="description"
-                                         size="small"
-                                         required
-                                         placeholder="Enter expense description..."
-                                         rows="3"
-                                         th:value="${expense.description}">
-                            </wa-textarea>
-                        </div>
+                            <div>
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description *</label>
+                                <wa-textarea name="description"
+                                             size="small"
+                                             required
+                                             placeholder="Enter expense description..."
+                                             rows="3"
+                                             th:value="${expense.description}">
+                                </wa-textarea>
+                            </div>
 
-                        <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Date *</label>
-                            <wa-input name="expenseDate"
-                                      type="date"
-                                      size="small"
-                                      required
-                                      th:value="${expense.expenseDate}">
-                            </wa-input>
-                        </div>
+                            <div>
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Date *</label>
+                                <wa-input name="expenseDate"
+                                          type="date"
+                                          size="small"
+                                          required
+                                          th:value="${expense.expenseDate}">
+                                </wa-input>
+                            </div>
 
-                        <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Category *</label>
-                            <wa-select name="categoryId" size="small" required>
-                                <wa-option value="">Select category...</wa-option>
-                                <wa-option th:each="category : ${categories}"
-                                           th:value="${category.id}"
-                                           th:text="${category.name}"
-                                           th:selected="${category.name == expense.category}">
-                                </wa-option>
-                            </wa-select>
+                            <div>
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Category *</label>
+                                <wa-select name="categoryId" size="small" required>
+                                    <wa-option value="">Select category...</wa-option>
+                                    <wa-option th:each="category : ${categories}"
+                                               th:value="${category.id}"
+                                               th:text="${category.name}"
+                                               th:selected="${category.name == expense.category}">
+                                    </wa-option>
+                                </wa-select>
+                            </div>
                         </div>
 
                         <wa-divider></wa-divider>
@@ -183,14 +218,17 @@
                         <h5>Attachments</h5>
 
                         <!-- Current Attachments Display -->
-                        <div th:if="${expense.attachmentCount > 0}" class="wa-stack wa-gap-s">
-                            <div class="wa-cluster wa-gap-s" style="align-items: center;">
-                                <wa-icon name="paperclip"></wa-icon>
-                                <span th:text="${expense.attachmentCount + ' attachment(s)'}"></span>
+                        <div th:if="${not #lists.isEmpty(attachments)}" class="wa-stack wa-gap-s">
+                            <div class="wa-text-s" style="color: var(--wa-color-gray-40); margin-bottom: var(--wa-space-xs);">
+                                Current attachments:
+                            </div>
+                            <div th:each="attachment : ${attachments}" class="wa-cluster wa-gap-s" style="align-items: center; padding: var(--wa-space-xs); background: var(--wa-color-surface-raised); border-radius: 4px;">
+                                <wa-icon name="document" style="color: var(--wa-color-gray-50);"></wa-icon>
+                                <span th:text="${attachment.filename}" style="font-size: var(--wa-font-size-s);"></span>
                             </div>
                         </div>
                         
-                        <div th:if="${expense.attachmentCount == 0}" class="wa-text-s" style="color: var(--wa-color-gray-50);">
+                        <div th:if="${#lists.isEmpty(attachments)}" class="wa-text-s" style="color: var(--wa-color-gray-50);">
                             No attachments uploaded yet
                         </div>
 
@@ -224,9 +262,9 @@
                                 Cancel
                             </wa-button>
                         </div>
-                    </div>
-                </wa-card>
-            </form>
+                    </form>
+                </div>
+            </wa-card>
 
         </div>
     </div>

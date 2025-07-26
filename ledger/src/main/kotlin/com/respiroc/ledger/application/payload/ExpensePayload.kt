@@ -16,6 +16,11 @@ data class CostPayload(
     val chargeable: Boolean
 )
 
+data class ExpenseAttachmentPayload(
+    val id: Long,
+    val filename: String
+)
+
 data class ExpensePayload(
     val id: Long,
     val title: String,

@@ -18,8 +18,8 @@ interface ExpenseRepository : CustomJpaRepository<Expense, Long> {
     @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId ORDER BY e.expenseDate DESC")
     fun findByTenantIdWithCosts(@Param("tenantId") tenantId: Long): List<Expense>
 
-    @Query("SELECT DISTINCT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId ORDER BY e.expenseDate DESC")
-    fun findByTenantIdWithCostsAndAttachments(@Param("tenantId") tenantId: Long): List<Expense>
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments WHERE e.tenantId = :tenantId ORDER BY e.expenseDate DESC")
+    fun findByTenantIdWithAttachments(@Param("tenantId") tenantId: Long): List<Expense>
 
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.tenantId = :tenantId")
     fun getTotalAmountByTenantId(@Param("tenantId") tenantId: Long): BigDecimal
@@ -38,8 +38,8 @@ interface ExpenseRepository : CustomJpaRepository<Expense, Long> {
         @Param("endDate") endDate: LocalDate
     ): List<Expense>
 
-    @Query("SELECT DISTINCT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
-    fun findByTenantIdAndDateRangeWithCostsAndAttachments(
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
+    fun findByTenantIdAndDateRangeWithAttachments(
         @Param("tenantId") tenantId: Long,
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
@@ -54,4 +54,8 @@ interface ExpenseRepository : CustomJpaRepository<Expense, Long> {
     @Modifying
     @Query("DELETE FROM Cost c WHERE c.expense.id = :expenseId")
     fun deleteCostsByExpenseId(@Param("expenseId") expenseId: Long)
+
+    @Modifying
+    @Query("UPDATE Expense e SET e.status = CASE WHEN e.status = 'OPEN' THEN 'DELIVERED' WHEN e.status = 'DELIVERED' THEN 'APPROVED' ELSE e.status END WHERE e.id = :id")
+    fun updateExpenseStatus(@Param("id") id: Long)
 }

@@ -64,12 +64,14 @@ class ExpenseWebController(
         
         val categories = expenseService.findAllActiveCategories()
         val firstCost = expense.costs.firstOrNull()
+        val attachments = expenseService.findExpenseAttachments(id)
 
         addCommonAttributesForCurrentTenant(model, "Edit Expense")
         model.addAttribute("categories", categories)
         model.addAttribute("expense", expense)
         model.addAttribute("expenseDate", expense.expenseDate)
         model.addAttribute("paymentTypes", PaymentType.entries)
+        model.addAttribute("attachments", attachments)
         
         if (firstCost != null) {
             model.addAttribute("costTitle", firstCost.title)
@@ -124,7 +126,9 @@ class ExpenseWebController(
             val created = expenseService.createExpense(payload, springUser().username ?: "system")
 
             if (!attachments.isNullOrEmpty()) {
-                expenseService.addAttachmentsToExpense(created.id, attachments.map { it.bytes })
+                val fileData = attachments.map { it.bytes }
+                val filenames = attachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}.pdf" }
+                expenseService.addAttachmentsToExpense(created.id, fileData, filenames)
             }
             "redirect:/expenses/overview"
         } catch (e: Exception) {
@@ -173,9 +177,7 @@ class ExpenseWebController(
 
             expenseService.updateExpense(id, payload)
 
-            if (!attachments.isNullOrEmpty()) {
-                expenseService.addAttachmentsToExpense(id, attachments.map { it.bytes })
-            }
+            processAttachments(id, attachments)
             "redirect:/expenses/overview"
         } catch (e: Exception) {
             val categories = expenseService.findAllActiveCategories()
@@ -218,9 +220,22 @@ class ExpenseWebController(
             "redirect:/expenses/overview?error=Failed to delete expense"
         }
     }
-}
 
-@Controller
+    @PostMapping("/update-status/{id}")
+    fun updateExpenseStatus(@PathVariable id: Long): String {
+        expenseService.updateExpenseStatus(id)
+        return "redirect:/expenses/edit/$id"
+    }
+
+    private fun processAttachments(expenseId: Long, attachments: List<MultipartFile>?) {
+        if (!attachments.isNullOrEmpty() && attachments.any { !it.isEmpty && it.size > 0 }) {
+            val validAttachments = attachments.filter { !it.isEmpty && it.size > 0 }
+            val fileData = validAttachments.map { it.bytes }
+            val filenames = validAttachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}.pdf" }
+            expenseService.addAttachmentsToExpense(expenseId, fileData, filenames)
+        }
+    }
+}
 @RequestMapping("htmx/expense")
 class ExpenseHTMXController(
     private val expenseService: ExpenseService
@@ -252,9 +267,9 @@ class ExpenseHTMXController(
         model: Model
     ): String {
         return try {
-            // Simulate file upload - create a dummy attachment to test the flow
-            val attachments = listOf(ByteArray(1024)) // Dummy file data
-            expenseService.addAttachmentsToExpense(expenseId, attachments)
+            val attachments = listOf(ByteArray(1024))
+            val filenames = listOf("dummy_file.pdf")
+            expenseService.addAttachmentsToExpense(expenseId, attachments, filenames)
             
             model.addAttribute("message", "File uploaded successfully")
             model.addAttribute("messageType", "success")

@@ -14,6 +14,9 @@ open class ExpenseAttachment {
     @Column(name = "file_data", nullable = false, columnDefinition = "BYTEA")
     open lateinit var fileData: ByteArray
 
+    @Column(name = "filename", nullable = false, length = 255)
+    open lateinit var filename: String
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expense_id", nullable = false)
     open lateinit var expense: Expense
