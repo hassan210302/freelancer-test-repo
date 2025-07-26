@@ -28,3 +28,11 @@ CREATE TABLE invoice_lines
     discount   INTEGER,
     vat_code   VARCHAR(10)    NOT NULL
 );
+
+CREATE TABLE invoice_sequences
+(
+    tenant_id   INTEGER NOT NULL REFERENCES tenants (id) ON DELETE CASCADE,
+    year        INTEGER NOT NULL,
+    next_number INTEGER NOT NULL,
+    PRIMARY KEY (tenant_id, year)
+);
