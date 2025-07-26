@@ -106,20 +106,19 @@
     <script th:inline="javascript">
         const getInputValue = (input) => {
             if (!input) return '';
-            if (typeof input.value !== 'undefined') return input.value;
-            return '';
+            return typeof input.value !== 'undefined' ? input.value : '';
         };
 
-        const getValue = (row, name) => {
+        const getNumericValue = (row, name) => {
             const input = row.querySelector(`wa-input[name="${name}"]`);
             return parseFloat(getInputValue(input)) || 0;
         };
 
         const updateAmount = (row) => {
-            const qty = getValue(row, 'quantity');
-            const price = getValue(row, 'unitPrice');
-            const discount = getValue(row, 'discount');
-            const vatCode = getValue(row, 'vatCode');
+            const qty = getNumericValue(row, 'quantity');
+            const price = getNumericValue(row, 'unitPrice');
+            const discount = getNumericValue(row, 'discount');
+            const vatCode = getNumericValue(row, 'vatCode');
             const vatRate = vatCodes.find(v => Number(v.code) === vatCode)?.rate ?? 0;
             const subtotal = qty * price * (1 - discount / 100);
             const total = subtotal * (1 + vatRate / 100);
@@ -127,37 +126,34 @@
         };
 
         const updateTotal = () => {
-            const tbody = document.getElementById('invoiceBody');
-            const total = Array.from(tbody.querySelectorAll('tr'))
-                .reduce((sum, row) => sum + parseFloat(row.querySelector('.amount')?.textContent || 0), 0);
+            const total = Array.from(document.querySelectorAll('#invoiceBody .amount'))
+                .reduce((sum, el) => sum + parseFloat(el.textContent || 0), 0);
             document.getElementById('invoiceTotal').textContent = total.toFixed(2);
         };
 
-        const setupRow = (row) => {
+        const setupCombobox = (row) => {
             const combobox = row.querySelector('r-combobox');
-            if (combobox) {
-                combobox.items = vatCodes.map(v => ({
-                    value: v.code,
-                    title: v.code,
-                    subtitle: `${v.rate}% - ${v.description}`,
-                    displayText: `${v.code} (${v.rate}%) - ${v.description}`
-                }));
-                combobox.addEventListener('change', (e) => {
-                    const vatCodeInput = row.querySelector('wa-input[name="vatCode"]');
-                    vatCodeInput.value = e.detail.value;
-                    updateAmount(row);
-                    updateTotal();
-                });
-            }
+            if (!combobox) return;
+            combobox.items = vatCodes.map(v => ({
+                value: v.code,
+                title: v.code,
+                subtitle: `${v.rate}% - ${v.description}`,
+                displayText: `${v.code} (${v.rate}%) - ${v.description}`
+            }));
+            combobox.addEventListener('change', (e) => {
+                const input = row.querySelector('wa-input[name="vatCode"]');
+                input.value = e.detail.value;
+                updateAmount(row);
+                updateTotal();
+            });
         };
 
-        const cloneRow = (sourceRow) => {
-            const clone = sourceRow.cloneNode(true);
+        const cloneRow = (source) => {
+            const clone = source.cloneNode(true);
             clone.querySelectorAll('wa-input').forEach(input => {
                 const name = input.getAttribute('name');
-                if (name === 'itemName') input.setAttribute('value', '');
-                else if (name === 'quantity') input.setAttribute('value', '1');
-                else input.setAttribute('value', '0');
+                input.setAttribute('value',
+                    name === 'itemName' ? '' : (name === 'quantity' ? '1' : '0'));
             });
             clone.querySelector('r-combobox')?.setAttribute('value', '');
             clone.querySelector('.amount').textContent = '0.00';
@@ -168,54 +164,62 @@
             vatCodes = await window.getVatCodes();
             const form = document.getElementById('invoiceForm');
             const tbody = document.getElementById('invoiceBody');
-            const invoiceDateInput = document.getElementById('invoiceDate');
+            const invoiceDate = document.getElementById('invoiceDate');
+            const dueDate = document.getElementById('dueDate');
             const daysInput = document.getElementById('daysUntilDue');
-            const dueDateInput = document.getElementById('dueDate');
+            const customerInput = form.querySelector('wa-input[name="customerId"]');
 
-            const getInvoiceDate = () =>
-                invoiceDateInput.value ? new Date(invoiceDateInput.value) : new Date();
-
-            const getDaysUntilDue = () => {
-                const days = daysInput.value ?? daysInput.getAttribute('value')
-                return parseInt(days || '0', 10) || 0;
-            }
+            const getInvoiceDate = () => invoiceDate.value ? new Date(invoiceDate.value) : new Date();
+            const getDaysUntilDue = () => parseInt(daysInput.value || daysInput.getAttribute('value') || '0', 10) || 0;
 
             const updateDueDate = () => {
                 const date = new Date(getInvoiceDate());
                 date.setDate(date.getDate() + getDaysUntilDue());
-                dueDateInput.value = date.toISOString().slice(0, 10);
+                dueDate.value = date.toISOString().slice(0, 10);
                 daysInput.setAttribute('label', `days until due: ${date.toLocaleDateString()}`);
             };
 
-            if (!invoiceDateInput.value)
-                invoiceDateInput.value = new Date().toISOString().split('T')[0];
+            if (!invoiceDate.value) invoiceDate.value = new Date().toISOString().split('T')[0];
 
             updateDueDate();
-            invoiceDateInput.addEventListener('change', updateDueDate);
+            invoiceDate.addEventListener('change', updateDueDate);
             daysInput.addEventListener('input', updateDueDate);
             tbody.querySelectorAll('tr').forEach(row => {
-                setupRow(row);
+                setupCombobox(row);
                 updateAmount(row);
             });
             updateTotal();
 
             form.addEventListener('submit', (event) => {
+                const customerId = getInputValue(customerInput);
+                if (!customerId || customerId === '0') {
+                    form.querySelector('#customerSearch')?.scrollIntoView({behavior: 'smooth'});
+                    alert('Please select a customer.');
+                    return event.preventDefault();
+                }
+
+                for (const row of tbody.querySelectorAll('tr')) {
+                    const vat = getInputValue(row.querySelector('wa-input[name="vatCode"]'));
+                    if (!vat || vat === '0') {
+                        row.querySelector('r-combobox')?.scrollIntoView({behavior: 'smooth'});
+                        alert('Please select a VAT code for each line.');
+                        return event.preventDefault();
+                    }
+                }
+
                 event.preventDefault();
                 const formData = new FormData();
-
                 ['issueDate', 'dueDate', 'currencyCode', 'customerId', 'supplierId'].forEach(name => {
                     const input = form.querySelector(`wa-input[name="${name}"]`);
-                    const value = getInputValue(input);
-                    if (value !== '') formData.append(name, value);
+                    const val = getInputValue(input);
+                    if (val !== '') formData.append(name, val);
                 });
 
-                tbody.querySelectorAll('tr').forEach((row, index) => {
+                tbody.querySelectorAll('tr').forEach((row, i) => {
                     ['itemName', 'quantity', 'unitPrice', 'discount', 'vatCode'].forEach(field => {
                         const input = row.querySelector(`wa-input[name="${field}"]`);
-                        const value = getInputValue(input);
-                        if (value !== '') {
-                            formData.append(`invoiceLines[${index}].${field}`, value);
-                        }
+                        const val = getInputValue(input);
+                        if (val !== '') formData.append(`invoiceLines[${i}].${field}`, val);
                     });
                 });
 
@@ -223,17 +227,18 @@
             });
 
             tbody.addEventListener('input', e => {
-                if (e.target.closest('wa-input')) {
-                    const row = e.target.closest('tr');
+                const row = e.target.closest('tr');
+                if (row && e.target.closest('wa-input')) {
                     updateAmount(row);
                     updateTotal();
                 }
             });
 
-            form.querySelector('[data-action="add-row"]').addEventListener('click', () => {
-                const newRow = cloneRow(tbody.querySelector('tr'));
+            form.querySelector('[data-action="add-row"]')?.addEventListener('click', () => {
+                const row = tbody.querySelector('tr');
+                const newRow = cloneRow(row);
                 tbody.appendChild(newRow);
-                setupRow(newRow);
+                setupCombobox(newRow);
                 updateAmount(newRow);
                 updateTotal();
             });
@@ -248,16 +253,17 @@
                 if (action === 'delete') {
                     if (tbody.rows.length > 1) row.remove();
                     updateTotal();
-                } else if (action === 'duplicate') {
-                    const clone = row.cloneNode(true);
-                    const origInputs = row.querySelectorAll('wa-input, r-combobox');
-                    const cloneInputs = clone.querySelectorAll('wa-input, r-combobox');
-                    origInputs.forEach((input, i) => {
-                        cloneInputs[i].setAttribute('value', getInputValue(input));
+                }
+
+                if (action === 'duplicate') {
+                    const newRow = row.cloneNode(true);
+                    row.querySelectorAll('wa-input, r-combobox').forEach((el, i) => {
+                        const val = getInputValue(el);
+                        newRow.querySelectorAll('wa-input, r-combobox')[i]?.setAttribute('value', val);
                     });
-                    row.parentNode.insertBefore(clone, row.nextSibling);
-                    setupRow(clone);
-                    updateAmount(clone);
+                    row.parentNode.insertBefore(newRow, row.nextSibling);
+                    setupCombobox(newRow);
+                    updateAmount(newRow);
                     updateTotal();
                 }
             });
