@@ -1,6 +1,7 @@
 package com.respiroc.webapp.controller.web
 
 import com.respiroc.invoice.application.InvoiceService
+import com.respiroc.util.currency.CurrencyService
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.NewInvoiceRequest
 import org.springframework.stereotype.Controller
@@ -9,7 +10,10 @@ import org.springframework.web.bind.annotation.*
 
 @Controller
 @RequestMapping(value = ["/invoice"])
-class InvoiceWebController(private val invoiceService: InvoiceService) : BaseController() {
+class InvoiceWebController(
+    private val invoiceService: InvoiceService,
+    private val currencyService: CurrencyService
+) : BaseController() {
 
     @GetMapping
     fun getInvoices(model: Model): String {
@@ -28,8 +32,8 @@ class InvoiceWebController(private val invoiceService: InvoiceService) : BaseCon
 
     @GetMapping("/new")
     fun getInvoiceForm(model: Model): String {
+        model.addAttribute("supportedCurrencies", currencyService.getSupportedCurrencies())
         addCommonAttributesForCurrentTenant(model, "New Invoice")
-//        model.addAttribute("invoice", NewInvoiceRequest())
         return "invoice/invoice-form"
     }
 
