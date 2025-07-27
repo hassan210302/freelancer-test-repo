@@ -2,6 +2,35 @@
 <html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:th="http://www.thymeleaf.org">
 <head>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DEBUG: DOM loaded');
+            console.log('DEBUG: HTMX version:', htmx.version);
+            
+            // Add click listeners to debug button clicks
+            document.querySelectorAll('button[type="button"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    console.log('DEBUG: Button clicked:', this.name);
+                    console.log('DEBUG: Button hx attributes:', {
+                        'hx-get': this.getAttribute('hx-get'),
+                        'hx-target': this.getAttribute('hx-target'),
+                        'hx-trigger': this.getAttribute('hx-trigger'),
+                        'hx-include': this.getAttribute('hx-include'),
+                        'hx-vals': this.getAttribute('hx-vals')
+                    });
+                });
+            });
+            
+            // Debug HTMX events
+            document.body.addEventListener('htmx:beforeRequest', function(evt) {
+                console.log('DEBUG: HTMX request starting:', evt.detail);
+            });
+            
+            document.body.addEventListener('htmx:afterRequest', function(evt) {
+                console.log('DEBUG: HTMX request completed:', evt.detail);
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -18,15 +47,17 @@
                         </wa-button>
                     </div>
                     
-                    <div class="wa-cluster">
+                    <div class="wa-cluster wa-gap-m">
+                        <input type="hidden" name="currentStatus" th:value="${selectedStatus}" />
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s">Start Date</label>
                             <wa-input type="date"
                                       name="startDate"
                                       size="small"
-                                      th:hx-get="'/htmx/expense/overview'"
-                                      th:hx-target="'#tableContent'"
-                                      th:hx-trigger="'change'"
+                                      hx-get="/htmx/expense/overview"
+                                      hx-target="#tableContent"
+                                      hx-trigger="change"
+                                      hx-include="[name='endDate'],[name='currentStatus']"
                                       th:value="${startDate}">
                             </wa-input>
                         </div>
@@ -35,23 +66,70 @@
                             <wa-input type="date"
                                       name="endDate"
                                       size="small"
-                                      th:hx-get="'/htmx/expense/overview'"
-                                      th:hx-target="'#tableContent'"
-                                      th:hx-trigger="'change'"
+                                      hx-get="/htmx/expense/overview"
+                                      hx-target="#tableContent"
+                                      hx-trigger="change"
+                                      hx-include="[name='startDate'],[name='currentStatus']"
                                       th:value="${endDate}">
                             </wa-input>
                         </div>
-                    </div>
-
-                    <div th:if="${#lists.isEmpty(expenses)}" class="wa-center">
-                        <div class="wa-stack wa-gap-m wa-center">
-                            <wa-icon name="credit-card" style="font-size: 3rem; opacity: 0.5;"></wa-icon>
-                            <h3 class="wa-heading-m">No expenses found</h3>
-                            <p class="wa-text-s">Create your first expense to get started.</p>
+                        <div class="wa-cluster wa-gap-s" style="align-items: end;">
+                            <button type="button"
+                                       class="wa-button wa-button--small"
+                                       name="all"
+                                       hx-get="/htmx/expense/overview"
+                                       hx-target="#tableContent"
+                                       hx-trigger="click"
+                                       hx-include="[name='startDate'],[name='endDate']"
+                                       hx-vals='{"currentStatus":"NULL"}'
+                                       th:class="${selectedStatus == null or selectedStatus == 'NULL' ? 'wa-button--primary' : 'wa-button--neutral'}">
+                                All
+                            </button>
+                            <button type="button"
+                                       class="wa-button wa-button--small"
+                                       name="open"
+                                       hx-get="/htmx/expense/overview"
+                                       hx-target="#tableContent"
+                                       hx-trigger="click"
+                                       hx-include="[name='startDate'],[name='endDate']"
+                                       hx-vals='{"currentStatus":"Open"}'
+                                       th:class="${selectedStatus == 'Open' ? 'wa-button--primary' : 'wa-button--neutral'}">
+                                Open
+                            </button>
+                            <button type="button"
+                                       class="wa-button wa-button--small"
+                                       name="delivered"
+                                       hx-get="/htmx/expense/overview"
+                                       hx-target="#tableContent"
+                                       hx-trigger="click"
+                                       hx-include="[name='startDate'],[name='endDate']"
+                                       hx-vals='{"currentStatus":"Delivered"}'
+                                       th:class="${selectedStatus == 'Delivered' ? 'wa-button--primary' : 'wa-button--neutral'}">
+                                Delivered
+                            </button>
+                            <button type="button"
+                                       class="wa-button wa-button--small"
+                                       name="approved"
+                                       hx-get="/htmx/expense/overview"
+                                       hx-target="#tableContent"
+                                       hx-trigger="click"
+                                       hx-include="[name='startDate'],[name='endDate']"
+                                       hx-vals='{"currentStatus":"Approved"}'
+                                       th:class="${selectedStatus == 'Approved' ? 'wa-button--primary' : 'wa-button--neutral'}">
+                                Approved
+                            </button>
                         </div>
                     </div>
-                    
+
                     <div id="tableContent" th:fragment="tableContent">
+                        <div th:if="${#lists.isEmpty(expenses)}" class="wa-center">
+                            <div class="wa-stack wa-gap-m wa-center">
+                                <wa-icon name="credit-card" style="font-size: 3rem; opacity: 0.5;"></wa-icon>
+                                <h3 class="wa-heading-m">No expenses found</h3>
+                                <p class="wa-text-s">Create your first expense to get started.</p>
+                            </div>
+                        </div>
+                        
                         <table th:unless="${#lists.isEmpty(expenses)}" class="wa-table">
                             <thead>
                             <tr>

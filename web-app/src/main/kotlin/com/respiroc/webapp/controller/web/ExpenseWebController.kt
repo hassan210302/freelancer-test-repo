@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.math.BigDecimal
 import java.time.LocalDate
 import com.respiroc.ledger.application.payload.ExpensePayload
+import com.respiroc.ledger.domain.model.ExpenseStatus
+import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 
 @Controller
 @RequestMapping("/expenses")
@@ -33,16 +35,24 @@ class ExpenseWebController(
         @RequestParam(name = "endDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         endDate: LocalDate?,
+        @RequestParam(name = "status", required = false)
+        status: ExpenseStatus?,
         model: Model
     ): String {
         val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
         val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
-        val expenses = expenseService.findExpensesByDate(startDate = effectiveStartDate, endDate = effectiveEndDate)
+        val expenses = expenseService.findExpensesWithFilters(
+            startDate = effectiveStartDate,
+            endDate = effectiveEndDate,
+            status = status
+        )
 
         addCommonAttributesForCurrentTenant(model, "Expenses")
         model.addAttribute("expenses", expenses)
         model.addAttribute("startDate", effectiveStartDate)
         model.addAttribute("endDate", effectiveEndDate)
+        model.addAttribute("selectedStatus", status?.name?.lowercase()?.replaceFirstChar { it.uppercase() })
+        model.addAttribute("expenseStatuses", ExpenseStatus.entries)
         return "expenses/overview"
     }
 
@@ -236,11 +246,13 @@ class ExpenseWebController(
         }
     }
 }
+@Controller
 @RequestMapping("htmx/expense")
 class ExpenseHTMXController(
     private val expenseService: ExpenseService
 ) : BaseController() {
     @GetMapping("/overview")
+    @HxRequest
     fun overviewHTMX(
         @RequestParam(name = "startDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -248,16 +260,44 @@ class ExpenseHTMXController(
         @RequestParam(name = "endDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         endDate: LocalDate?,
+        @RequestParam(name = "currentStatus", required = false)
+        currentStatus: String?,
         model: Model
     ): String {
+        println("DEBUG: HTMX request received")
+        println("DEBUG: startDate = $startDate")
+        println("DEBUG: endDate = $endDate")
+        println("DEBUG: currentStatus = $currentStatus")
+        
         val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
         val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
-        val expenses = expenseService.findExpensesByDate(startDate = effectiveStartDate, endDate = effectiveEndDate)
 
-        addCommonAttributesForCurrentTenant(model, "Expenses")
+        var statusEnum: ExpenseStatus? = null
+        when (currentStatus) {
+            "Open" -> statusEnum = ExpenseStatus.OPEN
+            "Delivered" -> statusEnum = ExpenseStatus.DELIVERED
+            "Approved" -> statusEnum = ExpenseStatus.APPROVED
+            "NULL" -> statusEnum = null
+            null -> statusEnum = null
+        }
+        
+        println("DEBUG: effectiveStartDate = $effectiveStartDate")
+        println("DEBUG: effectiveEndDate = $effectiveEndDate")
+        println("DEBUG: statusEnum = $statusEnum")
+
+        val expenses = expenseService.findExpensesWithFilters(
+            startDate = effectiveStartDate,
+            endDate = effectiveEndDate,
+            status = statusEnum
+        )
+        
+        println("DEBUG: found ${expenses.size} expenses")
+
         model.addAttribute("expenses", expenses)
         model.addAttribute("startDate", effectiveStartDate)
         model.addAttribute("endDate", effectiveEndDate)
+        model.addAttribute("selectedStatus", currentStatus)
+        model.addAttribute("expenseStatuses", ExpenseStatus.entries)
         return "expenses/overview :: tableContent"
     }
 

@@ -1,6 +1,7 @@
 package com.respiroc.ledger.domain.repository
 
 import com.respiroc.ledger.domain.model.Expense
+import com.respiroc.ledger.domain.model.ExpenseStatus
 import com.respiroc.util.repository.CustomJpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -43,6 +44,20 @@ interface ExpenseRepository : CustomJpaRepository<Expense, Long> {
         @Param("tenantId") tenantId: Long,
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
+    ): List<Expense>
+
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId AND e.status = :status ORDER BY e.expenseDate DESC")
+    fun findByTenantIdAndStatusWithCosts(
+        @Param("tenantId") tenantId: Long,
+        @Param("status") status: ExpenseStatus
+    ): List<Expense>
+
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate AND e.status = :status ORDER BY e.expenseDate DESC")
+    fun findByTenantIdAndDateRangeAndStatusWithCosts(
+        @Param("tenantId") tenantId: Long,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate,
+        @Param("status") status: ExpenseStatus
     ): List<Expense>
 
     @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments WHERE e.id = :id")

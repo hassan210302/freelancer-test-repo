@@ -25,8 +25,27 @@ class ExpenseService(
     @Transactional(readOnly = true)
     fun findAllExpensesByTenant(): List<ExpensePayload> {
         val expenses = expenseRepository.findByTenantIdWithCosts(tenantId())
-        return expenses.map { expense -> 
-            // Get attachment count separately since we can't fetch both collections at once
+        return expenses.map { expense ->
+            val attachmentCount = expenseRepository.findByIdWithAttachments(expense.id)?.attachments?.size ?: 0
+            toExpensePayload(expense, attachmentCount)
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun findExpensesWithFilters(
+        startDate: LocalDate? = null,
+        endDate: LocalDate? = null,
+        status: ExpenseStatus? = null
+    ): List<ExpensePayload> {
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        
+        val expenses = when {
+            status != null -> expenseRepository.findByTenantIdAndDateRangeAndStatusWithCosts(tenantId(), effectiveStartDate, effectiveEndDate, status)
+            else -> expenseRepository.findByTenantIdAndDateRangeWithCosts(tenantId(), effectiveStartDate, effectiveEndDate)
+        }
+        
+        return expenses.map { expense ->
             val attachmentCount = expenseRepository.findByIdWithAttachments(expense.id)?.attachments?.size ?: 0
             toExpensePayload(expense, attachmentCount)
         }
@@ -34,12 +53,7 @@ class ExpenseService(
 
     @Transactional(readOnly = true)
     fun findExpensesByDate(startDate: LocalDate, endDate: LocalDate): List<ExpensePayload> {
-        val expenses = expenseRepository.findByTenantIdAndDateRangeWithCosts(tenantId(), startDate, endDate)
-        return expenses.map { expense -> 
-            // Get attachment count separately since we can't fetch both collections at once
-            val attachmentCount = expenseRepository.findByIdWithAttachments(expense.id)?.attachments?.size ?: 0
-            toExpensePayload(expense, attachmentCount)
-        }
+        return findExpensesWithFilters(startDate = startDate, endDate = endDate)
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +127,6 @@ class ExpenseService(
     @Transactional(readOnly = true)
     fun findExpenseByIdForEdit(id: Long): ExpensePayload? {
         val expense = expenseRepository.findByIdWithCosts(id) ?: return null
-        // Get attachment count separately since we can't fetch both collections at once
         val attachmentCount = expenseRepository.findByIdWithAttachments(id)?.attachments?.size ?: 0
         return toExpensePayload(expense, attachmentCount)
     }
@@ -163,8 +176,7 @@ class ExpenseService(
         expense.amount = payload.costs.sumOf { it.amount }
         expense.createdBy = createdBy
         expense.tenantId = tenantId()
-        
-        // Create costs
+
         val costs = payload.costs.map { costPayload: CreateCostPayload ->
             val cost = Cost()
             cost.title = costPayload.title
@@ -183,8 +195,7 @@ class ExpenseService(
     }
 
     private fun createVoucherForExpense(expense: Expense) {
-        // This would create a voucher for the expense
-        // Implementation depends on voucher service
+
     }
 
     private fun mapCategoryToAccount(categoryId: Long): String {
