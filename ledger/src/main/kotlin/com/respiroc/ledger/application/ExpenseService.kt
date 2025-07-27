@@ -200,13 +200,13 @@ class ExpenseService(
 
     private fun mapCategoryToAccount(categoryId: Long): String {
         return when (categoryId) {
-            1L -> "7140" // Travel
-            2L -> "7350" // Meals & Entertainment
-            3L -> "6560" // Office Supplies
-            4L -> "7320" // Marketing
-            5L -> "6720" // Professional Services
-            6L -> "6200" // Utilities
-            else -> "7790" // Default
+            1L -> "7140"
+            2L -> "7350"
+            3L -> "6560"
+            4L -> "7320"
+            5L -> "6720"
+            6L -> "6200"
+            else -> "7790"
         }
     }
 

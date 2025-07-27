@@ -60,5 +60,5 @@ open class Expense {
     open var categoryId: Long = -1
 
     @Column(name = "account_number", length = 10)
-    open var accountNumber: String? = null  // Links to chart of accounts
+    open var accountNumber: String? = null
 }

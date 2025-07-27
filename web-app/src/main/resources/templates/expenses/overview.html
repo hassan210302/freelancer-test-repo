@@ -2,35 +2,6 @@
 <html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DEBUG: DOM loaded');
-            console.log('DEBUG: HTMX version:', htmx.version);
-            
-            // Add click listeners to debug button clicks
-            document.querySelectorAll('button[type="button"]').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    console.log('DEBUG: Button clicked:', this.name);
-                    console.log('DEBUG: Button hx attributes:', {
-                        'hx-get': this.getAttribute('hx-get'),
-                        'hx-target': this.getAttribute('hx-target'),
-                        'hx-trigger': this.getAttribute('hx-trigger'),
-                        'hx-include': this.getAttribute('hx-include'),
-                        'hx-vals': this.getAttribute('hx-vals')
-                    });
-                });
-            });
-            
-            // Debug HTMX events
-            document.body.addEventListener('htmx:beforeRequest', function(evt) {
-                console.log('DEBUG: HTMX request starting:', evt.detail);
-            });
-            
-            document.body.addEventListener('htmx:afterRequest', function(evt) {
-                console.log('DEBUG: HTMX request completed:', evt.detail);
-            });
-        });
-    </script>
 </head>
 
 <body>

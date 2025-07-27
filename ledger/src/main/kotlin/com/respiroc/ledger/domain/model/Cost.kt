@@ -5,11 +5,11 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 enum class PaymentType {
-    PRIVAT_UTLEGG,     // private outlay
-    REFUSJON,         // reimbursement
-    BEDRIFTS_UTLEGG,   // company expense
-    KONTANT_BETALING,  // cash payment
-    FAKTURABETALING   // invoice payment
+    PRIVAT_UTLEGG,
+    REFUSJON,
+    BEDRIFTS_UTLEGG,
+    KONTANT_BETALING,
+    FAKTURABETALING
 }
 
 @Entity

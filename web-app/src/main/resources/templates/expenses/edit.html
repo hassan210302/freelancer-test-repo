@@ -264,7 +264,6 @@
                             </div>
                         </div>
 
-                        <!-- Cost Template for JavaScript -->
                         <template id="cost-template" style="display: none;">
                             <div class="r-cost-item">
                                 <div class="r-cost-header">
@@ -333,7 +332,6 @@
                         <wa-divider></wa-divider>
                         <h5>Attachments</h5>
 
-                        <!-- Current Attachments Display -->
                         <div th:if="${not #lists.isEmpty(attachments)}" class="wa-stack wa-gap-s">
                             <div class="wa-text-s" style="color: var(--wa-color-gray-40); margin-bottom: var(--wa-space-xs);">
                                 Current attachments:
@@ -360,10 +358,7 @@
                             </div>
                         </div>
 
-                        <!-- Hidden File Input -->
                         <input type="file" id="file-input" name="attachments" multiple accept="image/*,application/pdf" style="display: none;" />
-                        
-                        <!-- File Feedback -->
                         <div class="file-feedback" style="margin-top: var(--wa-space-s); color: var(--wa-color-gray-40); font-size: var(--wa-font-size-s);">
                             No files selected
                         </div>

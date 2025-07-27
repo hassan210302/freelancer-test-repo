@@ -42,7 +42,6 @@ window.addEventListener("drop", function (e) {
         const files = e.dataTransfer.files;
         const fileInput = document.getElementById("file-input");
 
-        // Check if we have an expense ID available from the selected row
         const selectedRow = document.querySelector('tr[data-expense-id].selected') || 
                            document.querySelector('tr[data-expense-id]:hover') ||
                            document.querySelector('tr[data-expense-id]');
@@ -59,7 +58,6 @@ window.addEventListener("drop", function (e) {
         }
         fileInput.files = dataTransfer.files;
 
-        // Set the expense ID in the form
         const expenseIdInput = document.getElementById("expense-id-input");
         if (expenseIdInput) {
             expenseIdInput.value = expenseId;
@@ -71,23 +69,18 @@ window.addEventListener("drop", function (e) {
     }
 });
 
-// Track selected expense row
 let selectedExpenseId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Add click handlers to expense rows
     document.addEventListener('click', function(e) {
         const row = e.target.closest('tr[data-expense-id]');
         if (row) {
-            // Remove previous selection
             document.querySelectorAll('tr[data-expense-id]').forEach(r => r.classList.remove('selected'));
-            // Add selection to clicked row
             row.classList.add('selected');
             selectedExpenseId = row.getAttribute('data-expense-id');
         }
     });
 
-    // Handle file input change
     const fileInput = document.getElementById("file-input");
     if (fileInput) {
         fileInput.addEventListener('change', function() {
@@ -102,21 +95,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Handle file selection via button click
 function selectExpenseAndUpload(expenseId) {
     selectedExpenseId = expenseId;
-    // Remove previous selection
     document.querySelectorAll('tr[data-expense-id]').forEach(r => r.classList.remove('selected'));
-    // Add selection to clicked row
     const row = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
     if (row) {
         row.classList.add('selected');
     }
-    // Trigger file input
     document.getElementById("file-input").click();
 }
 
-// Reset form after successful upload
 document.addEventListener("htmx:afterSwap", function(e) {
     if (e.detail.target.id === "attachment-messages") {
         const fileInput = document.getElementById("file-input");
@@ -124,10 +112,8 @@ document.addEventListener("htmx:afterSwap", function(e) {
             fileInput.value = "";
         }
         
-        // Refresh the table content to show updated attachment counts
         if (e.detail.xhr.status === 200) {
             setTimeout(() => {
-                // Trigger a refresh of the table
                 const startDateInput = document.querySelector('input[name="startDate"]');
                 if (startDateInput) {
                     htmx.trigger(startDateInput, 'change');

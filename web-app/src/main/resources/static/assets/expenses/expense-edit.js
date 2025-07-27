@@ -40,11 +40,7 @@ window.addEventListener("drop", function (e) {
     }
 });
 
-// Upload files function for edit mode
 function uploadFiles(files) {
-    console.log("Uploading", files.length, "files");
-    
-    // Get the expense ID from the form
     const expenseIdInput = document.querySelector('input[name="expenseId"]');
     if (!expenseIdInput) {
         alert("Expense ID not found");
@@ -53,7 +49,6 @@ function uploadFiles(files) {
     
     const expenseId = expenseIdInput.value;
     
-    // Make direct HTMX request
     htmx.ajax('POST', '/htmx/expense/upload', {
         target: '#attachment-messages-edit',
         swap: 'outerHTML',
@@ -64,33 +59,24 @@ function uploadFiles(files) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle file input change for manual file selection
     const fileInput = document.getElementById("file-input-edit");
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
-                console.log("File input changed, uploading", this.files.length, "files");
                 uploadFiles(this.files);
             }
         });
-    } else {
-        console.error("File input not found");
     }
 });
 
-// Reset form and update attachment count after successful upload
 document.addEventListener("htmx:afterSwap", function(e) {
-    console.log("HTMX after swap", e.detail.target.id, e.detail.xhr.status);
     if (e.detail.target.id === "attachment-messages-edit") {
         const fileInput = document.getElementById("file-input-edit");
         if (fileInput) {
             fileInput.value = "";
         }
         
-        // Show success message and update attachment count
         if (e.detail.xhr.status === 200) {
-            console.log("Upload successful, reloading page");
-            // Update attachment count by reloading the page after a short delay to show the message
             setTimeout(() => {
                 location.reload();
             }, 1000);
@@ -98,13 +84,10 @@ document.addEventListener("htmx:afterSwap", function(e) {
     }
 });
 
-// Add error handling
 document.addEventListener("htmx:responseError", function(e) {
-    console.error("HTMX error", e.detail);
     alert("Upload failed: " + e.detail.xhr.status);
 });
 
 document.addEventListener("htmx:sendError", function(e) {
-    console.error("HTMX send error", e.detail);
     alert("Network error during upload");
 }); 

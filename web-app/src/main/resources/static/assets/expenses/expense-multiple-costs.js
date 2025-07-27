@@ -6,7 +6,6 @@ function addCost() {
     const costTemplate = document.getElementById('cost-template');
     const newCost = costTemplate.content.cloneNode(true);
     
-    // Update all IDs to be unique
     const costElements = newCost.querySelectorAll('[id]');
     costElements.forEach(element => {
         if (element.id) {
@@ -14,7 +13,6 @@ function addCost() {
         }
     });
     
-    // Update labels to reference the new IDs
     const labels = newCost.querySelectorAll('label[for]');
     labels.forEach(label => {
         if (label.getAttribute('for')) {
@@ -22,7 +20,6 @@ function addCost() {
         }
     });
     
-    // Add remove button functionality
     const removeButton = newCost.querySelector('.r-remove-cost-btn');
     if (removeButton) {
         removeButton.onclick = function() {
@@ -51,10 +48,8 @@ function removeCost(button) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the first cost
     updateCostNumbers();
     
-    // Add event listener for the add cost button
     const addCostButton = document.getElementById('add-cost-btn');
     if (addCostButton) {
         addCostButton.onclick = addCost;
