@@ -73,7 +73,6 @@ class ExpenseWebController(
             ?: return "redirect:/expenses/overview"
         
         val categories = expenseService.findAllActiveCategories()
-        val firstCost = expense.costs.firstOrNull()
         val attachments = expenseService.findExpenseAttachments(id)
 
         addCommonAttributesForCurrentTenant(model, "Edit Expense")
@@ -82,20 +81,6 @@ class ExpenseWebController(
         model.addAttribute("expenseDate", expense.expenseDate)
         model.addAttribute("paymentTypes", PaymentType.entries)
         model.addAttribute("attachments", attachments)
-        
-        if (firstCost != null) {
-            model.addAttribute("costTitle", firstCost.title)
-            model.addAttribute("costAmount", firstCost.amount)
-            model.addAttribute("costVat", firstCost.vat)
-            model.addAttribute("costPaymentType", firstCost.paymentType)
-            model.addAttribute("costChargeable", firstCost.chargeable)
-        } else {
-            model.addAttribute("costTitle", "")
-            model.addAttribute("costAmount", "")
-            model.addAttribute("costVat", 0)
-            model.addAttribute("costPaymentType", "")
-            model.addAttribute("costChargeable", false)
-        }
         
         return "expenses/edit"
     }
@@ -106,31 +91,25 @@ class ExpenseWebController(
         @RequestParam description: String,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expenseDate: LocalDate,
         @RequestParam categoryId: Long,
-        @RequestParam costTitle: String,
-        @RequestParam costAmount: BigDecimal,
-        @RequestParam costVat: Int,
-        @RequestParam costPaymentType: PaymentType,
-        @RequestParam(defaultValue = "false") costChargeable: Boolean,
+        @RequestParam(name = "costTitles", required = false) costTitles: Array<String>?,
+        @RequestParam(name = "costAmounts", required = false) costAmounts: Array<String>?,
+        @RequestParam(name = "costVats", required = false) costVats: Array<String>?,
+        @RequestParam(name = "costPaymentTypes", required = false) costPaymentTypes: Array<String>?,
+        @RequestParam(name = "costChargeables", required = false) costChargeables: Array<String>?,
         @RequestParam(name = "attachments", required = false) attachments: List<MultipartFile>?,
         model: Model
     ): String {
         return try {
-            val costPayload = CreateCostPayload(
-                title = costTitle,
-                date = expenseDate,
-                amount = costAmount,
-                vat = costVat,
-                currency = "NOK",
-                paymentType = costPaymentType,
-                chargeable = costChargeable
+            val costs = buildCostsFromArrays(
+                costTitles, costAmounts, costVats, costPaymentTypes, costChargeables, expenseDate
             )
-
+            
             val payload = CreateExpensePayload(
                 title = title,
                 description = description,
                 expenseDate = expenseDate,
                 categoryId = categoryId,
-                costs = listOf(costPayload)
+                costs = costs
             )
 
             val created = expenseService.createExpense(payload, springUser().username ?: "system")
@@ -158,31 +137,25 @@ class ExpenseWebController(
         @RequestParam description: String,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expenseDate: LocalDate,
         @RequestParam categoryId: Long,
-        @RequestParam costTitle: String,
-        @RequestParam costAmount: BigDecimal,
-        @RequestParam costVat: Int,
-        @RequestParam costPaymentType: PaymentType,
-        @RequestParam(defaultValue = "false") costChargeable: Boolean,
+        @RequestParam(name = "costTitles", required = false) costTitles: Array<String>?,
+        @RequestParam(name = "costAmounts", required = false) costAmounts: Array<String>?,
+        @RequestParam(name = "costVats", required = false) costVats: Array<String>?,
+        @RequestParam(name = "costPaymentTypes", required = false) costPaymentTypes: Array<String>?,
+        @RequestParam(name = "costChargeables", required = false) costChargeables: Array<String>?,
         @RequestParam(name = "attachments", required = false) attachments: List<MultipartFile>?,
         model: Model
     ): String {
         return try {
-            val costPayload = CreateCostPayload(
-                title = costTitle,
-                date = expenseDate,
-                amount = costAmount,
-                vat = costVat,
-                currency = "NOK",
-                paymentType = costPaymentType,
-                chargeable = costChargeable
+            val costs = buildCostsFromArrays(
+                costTitles, costAmounts, costVats, costPaymentTypes, costChargeables, expenseDate
             )
-
+            
             val payload = CreateExpensePayload(
                 title = title,
                 description = description,
                 expenseDate = expenseDate,
                 categoryId = categoryId,
-                costs = listOf(costPayload)
+                costs = costs
             )
 
             expenseService.updateExpense(id, payload)
@@ -203,7 +176,7 @@ class ExpenseWebController(
                 expenseDate = expenseDate,
                 status = com.respiroc.ledger.domain.model.ExpenseStatus.OPEN,
                 category = "",
-                amount = costAmount,
+                amount = BigDecimal.ZERO,
                 costs = emptyList(),
                 createdBy = "",
                 attachmentCount = 0
@@ -211,11 +184,6 @@ class ExpenseWebController(
             
             model.addAttribute("expense", expenseForForm)
             model.addAttribute("expenseDate", expenseDate)
-            model.addAttribute("costTitle", costTitle)
-            model.addAttribute("costAmount", costAmount)
-            model.addAttribute("costVat", costVat)
-            model.addAttribute("costPaymentType", costPaymentType)
-            model.addAttribute("costChargeable", costChargeable)
             
             "expenses/edit"
         }
@@ -243,6 +211,45 @@ class ExpenseWebController(
             val fileData = validAttachments.map { it.bytes }
             val filenames = validAttachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}.pdf" }
             expenseService.addAttachmentsToExpense(expenseId, fileData, filenames)
+        }
+    }
+
+    private fun buildCostsFromArrays(
+        costTitles: Array<String>?,
+        costAmounts: Array<String>?,
+        costVats: Array<String>?,
+        costPaymentTypes: Array<String>?,
+        costChargeables: Array<String>?,
+        expenseDate: LocalDate
+    ): List<CreateCostPayload> {
+        if (costTitles.isNullOrEmpty()) return emptyList()
+        
+        return costTitles.mapIndexedNotNull { index, title ->
+            if (title.isBlank()) return@mapIndexedNotNull null
+            
+            val amountStr = costAmounts?.getOrNull(index) ?: "0"
+            val vatStr = costVats?.getOrNull(index) ?: "0"
+            val paymentTypeStr = costPaymentTypes?.getOrNull(index) ?: ""
+            val chargeableStr = costChargeables?.getOrNull(index) ?: "false"
+            
+            try {
+                val amount = BigDecimal(amountStr)
+                val vat = vatStr.toIntOrNull() ?: 0
+                val paymentType = PaymentType.valueOf(paymentTypeStr)
+                val chargeable = chargeableStr.toBoolean()
+                
+                CreateCostPayload(
+                    title = title,
+                    date = expenseDate,
+                    amount = amount,
+                    vat = vat,
+                    currency = "NOK",
+                    paymentType = paymentType,
+                    chargeable = chargeable
+                )
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 }

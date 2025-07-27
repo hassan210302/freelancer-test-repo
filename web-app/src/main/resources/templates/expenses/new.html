@@ -4,6 +4,7 @@
 
 <head>
     <script src="/assets/expenses/expense-drag-drop.js"></script>
+    <script src="/assets/expenses/expense-multiple-costs.js"></script>
     <style>
         #dropzone {
             position: fixed;
@@ -51,6 +52,35 @@
         .upload-subtext {
             color: var(--wa-color-gray-50);
             font-size: var(--wa-font-size-s);
+        }
+        .r-cost-item {
+            border: 1px solid var(--wa-color-gray-80);
+            border-radius: 8px;
+            padding: var(--wa-space-m);
+            margin-bottom: var(--wa-space-m);
+            background: var(--wa-color-surface-default);
+        }
+        .r-cost-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--wa-space-m);
+        }
+        .r-cost-number {
+            font-weight: var(--wa-font-weight-semibold);
+            color: var(--wa-color-gray-20);
+        }
+        .r-remove-cost-btn {
+            color: var(--wa-color-danger-60);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: var(--wa-space-xs);
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+        .r-remove-cost-btn:hover {
+            background-color: var(--wa-color-danger-95);
         }
     </style>
 </head>
@@ -118,59 +148,145 @@
                         </div>
 
                         <wa-divider></wa-divider>
-                        <h5>Cost Details</h5>
-
-                        <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Cost Title *</label>
-                            <wa-input name="costTitle"
-                                      type="text"
-                                      size="small"
-                                      required
-                                      placeholder="Cost description">
-                            </wa-input>
+                        
+                        <div class="wa-cluster wa-gap-m" style="justify-content: space-between; align-items: center;">
+                            <h5>Cost Details</h5>
+                            <wa-button type="button" variant="neutral" size="small" id="add-cost-btn">
+                                <wa-icon name="plus" style="margin-right: 0.5rem;"></wa-icon>
+                                Add Cost
+                            </wa-button>
                         </div>
 
-                        <div class="wa-cluster wa-gap-m">
-                            <div style="flex: 1;">
-                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Amount *</label>
-                                <wa-input name="costAmount"
-                                          type="number"
-                                          size="small"
-                                          step="0.01"
-                                          min="0.01"
-                                          required
-                                          placeholder="0.00">
-                                </wa-input>
+                        <div id="costs-container">
+                            <div class="r-cost-item">
+                                <div class="r-cost-header">
+                                    <span class="r-cost-number">Cost 1</span>
+                                    <button type="button" class="r-remove-cost-btn" onclick="removeCost(this)" style="display: none;">
+                                        <wa-icon name="trash"></wa-icon>
+                                    </button>
+                                </div>
+                                
+                                <div class="wa-stack wa-gap-m">
+                                    <div>
+                                        <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Cost Title *</label>
+                                        <wa-input name="costTitles"
+                                                  type="text"
+                                                  size="small"
+                                                  required
+                                                  placeholder="Cost description">
+                                        </wa-input>
+                                    </div>
+
+                                    <div class="wa-cluster wa-gap-m">
+                                        <div style="flex: 1;">
+                                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Amount *</label>
+                                            <wa-input name="costAmounts"
+                                                      type="number"
+                                                      size="small"
+                                                      step="0.01"
+                                                      min="0.01"
+                                                      required
+                                                      placeholder="0.00">
+                                            </wa-input>
+                                        </div>
+
+                                        <div style="flex: 0 0 100px;">
+                                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">VAT %</label>
+                                            <wa-input name="costVats"
+                                                      type="number"
+                                                      size="small"
+                                                      min="0"
+                                                      max="100"
+                                                      value="0">
+                                            </wa-input>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Payment Type *</label>
+                                        <wa-select name="costPaymentTypes" size="small" required>
+                                            <wa-option value="">Select payment type...</wa-option>
+                                            <wa-option th:each="paymentType : ${paymentTypes}"
+                                                       th:value="${paymentType}"
+                                                       th:text="${paymentType}">
+                                            </wa-option>
+                                        </wa-select>
+                                    </div>
+
+                                    <div>
+                                        <wa-checkbox name="costChargeables" value="true">
+                                            <span>Chargeable to client</span>
+                                        </wa-checkbox>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
 
-                            <div style="flex: 0 0 100px;">
-                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">VAT %</label>
-                                <wa-input name="costVat"
-                                          type="number"
-                                          size="small"
-                                          min="0"
-                                          max="100"
-                                          value="0">
-                                </wa-input>
+                        <!-- Cost Template for JavaScript -->
+                        <template id="cost-template" style="display: none;">
+                            <div class="r-cost-item">
+                                <div class="r-cost-header">
+                                    <span class="r-cost-number">Cost Template</span>
+                                    <button type="button" class="r-remove-cost-btn" onclick="removeCost(this)">
+                                        <wa-icon name="trash"></wa-icon>
+                                    </button>
+                                </div>
+                                
+                                <div class="wa-stack wa-gap-m">
+                                    <div>
+                                        <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Cost Title *</label>
+                                        <wa-input name="costTitles"
+                                                  type="text"
+                                                  size="small"
+                                                  required
+                                                  placeholder="Cost description">
+                                        </wa-input>
+                                    </div>
+
+                                    <div class="wa-cluster wa-gap-m">
+                                        <div style="flex: 1;">
+                                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Amount *</label>
+                                            <wa-input name="costAmounts"
+                                                      type="number"
+                                                      size="small"
+                                                      step="0.01"
+                                                      min="0.01"
+                                                      required
+                                                      placeholder="0.00">
+                                            </wa-input>
+                                        </div>
+
+                                        <div style="flex: 0 0 100px;">
+                                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">VAT %</label>
+                                            <wa-input name="costVats"
+                                                      type="number"
+                                                      size="small"
+                                                      min="0"
+                                                      max="100"
+                                                      value="0">
+                                            </wa-input>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Payment Type *</label>
+                                        <wa-select name="costPaymentTypes" size="small" required>
+                                            <wa-option value="">Select payment type...</wa-option>
+                                            <wa-option th:each="paymentType : ${paymentTypes}"
+                                                       th:value="${paymentType}"
+                                                       th:text="${paymentType}">
+                                            </wa-option>
+                                        </wa-select>
+                                    </div>
+
+                                    <div>
+                                        <wa-checkbox name="costChargeables" value="true">
+                                            <span>Chargeable to client</span>
+                                        </wa-checkbox>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <div>
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Payment Type *</label>
-                            <wa-select name="costPaymentType" size="small" required>
-                                <wa-option value="">Select payment type...</wa-option>
-                                <wa-option th:each="paymentType : ${paymentTypes}"
-                                           th:value="${paymentType}"
-                                           th:text="${paymentType}">
-                                </wa-option>
-                            </wa-select>
-                        </div>
-
-                        <div>
-                            <wa-checkbox name="costChargeable" value="true">
-                                <span>Chargeable to client</span>
-                            </wa-checkbox>
-                        </div>
+                        </template>
 
                         <wa-divider></wa-divider>
                         
