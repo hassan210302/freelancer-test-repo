@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 data class SupplierPostingDTO(
     val accountNumber: String,
-    val accountName: String,
+    val description: String,
     val amount: BigDecimal,
     val postingDate: LocalDate,
     val currency: String

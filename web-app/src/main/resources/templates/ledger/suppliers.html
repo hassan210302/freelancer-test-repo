@@ -107,13 +107,14 @@
                                             <td></td>
                                             <td th:text="${posting.postingDate}"></td>
                                             <td></td>
-                                            <td></td>
+                                            <td th:text="${posting.description}"></td>
                                             <td class="r-amount-header" th:text="${posting.amount}"></td>
                                             <td th:text="${posting.currency}"></td>
                                         </tr>
 
                                         <tr class="r-total-row">
                                             <td><strong th:text="#{total}"></strong></td>
+                                            <td></td>
                                             <td></td>
                                             <td></td>
                                             <td>

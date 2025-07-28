@@ -197,7 +197,6 @@ class PostingService(
         endDate: LocalDate
     ): List<SupplierDTO> {
 
-        val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
         val rawData = postingRepository.findSuppliersByDateRange(startDate, endDate)
 
         val grouped = rawData.groupBy { row ->
@@ -212,17 +211,15 @@ class PostingService(
                 val amount = row[2] as BigDecimal
                 val postingDate = row[3] as LocalDate
                 val currency = row[4] as String
-                val account = accounts[accountNumber]
+                val description = row[6] as String
 
-                if (account != null) {
-                    SupplierPostingDTO(
+                SupplierPostingDTO(
                         accountNumber = accountNumber,
-                        accountName = account.accountDescription,
+                        description = description,
                         amount = amount,
                         postingDate = postingDate,
                         currency = currency
-                    )
-                } else null
+                )
             }
 
             SupplierDTO(
@@ -241,7 +238,6 @@ class PostingService(
         supplierName: String?
     ): List<SupplierDTO> {
 
-        val accounts = accountService.findAllAccounts().associateBy { it.noAccountNumber }
         val rawData = postingRepository.findSuppliersByDateRangeAndSupplierName(startDate, endDate,supplierName)
 
         val grouped = rawData.groupBy { row ->
@@ -256,17 +252,16 @@ class PostingService(
                 val amount = row[2] as BigDecimal
                 val postingDate = row[3] as LocalDate
                 val currency = row[4] as String
-                val account = accounts[accountNumber]
 
-                if (account != null) {
-                    SupplierPostingDTO(
-                        accountNumber = accountNumber,
-                        accountName = account.accountDescription,
-                        amount = amount,
-                        postingDate = postingDate,
-                        currency = currency
-                    )
-                } else null
+                val description = row[6] as String
+
+                SupplierPostingDTO(
+                    accountNumber = accountNumber,
+                    description = description,
+                    amount = amount,
+                    postingDate = postingDate,
+                    currency = currency
+                )
             }
 
             SupplierDTO(

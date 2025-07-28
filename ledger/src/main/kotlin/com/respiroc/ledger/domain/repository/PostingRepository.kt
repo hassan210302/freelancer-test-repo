@@ -115,7 +115,8 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
         p.amount,
         p.postingDate,
         p.currency,
-        c.organizationNumber
+        c.organizationNumber,
+        p.description
         
     FROM
         Supplier s
@@ -145,7 +146,8 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
         p.amount,
         p.postingDate,
         p.currency,
-        c.organizationNumber
+        c.organizationNumber,
+        p.description
         
     FROM
         Supplier s
