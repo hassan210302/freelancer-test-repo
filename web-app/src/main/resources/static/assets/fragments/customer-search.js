@@ -3,27 +3,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdown = document.getElementById('customer-search-dropdown');
     const container = input?.closest('div');
     if (!input || !dropdown || !container) return;
+
     let lastSelectedCustomer = { id: '', name: '' };
     let lastDispatchedCustomer = { id: '', name: '' };
-    const dropdownHasResults = () => dropdown.querySelectorAll('.dropdown-item').length > 0;
+
+    const dropdownHasResults = () => dropdown.querySelector('.dropdown-item') !== null;
 
     const dispatchSelection = (id, name) => {
         if (id === lastDispatchedCustomer.id && name === lastDispatchedCustomer.name) return;
+        lastDispatchedCustomer = { id, name };
         input.dispatchEvent(new CustomEvent('customerSelected', {
             detail: { id, name },
-            bubbles: true,
+            bubbles: true
         }));
-        lastDispatchedCustomer = { id, name };
     };
 
     const handleDropdownClose = () => {
         dropdown.style.display = 'none';
-        const currentInput = input?.value?.trim();
+        const currentInput = input.value.trim();
 
         if (!lastSelectedCustomer.id && !dropdownHasResults()) {
             input.value = '';
-            dispatchSelection('', '');
             lastSelectedCustomer = { id: '', name: '' };
+            dispatchSelection('', '');
             return;
         }
 
@@ -33,8 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 dispatchSelection(lastSelectedCustomer.id, lastSelectedCustomer.name);
             } else {
                 input.value = '';
-                dispatchSelection('', '');
                 lastSelectedCustomer = { id: '', name: '' };
+                dispatchSelection('', '');
             }
             return;
         }
@@ -49,26 +51,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('click', e => {
-        if (!container.contains(e.target)) {
-            handleDropdownClose();
-        }
+        if (!container.contains(e.target)) handleDropdownClose();
     });
 
     input.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            handleDropdownClose();
-        }
+        if (e.key === 'Escape') handleDropdownClose();
     });
 
     dropdown.addEventListener('click', e => {
         const item = e.target.closest('.dropdown-item');
         if (!item) return;
-        const id = item.dataset.customerId;
-        const name = item.dataset.customerName;
+        const { customerId: id, customerName: name } = item.dataset;
         input.value = name;
         lastSelectedCustomer = { id, name };
-        dispatchSelection(id, name);
         dropdown.style.display = 'none';
+        dispatchSelection(id, name);
     });
 
     input.addEventListener('input', () => {
