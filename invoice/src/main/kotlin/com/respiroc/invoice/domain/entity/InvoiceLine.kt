@@ -35,4 +35,7 @@ class InvoiceLine {
 
     @Column(name = "vat_code", nullable = false)
     lateinit var vatCode: String
+
+    @Transient
+    lateinit var totalAmount: BigDecimal
 }

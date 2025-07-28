@@ -112,6 +112,7 @@ class InvoiceService(
             val discountedSubtotal = subtotal.subtract(discountAmount)
             val vatCode = vatService.findVatCodeByCode(line.vatCode)
             val vatAmount = vatService.calculateVatAmount(discountedSubtotal, vatCode!!)
+            line.totalAmount = discountedSubtotal + vatAmount
             acc + discountedSubtotal + vatAmount
         }
     }
