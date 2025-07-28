@@ -122,9 +122,7 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
     JOIN
         Company c ON s.companyId = c.id
     JOIN
-        Tenant t ON c.id = t.companyId
-    JOIN
-        Posting p ON t.id = p.tenantId
+        Posting p ON s.companyId = p.companyId
     WHERE 
         p.accountNumber = '2400'
     AND 
@@ -154,9 +152,7 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
     JOIN
         Company c ON s.companyId = c.id
     JOIN
-        Tenant t ON c.id = t.companyId
-    JOIN
-        Posting p ON t.id = p.tenantId
+        Posting p ON s.companyId = p.companyId
     WHERE 
         p.accountNumber = '2400'
     AND 

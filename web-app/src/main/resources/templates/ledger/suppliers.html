@@ -59,9 +59,8 @@
                                        th:hx-indicator="'#loading-indicator'"
                                        th:hx-trigger="'change'"
                                        th:hx-include="'[name=\'startDate\'], [name=\'endDate\']'"
-                                       th:each="supplier : ${supplierData}">
-
-                                <wa-option th:value="${supplier.name}" th:text="${supplier.name}"></wa-option>
+                                       >
+                                <wa-option th:each="supplier : ${supplierData}" th:value="${supplier.name}" th:text="${supplier.name}"></wa-option>
 
                                 <wa-option value="All" selected>(All)</wa-option>
                             </wa-select>
