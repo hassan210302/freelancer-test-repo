@@ -21,7 +21,7 @@
         </td>
         <td th:data-label="#{invoice.table.issue_date}" th:text="${invoice.issueDate}"></td>
         <td th:data-label="#{invoice.table.due_date}" th:text="${invoice.dueDate}"></td>
-        <td th:data-label="#{invoice.table.invoice_type}" th:text="${invoice.isSaleInvoice()? 'Sale' : 'Purchase'}"></td>
+        <td th:data-label="#{invoice.table.invoice_type}"  th:text="${invoice.isSaleInvoice()} ? #{invoice.type.sale} : #{invoice.type.purchase}"></td>
         <td th:data-label="#{invoice.table.party_name}" th:text="${invoice.getPartyName()}"></td>
         <td th:data-label="#{invoice.table.amount}" th:text="${invoice.totalAmount}"></td>
         <td th:data-label="#{invoice.table.currency}" th:text="${invoice.currencyCode}"></td>

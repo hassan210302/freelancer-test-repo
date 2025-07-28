@@ -1,9 +1,70 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <body>
 <main layout:fragment="content">
-    invoice detail
+    <wa-card>
+        <div slot="header" th:text="#{invoice.summary.title}"></div>
+        <table>
+            <tbody>
+            <tr>
+                <td><strong th:text="#{invoice.number}"></strong></td>
+                <td th:text="${invoice.number}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.issue_date}"></strong></td>
+                <td th:text="${invoice.issueDate}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.due_date}"></strong></td>
+                <td th:text="${invoice.dueDate}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.type}"></strong></td>
+                <td th:text="${invoice.isSaleInvoice()} ? #{invoice.type.sale} : #{invoice.type.purchase}"></td>
+
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.party_name}"></strong></td>
+                <td th:text="${invoice.partyName}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.currency}"></strong></td>
+                <td th:text="${invoice.currencyCode}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.total_amount}"></strong></td>
+                <td th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'COMMA', 2, 'POINT')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </wa-card>
+
+    <wa-card style="margin-top: var(--wa-space-m); overflow: auto;">
+        <div slot="header" th:text="#{invoice.lines.title}"></div>
+        <table class="wa-zebra-rows wa-hover-rows" style="width: 100%;">
+            <thead>
+            <tr>
+                <th th:text="#{invoice.line.product}"></th>
+                <th th:text="#{invoice.line.quantity}"></th>
+                <th th:text="#{invoice.line.unit_price}"></th>
+                <th th:text="#{invoice.line.discount}"></th>
+                <th th:text="#{invoice.line.vat}"></th>
+                <th th:text="#{invoice.line.amount}"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line : ${invoice.lines}">
+                <td th:text="${line.itemName}"></td>
+                <td th:text="${line.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT')}"></td>
+                <td th:text="${line.discount != null ? line.discount : 0}"></td>
+                <td th:text="${line.vatCode}"></td>
+                <td th:text="${#numbers.formatDecimal(line.totalAmount, 1, 'COMMA', 2, 'POINT')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </wa-card>
 </main>
 </body>
 </html>
