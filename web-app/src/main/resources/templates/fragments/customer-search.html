@@ -1,6 +1,6 @@
 <div th:fragment="customerSearch">
     <div style="position: relative;">
-        <wa-input placeholder="Search customer"
+        <wa-input th:placeholder="#{contact.search_customer}"
                   autocomplete="off"
                   size="small"
                   type="text"
@@ -30,8 +30,7 @@
 
 <div th:fragment="items">
     <div th:if="${customers == null or #lists.isEmpty(customers)}"
-         style="padding: var(--wa-space-xs); color: var(--wa-color-neutral-60);">
-        No customers found.
+         style="padding: var(--wa-space-xs); color: var(--wa-color-neutral-60);" th:text="#{contact.no_customer_found}">
     </div>
 
     <div th:each="customer : ${customers}"
@@ -42,7 +41,7 @@
          style="padding: var(--wa-space-xs); cursor: pointer; border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-neutral-80);">
         <span th:text="${customer.name}"></span>
         <span style="color: var(--wa-color-neutral-60); font-size: var(--wa-font-size-small);"
-              th:text="${customer.privateCustomer} ? 'Person' : 'Company'">
+              th:text="${customer.privateCustomer} ? #{contact.private_person} : #{contact.company}">
   </span>
     </div>
 </div>
