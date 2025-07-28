@@ -9,11 +9,10 @@
     <form id="invoiceForm">
         <div class="wa-stack">
             <wa-card>
-                <div slot="header">Customer</div>
+                <div slot="header" th:text="#{invoice.form.customer}"></div>
                 <div class="wa-cluster wa-gap-s">
                     <div th:replace="fragments/customer-search :: customerSearch"></div>
-                    <wa-input name="customerId" id="customerId" class="wa-visually-hidden"
-                              tabindex="-1"></wa-input>
+                    <wa-input name="customerId" id="customerId" class="wa-visually-hidden" tabindex="-1"></wa-input>
                     <wa-select style="width: 5.6rem" size="small" value="NOK" name="currencyCode" required
                                id="currencyCode">
                         <wa-option th:each="currency : ${supportedCurrencies}"
@@ -23,34 +22,33 @@
                 </div>
             </wa-card>
             <wa-card>
-                <div slot="header">Date</div>
+                <div slot="header" th:text="#{invoice.form.date_section}"></div>
                 <div class="wa-cluster wa-gap-s">
-                    <wa-input id="invoiceDate" name="issueDate" type="date" label="invoice date" required
-                              size="small"></wa-input>
+                    <wa-input id="invoiceDate" name="issueDate" type="date" required size="small"
+                              th:label="#{invoice.form.issue_date}"></wa-input>
                     <wa-input id="daysUntilDue" value="14" min="0" size="small" required
-                              label="days until due" type="number"></wa-input>
-                    <wa-input name="dueDate" required id="dueDate" class="wa-visually-hidden"
-                              tabindex="-1"></wa-input>
+                              type="number" th:label="#{invoice.form.due_days}"></wa-input>
+                    <wa-input name="dueDate" required id="dueDate" class="wa-visually-hidden" tabindex="-1"></wa-input>
                 </div>
             </wa-card>
             <wa-card style="overflow: auto">
-                <div slot="header">Lines</div>
+                <div slot="header" th:text="#{invoice.form.lines_section}"></div>
                 <table id="invoiceTable">
                     <thead>
                     <tr>
-                        <th>Product</th>
-                        <th>Qty</th>
-                        <th>Unit Price</th>
-                        <th>Discount (%)</th>
-                        <th>VAT (%)</th>
-                        <th>Amount (Incl. VAT)</th>
-                        <th>Actions</th>
+                        <th th:text="#{invoice.form.line.product}"></th>
+                        <th th:text="#{invoice.form.line.quantity}"></th>
+                        <th th:text="#{invoice.form.line.unit_price}"></th>
+                        <th th:text="#{invoice.form.line.discount}"></th>
+                        <th th:text="#{invoice.form.line.vat}"></th>
+                        <th th:text="#{invoice.form.line.amount}"></th>
+                        <th th:text="#{invoice.form.line.actions}"></th>
                     </tr>
                     </thead>
                     <tbody id="invoiceBody">
                     <tr>
                         <td>
-                            <wa-input size="small" style="width: 300px;" name="itemName" required value=""></wa-input>
+                            <wa-input size="small" style="width: 350px;" name="itemName" required value=""></wa-input>
                         </td>
                         <td>
                             <wa-input type="number" min="0" value="1" size="small" required style="width: 80px;"
@@ -73,10 +71,14 @@
                         <td class="amount">0.00</td>
                         <td>
                             <wa-button size="small" variant="neutral" data-action="duplicate">
-                                <wa-icon label="duplicate" name="copy" variant="solid" title="Duplicate"></wa-icon>
+                                <wa-icon label="duplicate" name="copy" variant="solid"
+                                         th:title="#{invoice.form.button.duplicate}">
+                                </wa-icon>
                             </wa-button>
                             <wa-button size="small" variant="danger" data-action="delete">
-                                <wa-icon label="delete" name="trash" variant="solid" title="Delete"></wa-icon>
+                                <wa-icon label="delete" name="trash" variant="solid"
+                                         th:title="#{invoice.form.button.delete}">
+                                </wa-icon>
                             </wa-button>
                         </td>
                     </tr>
@@ -84,18 +86,20 @@
                     <tfoot>
                     <tr>
                         <td colspan="4"></td>
-                        <td style="text-align: right;">Total:</td>
+                        <td style="text-align: right;" th:text="#{invoice.detail.total_amount}"></td>
                         <td id="invoiceTotal">0.00</td>
                         <td>
-                            <wa-button type="button" variant="neutral" data-action="add-row">
-                                Add Row
+                            <wa-button type="button" variant="neutral" data-action="add-row"
+                                       th:text="#{invoice.form.button.add_row}">
                             </wa-button>
                         </td>
                     </tr>
                     </tfoot>
                 </table>
             </wa-card>
-            <wa-button type="submit" variant="success" style="width: fit-content">Submit Invoice</wa-button>
+            <wa-button type="submit" variant="success" style="width: fit-content"
+                       th:text="#{invoice.form.button.submit}">
+            </wa-button>
         </div>
     </form>
 </main>
