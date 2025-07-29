@@ -47,8 +47,10 @@
                         </div>
 
                         <div >
-                            <label class="wa-body-s" style="font-weight: 500;">Supplier</label>
-                            <wa-select name="supplierName"
+                            <label for="supplierName" th:text="#{supplier}" />
+                            <wa-select
+                                    name="supplierName"
+                                    id="supplierName"
                                        size="small"
                                        th:hx-get="'/htmx/ledger/suppliers'"
                                        th:hx-target="'#tableContent'"
