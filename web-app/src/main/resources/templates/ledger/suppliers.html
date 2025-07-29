@@ -29,7 +29,7 @@
                                       th:hx-swap="'innerHTML'"
                                       th:hx-indicator="'#loading-indicator'"
                                       th:hx-trigger="'change'"
-                                      th:hx-include="'[name=\'endDate\'], [name=\'supplierName\']'"></wa-input>
+                                      th:hx-include="'[name=\'endDate\'], [name=\'organizationNumber\']'"></wa-input>
                         </div>
 
                         <div class="r-filter-group">
@@ -45,7 +45,7 @@
                                       th:hx-swap="'innerHTML'"
                                       th:hx-indicator="'#loading-indicator'"
                                       th:hx-trigger="'change'"
-                                      th:hx-include="'[name=\'startDate\'], [name=\'supplierName\']'"></wa-input>
+                                      th:hx-include="'[name=\'startDate\'], [name=\'organizationNumber\']'"></wa-input>
                         </div>
 
                         <div class="r-filter-group">
@@ -60,7 +60,7 @@
                                        th:hx-trigger="'change'"
                                        th:hx-include="'[name=\'startDate\'], [name=\'endDate\']'"
                                        >
-                                <wa-option th:each="supplier : ${supplierData}" th:value="${supplier.name}" th:text="${supplier.name}"></wa-option>
+                                <wa-option th:each="supplier : ${supplierData}" th:value="${supplier.organizationNumber}" th:text="${supplier.name}"></wa-option>
 
                                 <wa-option value="All" selected>(All)</wa-option>
                             </wa-select>

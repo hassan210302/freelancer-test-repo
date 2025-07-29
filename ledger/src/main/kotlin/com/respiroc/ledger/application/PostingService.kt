@@ -200,33 +200,18 @@ class PostingService(
         val rawData = postingRepository.findSuppliersByDateRange(startDate, endDate)
 
         val grouped = rawData.groupBy { row ->
-            Pair(row[0] as String, row[5] as String)
+            Pair(row.name, row.organizationNumber)
         }
 
         return grouped.map { (key, rows) ->
             val (supplierName, organizationNumber) = key
 
-            val postings = rows.mapNotNull { row ->
-                val accountNumber = row[1] as String
-                val amount = row[2] as BigDecimal
-                val postingDate = row[3] as LocalDate
-                val currency = row[4] as String
-                val description = row[6] as String
-
-                SupplierPostingDTO(
-                        accountNumber = accountNumber,
-                        description = description,
-                        amount = amount,
-                        postingDate = postingDate,
-                        currency = currency
-                )
-            }
 
             SupplierDTO(
                 name = supplierName,
                 organizationNumber = organizationNumber,
-                postings = postings,
-                totalAmount = postings.sumOf { it.amount }
+                postings = rows,
+                totalAmount = rows.sumOf { it.amount }
             )
         }
     }
@@ -235,40 +220,24 @@ class PostingService(
     fun getSuppliersBySupplierName(
         startDate: LocalDate,
         endDate: LocalDate,
-        supplierName: String?
+        organizationNumber: String?
     ): List<SupplierDTO> {
 
-        val rawData = postingRepository.findSuppliersByDateRangeAndSupplierName(startDate, endDate,supplierName)
+        val rawData = postingRepository.findSuppliersByDateRangeAndOrganizationNumber(startDate, endDate,organizationNumber)
 
         val grouped = rawData.groupBy { row ->
-            Pair(row[0] as String, row[5] as String)
+            Pair(row.name, row.organizationNumber)
         }
 
         return grouped.map { (key, rows) ->
             val (supplierName, organizationNumber) = key
 
-            val postings = rows.mapNotNull { row ->
-                val accountNumber = row[1] as String
-                val amount = row[2] as BigDecimal
-                val postingDate = row[3] as LocalDate
-                val currency = row[4] as String
-
-                val description = row[6] as String
-
-                SupplierPostingDTO(
-                    accountNumber = accountNumber,
-                    description = description,
-                    amount = amount,
-                    postingDate = postingDate,
-                    currency = currency
-                )
-            }
 
             SupplierDTO(
                 name = supplierName,
                 organizationNumber = organizationNumber,
-                postings = postings,
-                totalAmount = postings.sumOf { it.amount }
+                postings = rows,
+                totalAmount = rows.sumOf { it.amount }
             )
         }
     }

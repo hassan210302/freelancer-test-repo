@@ -4,11 +4,13 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class SupplierPostingDTO(
+    val name: String,
     val accountNumber: String,
-    val description: String,
     val amount: BigDecimal,
     val postingDate: LocalDate,
-    val currency: String
+    val currency: String,
+    val organizationNumber: String,
+    val description: String
 )
 
 data class SupplierDTO(

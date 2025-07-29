@@ -1,5 +1,6 @@
 package com.respiroc.ledger.domain.repository
 
+import com.respiroc.ledger.application.payload.SupplierPostingDTO
 import com.respiroc.ledger.domain.model.Posting
 import com.respiroc.util.repository.CustomJpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -109,7 +110,7 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
 
     @Query(
         """
-    SELECT 
+    SELECT new com.respiroc.ledger.application.payload.SupplierPostingDTO(
         c.name,
         p.accountNumber,
         p.amount,
@@ -117,30 +118,25 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
         p.currency,
         c.organizationNumber,
         p.description
-        
-    FROM
-        Supplier s
-    JOIN
-        Company c ON s.companyId = c.id
-    JOIN
-        Posting p ON s.companyId = p.companyId
-    WHERE 
-        p.accountNumber = '2400'
-    AND 
-        p.postingDate BETWEEN :startDate AND :endDate
-    ORDER BY
-        c.name
-"""
+    )
+    FROM Supplier s
+    JOIN Posting p ON s.id = p.supllierId
+    JOIN Company c ON s.companyId = c.id
+
+    WHERE p.accountNumber = '2400'
+      AND p.postingDate BETWEEN :startDate AND :endDate
+    ORDER BY c.name
+    """
     )
     fun findSuppliersByDateRange(
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
-    ): List<Array<Any>>
+    ): List<SupplierPostingDTO>
 
 
     @Query(
         """
-    SELECT 
+    SELECT new com.respiroc.ledger.application.payload.SupplierPostingDTO(
         c.name,
         p.accountNumber,
         p.amount,
@@ -148,26 +144,23 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
         p.currency,
         c.organizationNumber,
         p.description
-        
-    FROM
-        Supplier s
-    JOIN
-        Company c ON s.companyId = c.id
-    JOIN
-        Posting p ON s.companyId = p.companyId
+    )
+    FROM Supplier s
+    JOIN Posting p ON s.id = p.supllierId
+    JOIN Company c ON s.companyId = c.id
     WHERE 
         p.accountNumber = '2400'
     AND 
         p.postingDate BETWEEN :startDate AND :endDate
     AND
-        c.name = :supplierName
+        c.organizationNumber = :organizationNumber
     ORDER BY
         c.name
 """
     )
-    fun findSuppliersByDateRangeAndSupplierName(
+    fun findSuppliersByDateRangeAndOrganizationNumber(
         @Param("startDate") startDate: LocalDate?,
         @Param("endDate") endDate: LocalDate?,
-        @Param("supplierName") supplierName: String?,
-    ): List<Array<Any>>
+        @Param("organizationNumber") organizationNumber: String?,
+    ): List<SupplierPostingDTO>
 }

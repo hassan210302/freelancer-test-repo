@@ -75,6 +75,6 @@ class Posting : Serializable {
     @JoinColumn(name = "voucher_id", nullable = true, updatable = false, insertable = false)
     var voucher: Voucher? = null
 
-    @Column(name = "company_id", nullable = true, updatable = false)
-    var companyId: Long? = null
+    @Column(name = "supplier_id", nullable = true, updatable = false)
+    var supllierId: Long? = null
 }
