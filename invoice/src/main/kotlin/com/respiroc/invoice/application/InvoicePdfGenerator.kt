@@ -2,6 +2,7 @@ package com.respiroc.invoice.application
 
 import com.itextpdf.io.font.constants.StandardFonts
 import com.itextpdf.kernel.colors.ColorConstants
+import com.itextpdf.kernel.font.PdfFont
 import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.geom.PageSize
 import com.itextpdf.kernel.pdf.PdfDocument
@@ -19,6 +20,7 @@ import com.respiroc.invoice.domain.entity.Invoice
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 class InvoicePdfGenerator {
 
@@ -33,15 +35,12 @@ class InvoicePdfGenerator {
             setMargins(40f, 40f, 40f, 40f)
         }
 
-        val subtotal = invoice.lines.sumOf { it.subTotal }
-        val totalDiscount = invoice.lines.sumOf { it.discountAmount }
-        val totalVat = invoice.lines.sumOf { it.sats }
 
         addHeader(document, invoice)
         addPartyInfo(document, invoice)
         addInvoiceDetails(document, invoice)
         addInvoiceLines(document, invoice)
-        addSummaryRows(document, subtotal - totalDiscount, totalVat, invoice.totalAmount, invoice.currencyCode)
+        addSummaryRows(document, invoice)
 
         document.close()
         return output.toByteArray()
@@ -129,26 +128,43 @@ class InvoicePdfGenerator {
 
     private fun addSummaryRows(
         document: Document,
-        subtotal: BigDecimal,
-        totalVat: BigDecimal,
-        totalAmount: BigDecimal,
-        currencyCode: String
+        invoice: Invoice,
     ) {
+
+        val subtotal = invoice.lines.sumOf { it.subTotal }
+        val totalDiscount = invoice.lines.sumOf { it.discountAmount }
+        val totalVat = invoice.lines.sumOf { it.sats }
+
         val table = Table(UnitValue.createPercentArray(floatArrayOf(4f, 1f, 2f, 2f, 2f, 2f, 2f, 2f)))
             .setWidth(UnitValue.createPercentValue(100f))
             .setMarginTop(5f)
 
-        table.addCell(createCell("Sum", boldFont, 9f, TextAlignment.LEFT, colspan = 5, border = Border.NO_BORDER))
-        table.addCell(createCell(formatMoney(subtotal), regularFont, 9f, TextAlignment.RIGHT))
-        table.addCell(createCell(formatMoney(totalVat), regularFont, 9f, TextAlignment.RIGHT))
-        table.addCell(createCell(formatMoney(totalAmount), regularFont, 9f, TextAlignment.RIGHT))
-        table.addCell(emptyCell(8).setBorderTop(SolidBorder(ColorConstants.BLACK, 0.25f)))
+        if (invoice.lines.size > 1) {
+            table.addCell(createCell("Sum", boldFont, 9f, TextAlignment.LEFT, colspan = 5, border = Border.NO_BORDER))
+            table.addCell(
+                createCell(
+                    formatMoney(subtotal.subtract(totalDiscount)),
+                    regularFont,
+                    9f,
+                    TextAlignment.RIGHT
+                )
+            )
+            table.addCell(createCell(formatMoney(totalVat), regularFont, 9f, TextAlignment.RIGHT))
+            table.addCell(createCell(formatMoney(invoice.totalAmount), regularFont, 9f, TextAlignment.RIGHT))
+            table.addCell(emptyCell(8).setBorderTop(SolidBorder(ColorConstants.BLACK, 0.25f)))
+        }
 
         table.addCell(
             createCell("Payable", boldFont, 9f, TextAlignment.LEFT, colspan = 6)
         )
         table.addCell(
-            createCell("$currencyCode ${formatMoney(totalAmount)}", boldFont, 9f, TextAlignment.RIGHT, colspan = 2)
+            createCell(
+                "${invoice.currencyCode} ${formatMoney(invoice.totalAmount)}",
+                boldFont,
+                9f,
+                TextAlignment.RIGHT,
+                colspan = 2
+            )
         )
         table.addCell(emptyCell(8).setBorderTop(SolidBorder(ColorConstants.BLACK, 2f)).setHeight(1f))
 
@@ -160,8 +176,12 @@ class InvoicePdfGenerator {
         val address = company.address!!
 
         val addressLine = listOfNotNull(
-            address.addressPart1, address.addressPart2, address.postalCode
-        ).joinToString(", ") + ". Org No: ${company.organizationNumber}"
+            address.addressPart1,
+            address.addressPart2,
+            address.postalCode,
+            address.city,
+            getCountryNameFromCode(address.countryIsoCode)
+        ).joinToString(", ")
 
         document.add(
             Paragraph(company.name)
@@ -181,7 +201,6 @@ class InvoicePdfGenerator {
         val addressWidth = regularFont.getWidth(addressLine, 10f)
 
         listOf(
-            address.countryIsoCode.uppercase(),
             addressLine
         ).forEach {
             document.add(
@@ -194,6 +213,37 @@ class InvoicePdfGenerator {
                     .setMarginBottom(0f)
             )
         }
+        val labels = listOf("Company Number:")
+        val values = listOf("${company.countryCode} ${company.organizationNumber.chunked(3).joinToString(" ")} MVA")
+
+        val fontSize = 10f
+        val labelFont = boldFont
+        val valueFont = regularFont
+
+        val maxLabelWidth = maxTextWidth(labels, labelFont, fontSize)
+        val maxValueWidth = maxTextWidth(values, valueFont, fontSize)
+
+        val paddingPerColumn = 8f
+        val totalTableWidth = maxLabelWidth + maxValueWidth + (paddingPerColumn * 2)
+
+        val columnWidths = floatArrayOf(maxLabelWidth + paddingPerColumn, maxValueWidth + paddingPerColumn)
+
+        val table = Table(UnitValue.createPointArray(columnWidths))
+            .setWidth(totalTableWidth)
+            .setMarginTop(10f)
+            .setBorder(Border.NO_BORDER)
+            .setHorizontalAlignment(HorizontalAlignment.RIGHT)
+
+        table.addCell(createCell(labels[0], labelFont, fontSize, TextAlignment.LEFT))
+        table.addCell(createCell(values[0], valueFont, fontSize, TextAlignment.LEFT))
+
+
+        table.setWidth(totalTableWidth)
+        document.add(table)
+    }
+
+    fun maxTextWidth(texts: List<String>, font: PdfFont, fontSize: Float): Float {
+        return texts.maxOfOrNull { font.getWidth(it, fontSize) } ?: 0f
     }
 
     private fun addPartyInfo(document: Document, invoice: Invoice) {
@@ -204,27 +254,24 @@ class InvoicePdfGenerator {
         val details = buildList {
             add(invoice.customer.getName())
             address?.addressPart1?.takeIf { it.isNotBlank() }?.let { add(it) }
-            address?.addressPart2?.let { add(it) }
-            address?.postalCode?.let { add(it) }
-            if (!invoice.customer.isPrivateCustomer()) {
-                add(invoice.customer.company!!.organizationNumber)
-            }
-            add(address?.countryIsoCode.orEmpty())
+            address?.addressPart2?.takeIf { it.isNotBlank() }?.let { add(it) }
+            add("${address?.postalCode ?: ""} ${address?.city}".trimIndent())
         }
 
-        val paragraph = Paragraph()
-            .setFont(regularFont)
-            .setFontSize(10f)
-            .setMultipliedLeading(1f)
-
-        details.forEach { paragraph.add("$it\n") }
-
-        document.add(paragraph)
+        details.forEach {
+            document.add(
+                Paragraph(it)
+                    .setFont(regularFont)
+                    .setFontSize(10f)
+                    .setMarginBottom(0.2f)
+                    .setMultipliedLeading(1f)
+            )
+        }
     }
 
     private fun createCell(
         text: String,
-        font: com.itextpdf.kernel.font.PdfFont,
+        font: PdfFont,
         fontSize: Float,
         alignment: TextAlignment,
         colspan: Int = 1,
@@ -243,4 +290,10 @@ class InvoicePdfGenerator {
     }
 
     private fun formatMoney(amount: BigDecimal?): String = amount?.let { "%,.2f".format(it) } ?: ""
+
+    fun getCountryNameFromCode(countryCode: String, displayLocale: Locale = Locale.ENGLISH): String {
+        val locale = Locale.Builder().setRegion(countryCode).build()
+        return locale.getDisplayCountry(displayLocale)
+    }
+
 }
