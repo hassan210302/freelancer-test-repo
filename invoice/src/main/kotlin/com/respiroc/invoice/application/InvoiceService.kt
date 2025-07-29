@@ -104,16 +104,22 @@ class InvoiceService(
     }
 
     private fun calculateTotalAmount(lines: List<InvoiceLine>): BigDecimal {
-        return lines.fold(BigDecimal.ZERO) { acc, line ->
+        var totalAmount = BigDecimal.ZERO
+        lines.forEach { line ->
             val quantity = BigDecimal.valueOf(line.quantity.toLong())
-            val subtotal = line.unitPrice.multiply(quantity)
+            val subTotal = line.unitPrice.multiply(quantity)
             val discountPercent = line.discount ?: BigDecimal.ZERO
-            val discountAmount = subtotal.multiply(discountPercent).divide(BigDecimal(100))
-            val discountedSubtotal = subtotal.subtract(discountAmount)
+            val discountAmount = subTotal.multiply(discountPercent).divide(BigDecimal(100))
+            val discountedSubtotal = subTotal.subtract(discountAmount)
             val vatCode = vatService.findVatCodeByCode(line.vatCode)
             val vatAmount = vatService.calculateVatAmount(discountedSubtotal, vatCode!!)
+            line.vatRate = vatCode.rate
+            line.vst = vatAmount
+            line.discountAmount = discountAmount
+            line.subTotal = subTotal
             line.totalAmount = discountedSubtotal + vatAmount
-            acc + discountedSubtotal + vatAmount
+            totalAmount = totalAmount + discountedSubtotal + vatAmount
         }
+        return totalAmount
     }
 }

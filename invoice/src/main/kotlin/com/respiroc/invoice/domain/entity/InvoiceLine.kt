@@ -38,4 +38,16 @@ class InvoiceLine {
 
     @Transient
     lateinit var totalAmount: BigDecimal
+
+    @Transient
+    lateinit var vatRate: BigDecimal
+
+    @Transient
+    lateinit var vst: BigDecimal
+
+    @Transient
+    lateinit var discountAmount: BigDecimal
+
+    @Transient
+    lateinit var subTotal: BigDecimal
 }
