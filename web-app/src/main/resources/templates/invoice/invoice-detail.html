@@ -4,7 +4,19 @@
 <body>
 <main layout:fragment="content">
     <wa-card>
-        <div slot="header" th:text="#{invoice.detail.summary.title}"></div>
+        <div slot="header" class="wa-split">
+            <div th:text="#{invoice.detail.summary.title}"></div>
+            <wa-button type="button" size="small" variant="neutral"
+                       th:hx-get="@{/invoice/{id}/pdf/embed(id=${invoice.id})}"
+                       th:hx-target="'#pdf-container'"
+                       th:hx-target-error="'#r-callout'"
+                       th:hx-swap="'innerHTML'"
+                       id="pdfLoadButton"
+                       hx-trigger="load, click delay:200ms"
+                       hx-on::after-request="activateSplit()">
+                <wa-icon label="Show" name="eye"></wa-icon>
+            </wa-button>
+        </div>
         <table>
             <tbody>
             <tr>
@@ -66,5 +78,12 @@
         </table>
     </wa-card>
 </main>
+<div layout:fragment="aside">
+    <div id="aside-split" style="height: 100%">
+        <div id="pdf-container" style="height: 100%; overflow-y: hidden;">
+            <embed id="pdf-embed" type="application/pdf"/>
+        </div>
+    </div>
+</div>
 </body>
 </html>

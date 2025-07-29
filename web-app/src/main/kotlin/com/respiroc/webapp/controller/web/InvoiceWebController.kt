@@ -8,9 +8,11 @@ import com.respiroc.webapp.controller.request.NewInvoiceRequest
 import com.respiroc.webapp.controller.request.toPayload
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @Controller
 @RequestMapping(value = ["/invoice"])
@@ -42,7 +44,7 @@ class InvoiceWebController(
     }
 
     @GetMapping("/{id}/pdf", produces = [MediaType.APPLICATION_PDF_VALUE])
-    fun viewInvoicePdf(
+    fun downloadInvoicePdf(
         @PathVariable id: Long,
         response: HttpServletResponse
     ) {
@@ -52,6 +54,17 @@ class InvoiceWebController(
         response.setHeader("Content-Disposition", "attachment; filename=invoice-${invoice.number}.pdf")
         response.setContentLength(pdfBytes.size)
         response.outputStream.use { it.write(pdfBytes) }
+    }
+
+    @GetMapping("/{id}/pdf/embed")
+    fun embeddedInvoicePdf(@PathVariable id: Long): ResponseEntity<String> {
+        val invoice = invoiceService.getInvoiceWithLines(id)
+        val pdfBytes = InvoicePdfGenerator().generate(invoice)
+
+        val base64Data = Base64.getEncoder().encodeToString(pdfBytes)
+        val dataUrl = "data:application/pdf;base64,$base64Data"
+        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
+            .body("""<embed id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""");
     }
 
     @DeleteMapping("/{id}")

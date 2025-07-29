@@ -57,7 +57,7 @@ class InvoicePdfGenerator {
             .author = invoice.tenant.company.name
 
         addHeader(document, invoice)
-        addPartyInfo(document, invoice)
+        addCustomerInfo(document, invoice)
         addInvoiceDetails(document, invoice)
         addInvoiceLines(document, invoice)
         addSummaryRows(document, invoice)
@@ -125,7 +125,7 @@ class InvoicePdfGenerator {
         document.add(table)
     }
 
-    private fun addPartyInfo(document: Document, invoice: Invoice) {
+    private fun addCustomerInfo(document: Document, invoice: Invoice) {
         val address = invoice.customer.let {
             if (it.isPrivateCustomer()) it.person!!.address else it.company!!.address
         }
