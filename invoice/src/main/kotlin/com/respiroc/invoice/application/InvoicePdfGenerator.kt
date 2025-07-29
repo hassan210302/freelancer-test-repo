@@ -10,7 +10,10 @@ import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.layout.Document
 import com.itextpdf.layout.borders.Border
 import com.itextpdf.layout.borders.SolidBorder
-import com.itextpdf.layout.element.*
+import com.itextpdf.layout.element.Cell
+import com.itextpdf.layout.element.Paragraph
+import com.itextpdf.layout.element.Table
+import com.itextpdf.layout.properties.HorizontalAlignment
 import com.itextpdf.layout.properties.TextAlignment
 import com.itextpdf.layout.properties.UnitValue
 import com.respiroc.invoice.domain.entity.Invoice
@@ -39,161 +42,285 @@ class InvoicePdfGenerator {
 
         addHeader(document, invoice)
         addPartyInfo(document, invoice)
-        addInvoiceInfo(document, invoice)
-        addInvoiceSummary(document, subtotal, totalDiscount, totalVat, invoice.totalAmount)
-        addInvoiceLinesTable(document, invoice)
-        addTotalSection(document, invoice)
-
+        addInvoiceDetails(document, invoice)
+        addInvoiceLines(document, invoice)
+        addSummaryRows(
+            document,
+            subtotal.subtract(totalDiscount),
+            totalVat,
+            invoice.totalAmount,
+            currencyCode = invoice.currencyCode
+        )
         document.close()
         return output.toByteArray()
     }
 
+    private fun addInvoiceLines(
+        document: Document,
+        invoice: Invoice,
+    ) {
+        val columnWidths = floatArrayOf(3f, 1f, 1.5f, 1.5f, 1.5f, 1.5f, 1.5f, 1.5f)  // narrower columns
+        val table = Table(UnitValue.createPercentArray(columnWidths))
+            .setWidth(UnitValue.createPercentValue(100f))
+            .setBorderBottom(SolidBorder(0.25f))// reduce overall width to 80%
+            .setMarginTop(50f)
+
+        fun headerCell(text: String): Cell {
+            return Cell()
+                .add(Paragraph(text).setFont(boldFont).setFontSize(9f))  // smaller font size
+                .setTextAlignment(TextAlignment.CENTER)
+                .setPadding(3f)  // reduce padding
+                .setBorderTop(Border.NO_BORDER)
+                .setBorderLeft(Border.NO_BORDER)
+                .setBorderRight(Border.NO_BORDER)
+                .setBorderBottom(SolidBorder(0.25f))
+        }
+
+        fun dataCell(text: String, align: TextAlignment = TextAlignment.LEFT): Cell {
+            return Cell()
+                .add(Paragraph(text).setFont(regularFont).setFontSize(9f))  // smaller font size
+                .setTextAlignment(align)
+                .setPadding(1f)  // reduce padding
+                .setBorder(Border.NO_BORDER)
+        }
+
+        // Add header row
+        table.addHeaderCell(headerCell("Description").setTextAlignment(TextAlignment.LEFT))
+        table.addHeaderCell(headerCell("Quantity").setTextAlignment(TextAlignment.RIGHT))
+        table.addHeaderCell(headerCell("Unit Price\n(excl. VAT)").setTextAlignment(TextAlignment.RIGHT))
+        table.addHeaderCell(headerCell("Discount").setTextAlignment(TextAlignment.RIGHT))
+        table.addHeaderCell(headerCell("VAT Rate").setTextAlignment(TextAlignment.RIGHT))
+        table.addHeaderCell(headerCell("Amount\n(excl. VAT)").setTextAlignment(TextAlignment.RIGHT))
+        table.addHeaderCell(headerCell("VAT").setTextAlignment(TextAlignment.RIGHT))
+        table.addHeaderCell(headerCell("Amount\n(incl. VAT)").setTextAlignment(TextAlignment.RIGHT))
+
+        invoice.lines.forEachIndexed { index, line ->
+            table.addCell(dataCell(line.itemName, TextAlignment.LEFT))
+            table.addCell(dataCell(line.quantity.toString(), TextAlignment.RIGHT))
+            table.addCell(dataCell(formatMoney(line.unitPrice), TextAlignment.RIGHT))
+            table.addCell(dataCell("${line.discount} %", TextAlignment.RIGHT))
+            table.addCell(dataCell("${line.vatRate} %", TextAlignment.RIGHT))
+            table.addCell(dataCell(formatMoney(line.subTotal.subtract(line.discountAmount)), TextAlignment.RIGHT))
+            table.addCell(dataCell(formatMoney(line.sats), TextAlignment.RIGHT))
+            table.addCell(dataCell(formatMoney(line.totalAmount), TextAlignment.RIGHT))
+        }
+        document.add(table)
+    }
+
+
+    fun formatMoney(amount: BigDecimal?): String {
+        return amount?.let { "%,.2f".format(it) } ?: ""
+    }
+
+    fun addInvoiceDetails(document: Document, invoice: Invoice) {
+        val table = Table(UnitValue.createPointArray(floatArrayOf(100f, 120f)))
+            .setBorder(Border.NO_BORDER)
+            .setWidth(UnitValue.createPercentValue(30f))
+            .setHorizontalAlignment(HorizontalAlignment.RIGHT)
+            .setMargin(0f)
+            .setPadding(0f)
+
+        fun labelCell(text: String): Cell {
+            return Cell().add(Paragraph(text))
+                .setFont(regularFont)
+                .setFontSize(10f)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)
+                .setPadding(0f)
+        }
+
+        fun valueCell(text: String): Cell {
+            return Cell().add(Paragraph(text))
+                .setFont(regularFont)
+                .setFontSize(10f)
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setBorder(Border.NO_BORDER)
+                .setPadding(0f)
+        }
+        table.addCell(
+            Cell(1, 2)
+                .add(Paragraph("Invoice").setFont(boldFont).setFontSize(18f))
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)
+                .setPaddingBottom(2f)
+        )
+
+        table.addCell(labelCell("Invoice No.:"))
+        table.addCell(valueCell(invoice.number))
+
+        table.addCell(labelCell("Invoice Date:"))
+        table.addCell(valueCell(invoice.issueDate.toString()))
+
+        table.addCell(
+            Cell(1, 2)
+                .add(Paragraph(" "))
+                .setBorder(Border.NO_BORDER)
+                .setPaddingTop(4f)
+        )
+
+        table.addCell(
+            Cell(1, 2)
+                .add(Paragraph("Payment Information").setFont(boldFont))
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)
+                .setPaddingBottom(2f)
+        )
+
+        table.addCell(labelCell("Due Date:"))
+        table.addCell(valueCell(invoice.dueDate.toString()))
+
+        document.add(table)
+    }
+
+    private fun addSummaryRows(
+        document: Document,
+        subtotal: BigDecimal,
+        totalVat: BigDecimal,
+        totalAmount: BigDecimal,
+        currencyCode: String
+    ) {
+        val summaryTable = Table(UnitValue.createPercentArray(floatArrayOf(4f, 1f, 2f, 2f, 2f, 2f, 2f, 2f)))
+            .setWidth(UnitValue.createPercentValue(100f))
+            .setMarginTop(5f)
+
+        summaryTable.addCell(
+            Cell(1, 5)
+                .add(Paragraph("Sum").setFont(boldFont).setFontSize(9f))
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)
+        )
+        summaryTable.addCell(
+            Cell().add(Paragraph(formatMoney(subtotal)).setFont(regularFont).setFontSize(9f))
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setBorder(Border.NO_BORDER)
+        )
+        summaryTable.addCell(
+            Cell().add(Paragraph(formatMoney(totalVat)).setFont(regularFont).setFontSize(9f))
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setBorder(Border.NO_BORDER)
+        )
+        summaryTable.addCell(
+            Cell().add(Paragraph(formatMoney(totalAmount)).setFont(regularFont).setFontSize(9f))
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setBorder(Border.NO_BORDER)
+        )
+        summaryTable.addCell(
+            Cell(1, 8)
+                .setBorder(Border.NO_BORDER)
+                .setBorderTop(SolidBorder(ColorConstants.BLACK, 0.25f))
+                .setHeight(0.25f)
+        )
+
+        // Row 2: Payment info
+        summaryTable.addCell(
+            Cell(1, 6)
+                .add(
+                    Paragraph("Payable to account xxxx-xxxx-xxxx-xxxx")
+                        .setFont(boldFont)
+                        .setFontSize(9f)
+                )
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)
+        )
+        summaryTable.addCell(
+            Cell(1, 2)
+                .add(Paragraph("$currencyCode ${formatMoney(totalAmount)}").setFont(boldFont).setFontSize(9f))
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setBorder(Border.NO_BORDER)
+        )
+
+        summaryTable.addCell(
+            Cell(1, 8)
+                .setBorder(Border.NO_BORDER)
+                .setBorderTop(SolidBorder(ColorConstants.BLACK, 2f))
+                .setHeight(1f)
+        )
+        document.add(summaryTable)
+    }
+
+
     private fun addHeader(document: Document, invoice: Invoice) {
+        val company = invoice.tenant.company
+        val address = company.address
+
+        val addressLineParts = listOfNotNull(
+            address?.addressPart1,
+            address?.addressPart2,
+            address?.postalCode
+        )
+
+        val addressLine = addressLineParts.joinToString(", ") + ". " + "Org No: ${company.organizationNumber}"
+
         document.add(
-            Paragraph(invoice.tenant.getCompanyName())
+            Paragraph(company.name)
                 .setFont(boldFont)
-                .setFontSize(24f)
+                .setFontSize(14f)
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setMarginBottom(2f)
+        )
+
+        document.add(
+            Table(1)
+                .setWidth(UnitValue.createPercentValue(100f))
+                .setBorder(Border.NO_BORDER)
+                .addCell(
+                    Cell().apply {
+                        setBorder(Border.NO_BORDER)
+                        setBorderTop(SolidBorder(ColorConstants.BLACK, 2f))
+                        setHeight(1f)
+                    }
+                )
+        )
+
+        val addressWidth = regularFont.getWidth(addressLine, 10f)
+        document.add(
+            Paragraph(address?.countryIsoCode?.uppercase())
+                .setFont(regularFont)
+                .setFontSize(10f)
+                .setWidth(addressWidth)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setHorizontalAlignment(HorizontalAlignment.RIGHT)
+                .setMarginBottom(0f)
+        )
+
+        document.add(
+            Paragraph(addressLine)
+                .setFont(regularFont)
+                .setFontSize(10f)
+                .setWidth(addressWidth)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setHorizontalAlignment(HorizontalAlignment.RIGHT)
                 .setMarginBottom(5f)
         )
 
-        document.add(
-            Table(1).setWidth(UnitValue.createPercentValue(100f)).setBorder(Border.NO_BORDER).addCell(
-                Cell().apply {
-                    setBorder(Border.NO_BORDER)
-                    setBorderTop(SolidBorder(ColorConstants.BLACK, 2f))
-                    setHeight(2f)
-                }
-            )
-        )
+
     }
 
     private fun addPartyInfo(document: Document, invoice: Invoice) {
-        val table = Table(UnitValue.createPercentArray(floatArrayOf(1f, 1f)))
-            .setWidth(UnitValue.createPercentValue(100f))
-            .setBorder(Border.NO_BORDER)
-            .setMarginTop(30f)
+        val address = if (invoice.customer.isPrivateCustomer()) invoice.customer.person!!.address
+        else invoice.customer.company!!.address
 
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER).apply {
-                add(Paragraph("Bill To:").setFont(boldFont).setFontSize(11f))
-                add(Paragraph(invoice.getPartyName()).setFont(regularFont).setFontSize(11f))
-            }
-        )
+        val detailLines = mutableListOf("${invoice.customer.getName()}\n")
+        if (address?.addressPart1!!.isNotBlank()) detailLines.add("${address.addressPart1}\n")
+        if (address.addressPart2 != null) detailLines.add("${address.addressPart2}\n")
+        if (address.postalCode != null) detailLines.add("${address.postalCode}\n")
+        if (invoice.customer.isPrivateCustomer()
+                .not()
+        ) detailLines.add("${invoice.customer.company!!.organizationNumber}\n")
+        detailLines.add(address.countryIsoCode)
 
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER).apply {
-                add(
-                    Paragraph("Currency: ${invoice.currencyCode}")
-                        .setFont(regularFont)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .setFontSize(11f)
-                )
-            }
-        )
-
-        document.add(table)
-    }
-
-    private fun addInvoiceInfo(document: Document, invoice: Invoice) {
-        val table = Table(UnitValue.createPercentArray(floatArrayOf(1f, 1f, 1f)))
-            .setWidth(UnitValue.createPercentValue(100f))
-            .setBorder(Border.NO_BORDER)
-            .setMarginTop(40f)
-            .setMarginBottom(5f)
-
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER).apply {
-                add(Paragraph("Invoice Number").setFont(regularFont).setFontSize(10f).setFontColor(DeviceGray.GRAY))
-                add(Paragraph(invoice.number).setFont(boldFont).setFontSize(16f))
-            }
-        )
-
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER).apply {
-                add(Paragraph("Issue Date").setFont(regularFont).setFontSize(10f).setFontColor(DeviceGray.GRAY))
-                add(Paragraph(invoice.issueDate.format(dateFormat)).setFont(boldFont).setFontSize(16f))
-                setTextAlignment(TextAlignment.CENTER)
-            }
-        )
-
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER).apply {
-                add(Paragraph("Due Date").setFont(regularFont).setFontSize(10f).setFontColor(DeviceGray.GRAY))
-                add(Paragraph(invoice.dueDate?.format(dateFormat) ?: "-").setFont(boldFont).setFontSize(16f))
-                setTextAlignment(TextAlignment.RIGHT)
-            }
-        )
-
-        document.add(table)
-    }
-
-    private fun addInvoiceSummary(
-        document: Document,
-        subtotal: BigDecimal,
-        discount: BigDecimal,
-        sats: BigDecimal,
-        total: BigDecimal
-    ) {
-        val table = Table(UnitValue.createPercentArray(floatArrayOf(2f, 2f, 2f, 2f)))
-            .setWidth(UnitValue.createPercentValue(100f))
+        val lines = Paragraph()
+            .setFont(regularFont)
             .setFontSize(10f)
-            .setMarginBottom(20f)
+            .setMargin(0f)
+            .setPadding(0f)
+            .setMultipliedLeading(1f)
 
-        addTableHeader(table, listOf("Subtotal", "Discount", "Sats", "Total"))
-        addTableRow(table, listOf(subtotal, discount, sats, total).map { format(it) })
-
-        document.add(table)
-    }
-
-    private fun addInvoiceLinesTable(document: Document, invoice: Invoice) {
-        val table = Table(UnitValue.createPercentArray(floatArrayOf(3f, 1f, 1f, 1f, 1f, 1f)))
-            .setWidth(UnitValue.createPercentValue(100f))
-            .setFontSize(10f)
-
-        addTableHeader(table, listOf("Item", "Qty", "Unit Price", "Discount %", "VAT %", "Amount"))
-
-        invoice.lines.forEach { line ->
-            addTableRow(
-                table,
-                listOf(
-                    line.itemName,
-                    line.quantity.toString(),
-                    format(line.unitPrice),
-                    format(line.discount ?: BigDecimal.ZERO),
-                    format(line.vat),
-                    format(line.totalAmount)
-                )
-            )
+        for (detailLine in detailLines) {
+            lines.add(detailLine)
         }
 
-        table.addCell(
-            Cell(1, 6)
-                .setBorder(Border.NO_BORDER)
-                .setBorderTop(SolidBorder(ColorConstants.BLACK, 1f))
-                .setPaddingTop(5f)
-                .setPaddingBottom(5f)
-        )
-
-        document.add(table)
-    }
-
-    private fun addTotalSection(document: Document, invoice: Invoice) {
-        val table = Table(UnitValue.createPercentArray(floatArrayOf(3f, 1f)))
-            .setWidth(UnitValue.createPercentValue(100f))
-            .setFontSize(10f)
-
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER)
-                .add(Paragraph("Total Amount").setFont(boldFont))
-        )
-
-        table.addCell(
-            Cell().setBorder(Border.NO_BORDER)
-                .add(Paragraph(format(invoice.totalAmount)).setFont(boldFont))
-                .setTextAlignment(TextAlignment.RIGHT)
-        )
-
-        document.add(table)
+        document.add(lines)
     }
 
     private fun addTableHeader(table: Table, headers: List<String>) {
