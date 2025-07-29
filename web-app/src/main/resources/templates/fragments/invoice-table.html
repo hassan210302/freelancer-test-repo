@@ -26,23 +26,9 @@
         <td th:data-label="#{invoice.table.amount}" th:text="${invoice.totalAmount}"></td>
         <td th:data-label="#{invoice.table.currency}" th:text="${invoice.currencyCode}"></td>
         <td th:data-label="#{invoice.table.actions}" style="text-align: right;">
-            <wa-button
-                    size="small"
-                    variant="brand"
-                    th:hx-get="@{/invoice/{id}/pdf(id=${invoice.id})}"
-                    hx-target="body"
-                    th:text="#{invoice.table.view_pdf}">
-            </wa-button>
-            <wa-button
-                    size="small"
-                    variant="danger"
-                    th:hx-target="'#row-' + ${invoice.id}"
-                    th:hx-delete="@{/invoice/{id}(id=${invoice.id})}"
-                    hx-disabled-elt="this"
-                    hx-swap="outerHTML swap:0.5s"
-                    th:hx-confirm="#{invoice.table.delete_confirm}"
-                    th:text="#{invoice.table.delete}">
-            </wa-button>
+            <a th:href="@{'/invoice/' + ${invoice.id} + '/pdf'}" class="wa-button">
+                <wa-icon name="eye"></wa-icon>
+            </a>
         </td>
     </tr>
     </tbody>
