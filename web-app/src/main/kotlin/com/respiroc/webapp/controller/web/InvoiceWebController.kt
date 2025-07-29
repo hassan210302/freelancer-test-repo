@@ -1,10 +1,13 @@
 package com.respiroc.webapp.controller.web
 
+import com.respiroc.invoice.application.InvoicePdfGenerator
 import com.respiroc.invoice.application.InvoiceService
 import com.respiroc.util.currency.CurrencyService
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.NewInvoiceRequest
 import com.respiroc.webapp.controller.request.toPayload
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
@@ -38,11 +41,17 @@ class InvoiceWebController(
         return "invoice/invoice-form"
     }
 
-    @GetMapping("/{id}/pdf")
-    fun viewInvoicePdf(@PathVariable id: Long): String {
-        // TODO: Implement logic to generate/view PDF
-//        return "invoice/invoice-pdf-view"
-        return "invoice/invoice"
+    @GetMapping("/{id}/pdf", produces = [MediaType.APPLICATION_PDF_VALUE])
+    fun viewInvoicePdf(
+        @PathVariable id: Long,
+        response: HttpServletResponse
+    ) {
+        val invoice = invoiceService.getInvoiceWithLines(id)
+        val pdfBytes = InvoicePdfGenerator().generate(invoice)
+        response.contentType = MediaType.APPLICATION_PDF_VALUE
+        response.setHeader("Content-Disposition", "attachment; filename=invoice-${invoice.number}.pdf")
+        response.setContentLength(pdfBytes.size)
+        response.outputStream.use { it.write(pdfBytes) }
     }
 
     @DeleteMapping("/{id}")
