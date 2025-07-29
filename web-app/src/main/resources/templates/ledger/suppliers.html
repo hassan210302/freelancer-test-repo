@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head>
-    <link rel="stylesheet" th:href="@{/assets/ledger/supplier.css}">
-</head>
+
 
 <body>
-<main layout:fragment="content">
+<main layout:fragment="content" >
     <div >
 
 
-            <div class="r-supplier-container">
+            <wa-card  style="background: var(--wa-color-surface-raised); --spacing: 0">
 
-                <div class="r-filters-section">
+                <div slot="header" class="wa-split"  >
 
-                    <div div class="r-filters-form" th:if="${user != null and user.ctx.currentTenant != null}">
+                    <div class="wa-cluster" style="padding: var(--wa-space-l)">
 
-                        <div class="r-filter-group">
-                            <label class="r-filter-label" for="startDate" th:text="#{start_date}" />
+                        <div>
+                            <label  for="startDate" th:text="#{start_date}" />
                             <wa-input type="date"
                                       name="startDate"
                                       id="startDate"
@@ -32,8 +30,8 @@
                                       th:hx-include="'[name=\'endDate\'], [name=\'organizationNumber\']'"></wa-input>
                         </div>
 
-                        <div class="r-filter-group">
-                            <label class="r-filter-label" for="endDate" th:text="#{end_date}" />
+                        <div >
+                            <label  for="endDate" th:text="#{end_date}" />
                             <wa-input type="date"
                                       name="endDate"
                                       id="endDate"
@@ -48,7 +46,7 @@
                                       th:hx-include="'[name=\'startDate\'], [name=\'organizationNumber\']'"></wa-input>
                         </div>
 
-                        <div class="r-filter-group">
+                        <div >
                             <label class="wa-body-s" style="font-weight: 500;">Supplier</label>
                             <wa-select name="supplierName"
                                        size="small"
@@ -66,8 +64,8 @@
                             </wa-select>
                         </div>
 
-                        <div class="r-filter-group">
-                            <div id="loading-indicator" class="htmx-indicator r-loading-indicator">
+                        <div>
+                            <div id="loading-indicator" class="htmx-indicator">
                                 <wa-spinner size="small"></wa-spinner>
                                 <span style="margin-left: var(--wa-space-s);" th:text="#{loading}" />
                             </div>
@@ -76,13 +74,13 @@
                     </div>
                 </div>
 
-                <div id="tableContent">
+                <div id="tableContent" style="background: var(--wa-color-surface-default);" >
                     <div th:fragment="tableContent">
                         <div th:unless="${#lists.isEmpty(supplierData)}">
                             <div style="overflow-x: auto;">
 
-                                <table class="r-supplier-table">
-                                    <thead>
+                                <table style="font-size: var(--wa-font-size-s); padding: var(--wa-space-m) var(--wa-space-s);">
+                                    <thead style="background: var(--wa-color-surface-raised);">
 
                                     <tr>
                                         <th style="width: 20%;" th:text="#{invoice_no}" />
@@ -98,7 +96,7 @@
                                     <th:block th:each="supplier : ${supplierData}">
                                         <tr>
                                             <td colspan="5">
-                <span class="r-supplier-name" style="width: 80%"
+                <span  style="width: 80%;     font-weight: 900;color: var(--wa-color-blue-40); padding: var(--wa-space-m) var(--wa-space-s);"
                       th:text="${supplier.name + ' (' + supplier.organizationNumber + ')'}"></span>
                                             </td>
                                         </tr>
@@ -108,11 +106,11 @@
                                             <td th:text="${posting.postingDate}"></td>
                                             <td></td>
                                             <td th:text="${posting.description}"></td>
-                                            <td class="r-amount-header" th:text="${posting.amount}"></td>
+                                            <td  th:text="${posting.amount}"></td>
                                             <td th:text="${posting.currency}"></td>
                                         </tr>
 
-                                        <tr class="r-total-row">
+                                        <tr style="background: var(--wa-color-surface-default);border-top: 2px solid var(--wa-color-blue-70);    font-weight: 600;color: var(--wa-color-blue-40);padding: var(--wa-space-m) var(--wa-space-s);">
                                             <td><strong th:text="#{total}"></strong></td>
                                             <td></td>
                                             <td></td>
@@ -135,8 +133,8 @@
                         </div>
 
 
-                        <div th:if="${#lists.isEmpty(supplierData)}" class="r-empty-state">
-                            <div class="r-empty-state-icon">
+                        <div th:if="${#lists.isEmpty(supplierData)}" style="    text-align: center;padding: var(--wa-space-4xl);color: var(--wa-color-gray-50);">
+                            <div style="    font-size: var(--wa-font-size-4xl);margin-bottom: var(--wa-space-m);opacity: 0.5;">
                                 <wa-icon name="table"></wa-icon>
                             </div>
                             <h3 th:text="#{no_Data_available}" />
@@ -145,7 +143,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </wa-card>
 
 
 
