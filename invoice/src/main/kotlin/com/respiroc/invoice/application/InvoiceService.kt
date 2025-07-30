@@ -110,7 +110,7 @@ class InvoiceService(
             val vatCode = vatService.findVatCodeByCode(line.vatCode)
             val vatAmount = vatService.calculateVatAmount(discountedSubtotal, vatCode!!)
             line.vatRate = vatCode.rate
-            line.vst = vatAmount
+            line.vat = vatAmount
             line.discountAmount = discountAmount
             line.subTotal = subTotal
             line.totalAmount = discountedSubtotal + vatAmount

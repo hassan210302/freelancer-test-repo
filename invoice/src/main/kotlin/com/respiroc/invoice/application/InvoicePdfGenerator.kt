@@ -214,7 +214,7 @@ class InvoicePdfGenerator {
                     TextAlignment.RIGHT
                 )
             )
-            table.addCell(createCell(formatMoney(line.vst), regularFont, FONT_SIZE_SMALL, TextAlignment.RIGHT))
+            table.addCell(createCell(formatMoney(line.vat), regularFont, FONT_SIZE_SMALL, TextAlignment.RIGHT))
             table.addCell(createCell(formatMoney(line.totalAmount), regularFont, FONT_SIZE_SMALL, TextAlignment.RIGHT))
         }
 
@@ -261,7 +261,7 @@ class InvoicePdfGenerator {
     private fun calculateTotals(invoice: Invoice): InvoiceTotals {
         val subtotal = invoice.lines.sumOf { it.subTotal }
         val discount = invoice.lines.sumOf { it.discountAmount }
-        val vat = invoice.lines.sumOf { it.vst }
+        val vat = invoice.lines.sumOf { it.vat }
         val total = invoice.totalAmount
         return InvoiceTotals(subtotal, discount, vat, total)
     }

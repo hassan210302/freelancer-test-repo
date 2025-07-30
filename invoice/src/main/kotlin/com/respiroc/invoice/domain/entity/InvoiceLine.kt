@@ -43,7 +43,7 @@ class InvoiceLine {
     lateinit var vatRate: BigDecimal
 
     @Transient
-    lateinit var vst: BigDecimal
+    lateinit var vat: BigDecimal
 
     @Transient
     lateinit var discountAmount: BigDecimal
