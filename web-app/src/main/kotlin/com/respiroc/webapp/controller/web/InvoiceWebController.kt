@@ -65,14 +65,6 @@ class InvoiceWebController(
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
             .body("""<embed id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""")
     }
-
-    @DeleteMapping("/{id}")
-    @ResponseBody
-    fun deleteInvoice(@PathVariable id: Long) {
-        // TODO: Implement delete logic
-//        invoiceService.deleteById(id)
-    }
-
 }
 
 @Controller
