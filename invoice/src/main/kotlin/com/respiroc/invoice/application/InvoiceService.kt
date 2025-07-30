@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Service
 @Transactional
@@ -104,7 +105,7 @@ class InvoiceService(
             val quantity = BigDecimal.valueOf(line.quantity.toLong())
             val subTotal = line.unitPrice.multiply(quantity)
             val discountPercent = line.discount ?: BigDecimal.ZERO
-            val discountAmount = subTotal.multiply(discountPercent).divide(BigDecimal(100))
+            val discountAmount = subTotal.multiply(discountPercent).divide(BigDecimal(100), RoundingMode.HALF_UP)
             val discountedSubtotal = subTotal.subtract(discountAmount)
             val vatCode = vatService.findVatCodeByCode(line.vatCode)
             val vatAmount = vatService.calculateVatAmount(discountedSubtotal, vatCode!!)

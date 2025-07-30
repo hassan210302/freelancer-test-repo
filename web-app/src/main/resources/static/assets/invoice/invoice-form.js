@@ -8,14 +8,19 @@ const getNumericValue = (row, name) => {
     return parseFloat(getInputValue(input)) || 0;
 };
 
+function roundHalfUp(value, decimals = 2) {
+    const factor = 10 ** decimals;
+    return Math.round((value * factor) + Number.EPSILON) / factor;
+}
+
 const updateAmount = (row) => {
     const qty = getNumericValue(row, 'quantity');
     const price = getNumericValue(row, 'unitPrice');
     const discount = getNumericValue(row, 'discount');
     const vatCode = getNumericValue(row, 'vatCode');
     const vatRate = vatCodes.find(v => Number(v.code) === vatCode)?.rate ?? 0;
-    const subtotal = qty * price * (1 - discount / 100);
-    const total = subtotal * (1 + vatRate / 100);
+    const subtotal = roundHalfUp(qty * price * (1 - discount / 100));
+    const total = roundHalfUp(subtotal * (1 + vatRate / 100));
     row.querySelector('.amount').textContent = total.toFixed(2);
 };
 
