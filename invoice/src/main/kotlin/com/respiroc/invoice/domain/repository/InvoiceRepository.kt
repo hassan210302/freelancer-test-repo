@@ -39,4 +39,8 @@ interface InvoiceRepository : CustomJpaRepository<Invoice, Long> {
     """
     )
     fun findInvoiceById(@Param("id") id: Long): Invoice?
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE YEAR(i.issueDate) = :year")
+    fun countInvoicesByIssueDateYear(@Param("year") year: Int): Int
+
 }
