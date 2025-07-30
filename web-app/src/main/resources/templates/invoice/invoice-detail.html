@@ -32,21 +32,12 @@
                 <td th:text="${invoice.dueDate}"></td>
             </tr>
             <tr>
-                <td><strong th:text="#{invoice.detail.type}"></strong></td>
-                <td th:text="${invoice.isSaleInvoice()} ? #{invoice.detail.type.sale} : #{invoice.detail.type.purchase}"></td>
-
-            </tr>
-            <tr>
-                <td><strong th:text="#{invoice.detail.party_name}"></strong></td>
-                <td th:text="${invoice.partyName}"></td>
-            </tr>
-            <tr>
-                <td><strong th:text="#{invoice.detail.currency}"></strong></td>
-                <td th:text="${invoice.currencyCode}"></td>
+                <td><strong th:text="#{invoice.detail.customer_name}"></strong></td>
+                <td th:text="${invoice.customer.getName()}"></td>
             </tr>
             <tr>
                 <td><strong th:text="#{invoice.detail.total_amount}"></strong></td>
-                <td th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'COMMA', 2, 'POINT')}"></td>
+                <td th:text="|${#numbers.formatDecimal(invoice.totalAmount, 1, 'COMMA', 2, 'POINT')} ${invoice.currencyCode}|"></td>
             </tr>
             </tbody>
         </table>
