@@ -99,6 +99,7 @@ async function addPostingLine(sourceRow = null) {
 
     const accounts = await window.getAccounts();
     const vatCodes = await window.getVatCodes();
+    const suppliers = await window.getSuppliers();
     
     const accountItems = accounts.map(account => ({
         value: account.noAccountNumber,
@@ -114,6 +115,13 @@ async function addPostingLine(sourceRow = null) {
         displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
     }));
 
+    const supplierItems = suppliers.map(supplier => ({
+        value: supplier.id,
+        title: supplier.company.name,
+        subtitle: supplier.company.name,
+        displayText: supplier.company.name,
+    }))
+
     // Get current date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
     
@@ -126,6 +134,7 @@ async function addPostingLine(sourceRow = null) {
         creditVatCode: sourceRow.querySelector('[name*="creditVatCode"]')?.value || vatCodes[0]?.code || '',
         amount: sourceRow.querySelector('[name*="amount"]')?.value || '',
         currency: sourceRow.querySelector('[name*="currency"]')?.value || 'NOK',
+        supplier: sourceRow.querySelector('[name*="supplier"]')?.value || '',
         description: sourceRow.querySelector('[name*="description"]')?.value || ''
     } : {
         postingDate: today,
@@ -135,6 +144,7 @@ async function addPostingLine(sourceRow = null) {
         creditVatCode: vatCodes[0]?.code || '',
         amount: '',
         currency: 'NOK',
+        supplier: '',
         description: ''
     };
 
@@ -202,6 +212,15 @@ async function addPostingLine(sourceRow = null) {
             </wa-select>
         </td>
         <td>
+          <r-combobox
+            name="postingLines[${rowCounter}].supplier"
+            placeholder="Select supplier..."
+            tabindex="${rowCounter * 10 + 9}"
+            class="w-full"
+            filter>
+          </r-combobox>
+        </td>
+        <td>
             <wa-input type="text" size="small"
                       tabindex="${rowCounter * 10 + 6}"
                       placeholder="Description"
@@ -228,8 +247,10 @@ async function addPostingLine(sourceRow = null) {
     const debitVatCombo = newRow.querySelector('[name*="debitVatCode"]');
     const creditAccountCombo = newRow.querySelector('[name*="creditAccount"]');
     const creditVatCombo = newRow.querySelector('[name*="creditVatCode"]');
+    const supplierCombo = newRow.querySelector('[name*="creditVatCode"]')
     
     debitAccountCombo.items = accountItems;
+    supplierCombo.items = supplierItems;
     debitVatCombo.items = vatItems;
     creditAccountCombo.items = accountItems;
     creditVatCombo.items = vatItems;
