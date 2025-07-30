@@ -9,9 +9,6 @@ import com.respiroc.ledger.application.VatService
 import com.respiroc.util.context.ContextAwareApi
 import jakarta.persistence.EntityManager
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
@@ -41,7 +38,6 @@ class InvoiceService(
         invoice.issueDate = payload.issueDate
         invoice.dueDate = payload.dueDate
         invoice.currencyCode = payload.currencyCode
-        invoice.supplierId = payload.supplierId
         invoice.customerId = payload.customerId
         return invoice
     }
@@ -76,10 +72,9 @@ class InvoiceService(
         return (query.singleResult as Number).toInt()
     }
 
-    fun getInvoicesWithLines(page: Int, size: Int): Page<Invoice> {
-        val pageable = PageRequest.of(page, size).withSort(Sort.by("id").descending())
-        val invoicePage = invoiceRepository.findAllInvoices(pageable)
-        val invoiceIds = invoicePage.content.map { it.id }
+    fun getInvoicesWithLines(): List<Invoice> {
+        val invoices = invoiceRepository.findAllInvoices()
+        val invoiceIds = invoices.map { it.id }
         val invoiceMapWithLines = if (invoiceIds.isNotEmpty()) {
             invoiceRepository.fetchLinesByInvoiceIds(invoiceIds)
                 .associateBy { it.id }
@@ -87,14 +82,14 @@ class InvoiceService(
             emptyMap()
         }
 
-        invoicePage.content.forEach { invoice ->
+        invoices.forEach { invoice ->
             val invoiceWithLines = invoiceMapWithLines[invoice.id]
             if (invoiceWithLines != null) {
                 invoice.lines = invoiceWithLines.lines
                 invoice.totalAmount = calculateTotalAmount(invoice.lines)
             }
         }
-        return invoicePage
+        return invoices
     }
 
     fun getInvoiceWithLines(invoiceId: Long): Invoice {

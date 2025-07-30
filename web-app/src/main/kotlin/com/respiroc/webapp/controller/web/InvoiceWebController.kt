@@ -24,8 +24,7 @@ class InvoiceWebController(
     @GetMapping
     fun getInvoices(model: Model): String {
         addCommonAttributesForCurrentTenant(model, "Invoices")
-        // TODO handle pagination
-        model.addAttribute("invoices", invoiceService.getInvoicesWithLines(0, 1000).content)
+        model.addAttribute("invoices", invoiceService.getInvoicesWithLines())
         return "invoice/invoice"
     }
 
