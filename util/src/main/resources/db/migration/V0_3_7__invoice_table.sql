@@ -6,14 +6,7 @@ CREATE TABLE invoices
     issue_date    DATE        NOT NULL,
     due_date      DATE,
     currency_code VARCHAR(5)  NOT NULL,
-    supplier_id   INTEGER REFERENCES suppliers (id),
-    customer_id   INTEGER REFERENCES customers (id),
-
-    CONSTRAINT chk_exactly_one_party
-        CHECK (
-            (supplier_id IS NULL AND customer_id IS NOT NULL)
-                OR (supplier_id IS NOT NULL AND customer_id IS NULL)
-            )
+    customer_id   INTEGER REFERENCES customers (id) NOT NULL
 );
 
 CREATE INDEX idx_invoices_tenant_id ON invoices (tenant_id);
