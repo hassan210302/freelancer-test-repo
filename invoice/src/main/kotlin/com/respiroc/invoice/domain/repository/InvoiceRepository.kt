@@ -14,6 +14,7 @@ interface InvoiceRepository : CustomJpaRepository<Invoice, Long> {
         LEFT JOIN FETCH i.customer customer
         LEFT JOIN FETCH customer.company customerCompany
         LEFT JOIN FETCH customer.person customerPerson
+        ORDER BY i.id desc
     """
     )
     fun findAllInvoices(): List<Invoice>

@@ -63,7 +63,7 @@ class InvoiceWebController(
         val base64Data = Base64.getEncoder().encodeToString(pdfBytes)
         val dataUrl = "data:application/pdf;base64,$base64Data"
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
-            .body("""<embed id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""");
+            .body("""<embed id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""")
     }
 
     @DeleteMapping("/{id}")
