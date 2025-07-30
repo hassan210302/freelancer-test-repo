@@ -7,8 +7,7 @@ data class NewInvoicePayload(
     val issueDate: LocalDate,
     val dueDate: LocalDate?,
     val currencyCode: String,
-    val supplierId: Long?,
-    val customerId: Long?,
+    val customerId: Long,
     val invoiceLines: List<NewInvoiceLinePayload>
 )
 

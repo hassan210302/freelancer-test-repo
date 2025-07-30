@@ -1,7 +1,6 @@
 package com.respiroc.invoice.domain.entity
 
 import com.respiroc.customer.domain.model.Customer
-import com.respiroc.supplier.domain.model.Supplier
 import com.respiroc.tenant.domain.model.Tenant
 import jakarta.persistence.*
 import org.hibernate.annotations.TenantId
@@ -37,18 +36,11 @@ class Invoice {
     @Column(name = "currency_code", nullable = false)
     var currencyCode: String = ""
 
-    @Column(name = "supplier_id")
-    var supplierId: Long? = null
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "supplier_id", updatable = false, insertable = false)
-    lateinit var supplier: Supplier
-
     @Column(name = "customer_id")
     var customerId: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", updatable = false, insertable = false)
+    @JoinColumn(name = "customer_id", updatable = false, insertable = false, nullable = false)
     lateinit var customer: Customer
 
     @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true)
@@ -57,12 +49,4 @@ class Invoice {
     @Transient
     lateinit var totalAmount: BigDecimal
 
-    fun isSaleInvoice(): Boolean {
-        return supplierId == null
-    }
-
-    fun getPartyName(): String{
-        return if(isSaleInvoice()) customer.getName()
-        else supplier.getName()
-    }
 }

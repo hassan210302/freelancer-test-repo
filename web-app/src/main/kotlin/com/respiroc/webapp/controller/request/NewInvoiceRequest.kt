@@ -9,8 +9,7 @@ data class NewInvoiceRequest(
     var issueDate: LocalDate? = null,
     var dueDate: LocalDate? = null,
     var currencyCode: String = "",
-    var supplierId: Long? = null,
-    var customerId: Long? = null,
+    var customerId: Long,
     var invoiceLines: List<NewInvoiceLineRequest>
 )
 
@@ -27,7 +26,6 @@ fun NewInvoiceRequest.toPayload(): NewInvoicePayload {
         issueDate = this.issueDate ?: error("issueDate is required"),
         dueDate = this.dueDate,
         currencyCode = this.currencyCode,
-        supplierId = this.supplierId,
         customerId = this.customerId,
         invoiceLines = this.invoiceLines.map { it.toPayload() }
     )
