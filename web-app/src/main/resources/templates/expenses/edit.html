@@ -105,8 +105,9 @@
         <div id="textnode">Drop files anywhere</div>
     </div>
 
-    <div class="wa-container">
-        <div class="wa-stack wa-gap-m">
+    <div class="wa-container" style="max-width: 1400px;">
+        <div style="display: grid; grid-template-columns: 1fr 500px; gap: var(--wa-space-xl); align-items: start;">
+            <div class="wa-stack wa-gap-m">
 
             <div th:if="${error}" class="wa-callout wa-callout--danger">
                 <wa-icon name="exclamation-triangle"></wa-icon>
@@ -332,20 +333,6 @@
                         <wa-divider></wa-divider>
                         <h5>Attachments</h5>
 
-                        <div th:if="${not #lists.isEmpty(attachments)}" class="wa-stack wa-gap-s">
-                            <div class="wa-text-s" style="color: var(--wa-color-gray-40); margin-bottom: var(--wa-space-xs);">
-                                Current attachments:
-                            </div>
-                            <div th:each="attachment : ${attachments}" class="wa-cluster wa-gap-s" style="align-items: center; padding: var(--wa-space-xs); background: var(--wa-color-surface-raised); border-radius: 4px;">
-                                <wa-icon name="document" style="color: var(--wa-color-gray-50);"></wa-icon>
-                                <span th:text="${attachment.filename}" style="font-size: var(--wa-font-size-s);"></span>
-                            </div>
-                        </div>
-                        
-                        <div th:if="${#lists.isEmpty(attachments)}" class="wa-text-s" style="color: var(--wa-color-gray-50);">
-                            No attachments uploaded yet
-                        </div>
-
                         <div class="attachment-upload-area" onclick="document.getElementById('file-input-edit').click()">
                             <div class="upload-icon">
                                 <wa-icon name="cloud-upload" style="font-size: 2rem; color: var(--wa-color-primary-60);"></wa-icon>
@@ -376,7 +363,31 @@
                     </form>
                 </div>
             </wa-card>
-
+            </div>
+            
+            <!-- PDF Viewer Column -->
+            <div class="wa-stack wa-gap-m" style="position: sticky; top: var(--wa-space-m);">
+                <wa-card>
+                    <div slot="header">
+                        <h5>Attachments Preview</h5>
+                    </div>
+                    <div id="pdf-viewer-container" style="height: 600px; border: 1px solid var(--wa-color-gray-80); border-radius: 8px; overflow: hidden;">
+                        <div th:if="${not #lists.isEmpty(attachments)}" 
+                             style="height: 100%;"
+                             th:hx-get="@{/htmx/expense/{id}/combined-pdf(id=${expense.id})}"
+                             hx-trigger="load"
+                             hx-swap="innerHTML">
+                            Loading PDF...
+                        </div>
+                        <div th:if="${#lists.isEmpty(attachments)}" class="wa-center" style="height: 100%; display: flex; align-items: center; justify-content: center; color: var(--wa-color-gray-50);">
+                            <div class="wa-stack wa-center wa-gap-m">
+                                <wa-icon name="document-text" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
+                                <span>No attachments to preview</span>
+                            </div>
+                        </div>
+                    </div>
+                </wa-card>
+            </div>
         </div>
     </div>
 </main>

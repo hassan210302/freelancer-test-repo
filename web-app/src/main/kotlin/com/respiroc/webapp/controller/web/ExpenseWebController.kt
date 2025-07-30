@@ -15,11 +15,16 @@ import java.time.LocalDate
 import com.respiroc.ledger.application.payload.ExpensePayload
 import com.respiroc.ledger.domain.model.ExpenseStatus
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
+import com.respiroc.util.attachment.AttachmentService
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 
 @Controller
 @RequestMapping("/expenses")
 class ExpenseWebController(
-    private val expenseService: ExpenseService
+    private val expenseService: ExpenseService,
+    private val attachmentService: AttachmentService
 ) : BaseController() {
 
     @GetMapping
@@ -258,7 +263,8 @@ class ExpenseWebController(
 @Controller
 @RequestMapping("htmx/expense")
 class ExpenseHTMXController(
-    private val expenseService: ExpenseService
+    private val expenseService: ExpenseService,
+    private val attachmentService: AttachmentService
 ) : BaseController() {
     @GetMapping("/overview")
     @HxRequest
@@ -297,6 +303,23 @@ class ExpenseHTMXController(
         model.addAttribute("selectedStatus", currentStatus)
         model.addAttribute("expenseStatuses", ExpenseStatus.entries)
         return "expenses/overview :: tableContent"
+    }
+
+    @GetMapping("/{id}/combined-pdf")
+    fun getCombinedPdf(@PathVariable id: Long): ResponseEntity<String> {
+        val expense = expenseService.findExpenseById(id) ?: return ResponseEntity.notFound().build()
+        val attachments = expense.attachments.map { it.attachment }
+        
+        return if (attachments.isNotEmpty()) {
+            val combinedPdf = attachmentService.combineIntoPdf(attachments)
+            val base64Data = java.util.Base64.getEncoder().encodeToString(combinedPdf)
+            val dataUrl = "data:application/pdf;base64,$base64Data"
+            ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.TEXT_HTML)
+                .body("""<embed id="expense-pdf-viewer" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""")
+        } else {
+            ResponseEntity.notFound().build()
+        }
     }
 
 }

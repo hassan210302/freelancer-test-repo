@@ -138,6 +138,43 @@ class AttachmentService {
     }
 
 
+    fun combineIntoPdf(attachments: List<Attachment>): ByteArray {
+        val pdfBaos = ByteArrayOutputStream()
+        val writer = PdfWriter(pdfBaos, WriterProperties().setCompressionLevel(9))
+        val pdfDoc = PdfDocument(writer)
+        val document = Document(pdfDoc, PageSize.LETTER).apply { setMargins(0f, 0f, 0f, 0f) }
+
+        attachments.forEach { attachment ->
+            if (attachment.mimetype.equals("application/pdf", true)) {
+                // Merge existing PDF
+                val existingPdf = PdfDocument(com.itextpdf.kernel.pdf.PdfReader(ByteArrayInputStream(attachment.fileData)))
+                existingPdf.copyPagesTo(1, existingPdf.numberOfPages, pdfDoc)
+                existingPdf.close()
+            } else if (attachment.mimetype.lowercase() in imageMimeTypes) {
+                // Convert image to PDF page
+                val buffered = ImageIO.read(ByteArrayInputStream(attachment.fileData))
+                    ?: return@forEach
+                
+                val jpegBytes = bufferedToJpegBytes(buffered)
+                val imgData = ImageDataFactory.create(jpegBytes)
+                val image = Image(imgData).apply {
+                    scaleToFit(PageSize.LETTER.width, PageSize.LETTER.height)
+                    val x = (PageSize.LETTER.width - imageScaledWidth) / 2
+                    val y = (PageSize.LETTER.height - imageScaledHeight) / 2
+                    setFixedPosition(x, y)
+                }
+                
+                document.add(image)
+                if (attachment != attachments.last()) {
+                    document.add(com.itextpdf.layout.element.AreaBreak())
+                }
+            }
+        }
+
+        document.close()
+        return pdfBaos.toByteArray()
+    }
+
     private fun ensurePdfExt(name: String): String =
         if (name.lowercase().endsWith(".pdf")) name else "${name.substringBeforeLast('.', name)}.pdf"
 }
