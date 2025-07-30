@@ -55,7 +55,9 @@ function clearSelectedFiles() {
 }
 
 function updateFileInput() {
-    const fileInput = document.getElementById("file-input");
+    const fileInput = document.getElementById("file-input") || document.getElementById("file-input-edit");
+    if (!fileInput) return;
+    
     const dataTransfer = new DataTransfer();
     
     selectedFiles.forEach(file => {
@@ -94,7 +96,7 @@ window.addEventListener("drop", function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById("file-input");
+    const fileInput = document.getElementById("file-input") || document.getElementById("file-input-edit");
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
@@ -106,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
-            const fileInput = document.getElementById("file-input");
+            const fileInput = document.getElementById("file-input") || document.getElementById("file-input-edit");
         });
     }
     

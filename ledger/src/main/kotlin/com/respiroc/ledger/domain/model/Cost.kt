@@ -1,6 +1,7 @@
 package com.respiroc.ledger.domain.model
 
 import jakarta.persistence.*
+import org.hibernate.annotations.TenantId
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -46,5 +47,9 @@ open class Cost {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expense_id", nullable = false)
     open lateinit var expense: Expense
+
+    @TenantId
+    @Column(name = "tenant_id", nullable = false)
+    open var tenantId: Long = -1
 
 } 

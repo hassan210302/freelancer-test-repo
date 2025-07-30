@@ -10,6 +10,9 @@ import com.respiroc.ledger.domain.repository.CostRepository
 import com.respiroc.ledger.domain.repository.ExpenseCategoryRepository
 import com.respiroc.ledger.domain.repository.ExpenseRepository
 import com.respiroc.util.context.ContextAwareApi
+import com.respiroc.util.attachment.Attachment
+import com.respiroc.util.attachment.AttachmentRepository
+import com.respiroc.util.attachment.AttachmentService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -19,12 +22,14 @@ import java.time.LocalDate
 class ExpenseService(
     private val expenseRepository: ExpenseRepository,
     private val expenseCategoryRepository: ExpenseCategoryRepository,
-    private val costRepository: CostRepository
+    private val costRepository: CostRepository,
+    private val attachmentRepository: AttachmentRepository,
+    private val attachmentService: AttachmentService
 ) : ContextAwareApi {
 
     @Transactional(readOnly = true)
     fun findAllExpensesByTenant(): List<ExpensePayload> {
-        val expenses = expenseRepository.findByTenantIdWithCosts(tenantId())
+        val expenses = expenseRepository.findAllWithCosts()
         return expenses.map { expense ->
             val attachmentCount = expenseRepository.findByIdWithAttachments(expense.id)?.attachments?.size ?: 0
             toExpensePayload(expense, attachmentCount)
@@ -41,8 +46,8 @@ class ExpenseService(
         val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
         
         val expenses = when {
-            status != null -> expenseRepository.findByTenantIdAndDateRangeAndStatusWithCosts(tenantId(), effectiveStartDate, effectiveEndDate, status)
-            else -> expenseRepository.findByTenantIdAndDateRangeWithCosts(tenantId(), effectiveStartDate, effectiveEndDate)
+            status != null -> expenseRepository.findByDateRangeAndStatusWithCosts(effectiveStartDate, effectiveEndDate, status)
+            else -> expenseRepository.findByDateRangeWithCosts(effectiveStartDate, effectiveEndDate)
         }
         
         return expenses.map { expense ->
@@ -63,7 +68,7 @@ class ExpenseService(
 
     @Transactional(readOnly = true)
     fun getTotalExpenseAmount(): BigDecimal {
-        return expenseRepository.getTotalAmountByTenantId(tenantId())
+        return expenseRepository.getTotalAmount()
     }
 
     @Transactional
@@ -83,7 +88,6 @@ class ExpenseService(
         expense.description = payload.description
         expense.expenseDate = payload.expenseDate
         expense.categoryId = payload.categoryId
-        expense.accountNumber = mapCategoryToAccount(payload.categoryId)
         expense.amount = payload.costs.sumOf { it.amount }
         
         expenseRepository.deleteCostsByExpenseId(id)
@@ -98,6 +102,7 @@ class ExpenseService(
             cost.paymentType = costPayload.paymentType
             cost.chargeable = costPayload.chargeable
             cost.expense = expense
+            cost.tenantId = tenantId()
             cost
         }
         
@@ -132,16 +137,31 @@ class ExpenseService(
     }
 
     @Transactional
-    fun addAttachmentsToExpense(expenseId: Long, attachments: List<ByteArray>, filenames: List<String>): ExpensePayload {
+    fun addAttachmentsToExpense(expenseId: Long, attachmentData: List<ByteArray>, filenames: List<String>, mimeTypes: List<String>): ExpensePayload {
         val expense = expenseRepository.findByIdWithAttachments(expenseId)
             ?: throw IllegalArgumentException("Expense not found")
         
-        for (i in attachments.indices) {
-            val attachment = ExpenseAttachment()
-            attachment.fileData = attachments[i]
-            attachment.filename = if (i < filenames.size) filenames[i] else "attachment_${System.currentTimeMillis()}.pdf"
-            attachment.expense = expense
-            expense.attachments.add(attachment)
+        for (i in attachmentData.indices) {
+            val originalFilename = if (i < filenames.size) filenames[i] else "attachment_${System.currentTimeMillis()}"
+            val originalMimeType = if (i < mimeTypes.size) mimeTypes[i] else "application/octet-stream"
+            
+            val (pdfData, pdfFilename, pdfMimeType) = attachmentService.convertToPdf(
+                attachmentData[i], originalFilename, originalMimeType
+            )
+            
+            val attachment = Attachment().apply {
+                fileData = pdfData
+                filename = pdfFilename
+                mimetype = pdfMimeType
+            }
+            val savedAttachment = attachmentRepository.save(attachment)
+            
+            val expenseAttachment = ExpenseAttachment().apply {
+                this.expense = expense
+                this.attachment = savedAttachment
+                this.tenantId = tenantId()
+            }
+            expense.attachments.add(expenseAttachment)
         }
         
         val savedExpense = expenseRepository.save(expense)
@@ -158,10 +178,10 @@ class ExpenseService(
         val expense = expenseRepository.findByIdWithAttachments(expenseId)
             ?: return emptyList()
         
-        return expense.attachments.map { attachment: ExpenseAttachment ->
+        return expense.attachments.map { expenseAttachment: ExpenseAttachment ->
             ExpenseAttachmentPayload(
-                id = attachment.id,
-                filename = attachment.filename
+                id = expenseAttachment.attachment.id ?: -1,
+                filename = expenseAttachment.attachment.filename
             )
         }
     }
@@ -172,7 +192,6 @@ class ExpenseService(
         expense.description = payload.description
         expense.expenseDate = payload.expenseDate
         expense.categoryId = payload.categoryId
-        expense.accountNumber = mapCategoryToAccount(payload.categoryId)
         expense.amount = payload.costs.sumOf { it.amount }
         expense.createdBy = createdBy
         expense.tenantId = tenantId()
@@ -187,6 +206,7 @@ class ExpenseService(
             cost.paymentType = costPayload.paymentType
             cost.chargeable = costPayload.chargeable
             cost.expense = expense
+            cost.tenantId = tenantId()
             cost
         }
         
@@ -198,20 +218,9 @@ class ExpenseService(
 
     }
 
-    private fun mapCategoryToAccount(categoryId: Long): String {
-        return when (categoryId) {
-            1L -> "7140"
-            2L -> "7350"
-            3L -> "6560"
-            4L -> "7320"
-            5L -> "6720"
-            6L -> "6200"
-            else -> "7790"
-        }
-    }
 
     private fun toExpensePayload(expense: Expense, attachmentCount: Int = 0): ExpensePayload {
-        val category = expenseCategoryRepository.findById(expense.categoryId).orElse(null)
+        val category = expenseCategoryRepository.findById(expense.categoryId.toLong()).orElse(null)
         val costPayloads = expense.costs.map { cost: Cost ->
             CostPayload(
                 id = cost.id,
@@ -234,7 +243,7 @@ class ExpenseService(
             category = category?.name ?: "Unknown",
             amount = expense.amount,
             costs = costPayloads,
-            receiptPath = expense.receiptPath,
+            receiptPath = null,
             createdBy = expense.createdBy,
             attachmentCount = attachmentCount
         )

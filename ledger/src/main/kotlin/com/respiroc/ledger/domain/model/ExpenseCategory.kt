@@ -12,13 +12,16 @@ open class ExpenseCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Long = -1
+    open var id: Short = -1
 
     @Column(name = "name", nullable = false, length = 100)
     open lateinit var name: String
 
     @Column(name = "description", length = 255)
     open var description: String? = null
+
+    @Column(name = "account_number", length = 10)
+    open var accountNumber: String? = null
 
     @Column(name = "is_active", nullable = false)
     open var isActive: Boolean = true

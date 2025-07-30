@@ -90,7 +90,7 @@ class ExpenseWebController(
         @RequestParam title: String,
         @RequestParam description: String,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expenseDate: LocalDate,
-        @RequestParam categoryId: Long,
+        @RequestParam categoryId: Short,
         @RequestParam(name = "costTitles", required = false) costTitles: Array<String>?,
         @RequestParam(name = "costAmounts", required = false) costAmounts: Array<String>?,
         @RequestParam(name = "costVats", required = false) costVats: Array<String>?,
@@ -116,8 +116,9 @@ class ExpenseWebController(
 
             if (!attachments.isNullOrEmpty()) {
                 val fileData = attachments.map { it.bytes }
-                val filenames = attachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}.pdf" }
-                expenseService.addAttachmentsToExpense(created.id, fileData, filenames)
+                val filenames = attachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}" }
+                val mimeTypes = attachments.map { it.contentType ?: "application/octet-stream" }
+                expenseService.addAttachmentsToExpense(created.id, fileData, filenames, mimeTypes)
             }
             "redirect:/expenses/overview"
         } catch (e: Exception) {
@@ -136,7 +137,7 @@ class ExpenseWebController(
         @RequestParam title: String,
         @RequestParam description: String,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expenseDate: LocalDate,
-        @RequestParam categoryId: Long,
+        @RequestParam categoryId: Short,
         @RequestParam(name = "costTitles", required = false) costTitles: Array<String>?,
         @RequestParam(name = "costAmounts", required = false) costAmounts: Array<String>?,
         @RequestParam(name = "costVats", required = false) costVats: Array<String>?,
@@ -209,8 +210,9 @@ class ExpenseWebController(
         if (!attachments.isNullOrEmpty() && attachments.any { !it.isEmpty && it.size > 0 }) {
             val validAttachments = attachments.filter { !it.isEmpty && it.size > 0 }
             val fileData = validAttachments.map { it.bytes }
-            val filenames = validAttachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}.pdf" }
-            expenseService.addAttachmentsToExpense(expenseId, fileData, filenames)
+            val filenames = validAttachments.map { it.originalFilename ?: "attachment_${System.currentTimeMillis()}" }
+            val mimeTypes = validAttachments.map { it.contentType ?: "application/octet-stream" }
+            expenseService.addAttachmentsToExpense(expenseId, fileData, filenames, mimeTypes)
         }
     }
 
@@ -271,11 +273,6 @@ class ExpenseHTMXController(
         currentStatus: String?,
         model: Model
     ): String {
-        println("DEBUG: HTMX request received")
-        println("DEBUG: startDate = $startDate")
-        println("DEBUG: endDate = $endDate")
-        println("DEBUG: currentStatus = $currentStatus")
-        
         val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
         val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
@@ -287,18 +284,12 @@ class ExpenseHTMXController(
             "NULL" -> statusEnum = null
             null -> statusEnum = null
         }
-        
-        println("DEBUG: effectiveStartDate = $effectiveStartDate")
-        println("DEBUG: effectiveEndDate = $effectiveEndDate")
-        println("DEBUG: statusEnum = $statusEnum")
 
         val expenses = expenseService.findExpensesWithFilters(
             startDate = effectiveStartDate,
             endDate = effectiveEndDate,
             status = statusEnum
         )
-        
-        println("DEBUG: found ${expenses.size} expenses")
 
         model.addAttribute("expenses", expenses)
         model.addAttribute("startDate", effectiveStartDate)
@@ -308,23 +299,4 @@ class ExpenseHTMXController(
         return "expenses/overview :: tableContent"
     }
 
-    @PostMapping("/upload")
-    fun uploadFiles(
-        @RequestParam("expenseId") expenseId: Long,
-        model: Model
-    ): String {
-        return try {
-            val attachments = listOf(ByteArray(1024))
-            val filenames = listOf("dummy_file.pdf")
-            expenseService.addAttachmentsToExpense(expenseId, attachments, filenames)
-            
-            model.addAttribute("message", "File uploaded successfully")
-            model.addAttribute("messageType", "success")
-            "fragments/message :: messageFragment"
-        } catch (e: Exception) {
-            model.addAttribute("message", "Error uploading file: ${e.message}")
-            model.addAttribute("messageType", "error")
-            "fragments/message :: messageFragment"
-        }
-    }
 }

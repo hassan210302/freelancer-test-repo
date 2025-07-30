@@ -1,4 +1,4 @@
-package com.respiroc.webapp
+package com.respiroc.util.attachment
 
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.geom.PageSize

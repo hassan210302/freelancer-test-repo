@@ -13,48 +13,43 @@ import java.time.LocalDate
 @Repository
 interface ExpenseRepository : CustomJpaRepository<Expense, Long> {
 
-    @Query("SELECT e FROM Expense e WHERE e.tenantId = :tenantId ORDER BY e.expenseDate DESC")
-    fun findByTenantId(@Param("tenantId") tenantId: Long): List<Expense>
+    @Query("SELECT e FROM Expense e ORDER BY e.expenseDate DESC")
+    fun findAllOrderedByDate(): List<Expense>
 
-    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId ORDER BY e.expenseDate DESC")
-    fun findByTenantIdWithCosts(@Param("tenantId") tenantId: Long): List<Expense>
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs ORDER BY e.expenseDate DESC") 
+    fun findAllWithCosts(): List<Expense>
 
-    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments WHERE e.tenantId = :tenantId ORDER BY e.expenseDate DESC")
-    fun findByTenantIdWithAttachments(@Param("tenantId") tenantId: Long): List<Expense>
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments ORDER BY e.expenseDate DESC")
+    fun findAllWithAttachments(): List<Expense>
 
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.tenantId = :tenantId")
-    fun getTotalAmountByTenantId(@Param("tenantId") tenantId: Long): BigDecimal
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e")
+    fun getTotalAmount(): BigDecimal
 
-    @Query("SELECT e FROM Expense e WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
-    fun findByTenantIdAndDateRange(
-        @Param("tenantId") tenantId: Long,
+    @Query("SELECT e FROM Expense e WHERE e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
+    fun findByDateRange(
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
     ): List<Expense>
 
-    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
-    fun findByTenantIdAndDateRangeWithCosts(
-        @Param("tenantId") tenantId: Long,
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
+    fun findByDateRangeWithCosts(
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
     ): List<Expense>
 
-    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
-    fun findByTenantIdAndDateRangeWithAttachments(
-        @Param("tenantId") tenantId: Long,
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.attachments WHERE e.expenseDate BETWEEN :startDate AND :endDate ORDER BY e.expenseDate DESC")
+    fun findByDateRangeWithAttachments(
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
     ): List<Expense>
 
-    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId AND e.status = :status ORDER BY e.expenseDate DESC")
-    fun findByTenantIdAndStatusWithCosts(
-        @Param("tenantId") tenantId: Long,
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.status = :status ORDER BY e.expenseDate DESC")
+    fun findByStatusWithCosts(
         @Param("status") status: ExpenseStatus
     ): List<Expense>
 
-    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.tenantId = :tenantId AND e.expenseDate BETWEEN :startDate AND :endDate AND e.status = :status ORDER BY e.expenseDate DESC")
-    fun findByTenantIdAndDateRangeAndStatusWithCosts(
-        @Param("tenantId") tenantId: Long,
+    @Query("SELECT e FROM Expense e LEFT JOIN FETCH e.costs WHERE e.expenseDate BETWEEN :startDate AND :endDate AND e.status = :status ORDER BY e.expenseDate DESC")
+    fun findByDateRangeAndStatusWithCosts(
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate,
         @Param("status") status: ExpenseStatus

@@ -40,9 +40,6 @@ open class Expense {
     @OneToMany(mappedBy = "expense", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     open var attachments: MutableList<ExpenseAttachment> = mutableListOf()
 
-    @Column(name = "receipt_path", length = 255)
-    open var receiptPath: String? = null
-
     @Column(name = "created_by", nullable = false, length = 100)
     open lateinit var createdBy: String
 
@@ -57,8 +54,5 @@ open class Expense {
     open var tenantId: Long = -1
 
     @Column(name = "category_id", nullable = false)
-    open var categoryId: Long = -1
-
-    @Column(name = "account_number", length = 10)
-    open var accountNumber: String? = null
+    open var categoryId: Short = -1
 }

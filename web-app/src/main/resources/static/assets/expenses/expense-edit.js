@@ -41,21 +41,11 @@ window.addEventListener("drop", function (e) {
 });
 
 function uploadFiles(files) {
-    const expenseIdInput = document.querySelector('input[name="expenseId"]');
-    if (!expenseIdInput) {
-        alert("Expense ID not found");
-        return;
+    const fileInput = document.getElementById("file-input-edit");
+    if (fileInput) {
+        fileInput.files = files;
+        fileInput.dispatchEvent(new Event('change'));
     }
-    
-    const expenseId = expenseIdInput.value;
-    
-    htmx.ajax('POST', '/htmx/expense/upload', {
-        target: '#attachment-messages-edit',
-        swap: 'outerHTML',
-        values: {
-            expenseId: expenseId
-        }
-    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {

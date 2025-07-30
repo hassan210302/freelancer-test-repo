@@ -2,6 +2,9 @@ package com.respiroc.webapp
 
 import com.respiroc.tenant.application.TenantService
 import com.respiroc.tenant.domain.model.Tenant
+import com.respiroc.util.attachment.Attachment
+import com.respiroc.util.attachment.AttachmentRepository
+import com.respiroc.util.attachment.AttachmentService
 import com.respiroc.util.repository.CustomJpaRepository
 import com.respiroc.webapp.controller.BaseController
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest

@@ -18,7 +18,6 @@ data class CreateExpensePayload(
     val title: String,
     val description: String,
     val expenseDate: LocalDate,
-    val categoryId: Long,
-    val costs: List<CreateCostPayload>,
-    val receiptPath: String? = null
+    val categoryId: Short,
+    val costs: List<CreateCostPayload>
 )
