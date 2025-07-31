@@ -70,7 +70,7 @@ class InvoiceService(
             val invoiceWithLines = invoiceMapWithLines[invoice.id]
             if (invoiceWithLines != null) {
                 invoice.lines = invoiceWithLines.lines
-                invoice.totalAmount = calculateTotalAmount(invoice.lines)
+                populateInvoiceAmounts(invoice)
             }
         }
         return invoices
@@ -78,13 +78,14 @@ class InvoiceService(
 
     fun getInvoiceWithLines(invoiceId: Long): Invoice {
         val invoice = invoiceRepository.findInvoiceById(invoiceId)!!
-        invoice.totalAmount = calculateTotalAmount(invoice.lines)
+        populateInvoiceAmounts(invoice)
         return invoice
     }
 
-    private fun calculateTotalAmount(lines: List<InvoiceLine>): BigDecimal {
-        var totalAmount = BigDecimal.ZERO
-        lines.forEach { line ->
+    private fun populateInvoiceAmounts(invoice: Invoice) {
+        invoice.totalAmount = BigDecimal.ZERO
+        invoice.discountedSubTotal = BigDecimal.ZERO
+        invoice.lines.forEach { line ->
             val quantity = BigDecimal.valueOf(line.quantity.toLong())
             val subTotal = line.unitPrice.multiply(quantity)
             val discountPercent = line.discount ?: BigDecimal.ZERO
@@ -97,8 +98,8 @@ class InvoiceService(
             line.discountAmount = discountAmount
             line.subTotal = subTotal
             line.totalAmount = discountedSubtotal + vatAmount
-            totalAmount = totalAmount + discountedSubtotal + vatAmount
+            invoice.totalAmount += line.totalAmount
+            invoice.discountedSubTotal += discountedSubtotal
         }
-        return totalAmount
     }
 }

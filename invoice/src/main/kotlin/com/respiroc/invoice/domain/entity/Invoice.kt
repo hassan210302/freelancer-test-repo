@@ -53,4 +53,7 @@ class Invoice {
     @Transient
     lateinit var totalAmount: BigDecimal
 
+    @Transient
+    lateinit var discountedSubTotal: BigDecimal
+
 }
