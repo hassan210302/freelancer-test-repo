@@ -45,9 +45,8 @@ class InvoiceService(
     fun createVoucher(invoice: Invoice, customer: Customer): VoucherPayload {
         val description = "Invoice number ${invoice.number} to ${customer.getName()}"
         val now = LocalDate.now()
-        var postRowNumberPointer = 0
         val postings = mutableListOf<CreatePostingPayload>()
-        postings.add(
+        postings +=
             CreatePostingPayload(
                 accountNumber = "1500", // Accounts Receivables
                 amount = invoice.totalAmount,
@@ -56,11 +55,9 @@ class InvoiceService(
                 description = description,
                 originalAmount = invoice.totalAmount,
                 originalCurrency = invoice.currencyCode,
-                rowNumber = postRowNumberPointer
+                rowNumber = 0
             )
-        )
-        postRowNumberPointer++
-        postings.add(
+        postings +=
             CreatePostingPayload(
                 accountNumber = "3000", // Sales – Goods – High VAT Rate
                 amount = invoice.discountedSubTotal.negate(),
@@ -69,30 +66,27 @@ class InvoiceService(
                 description = description,
                 originalAmount = invoice.discountedSubTotal.negate(),
                 originalCurrency = invoice.currencyCode,
-                rowNumber = postRowNumberPointer
+                rowNumber = 1
             )
-        )
-        postRowNumberPointer++
-        invoice.lines.forEach { invoiceLine ->
-            if (invoiceLine.vatRate.equals(0)) return@forEach
-            postings.add(
-                CreatePostingPayload(
-                    accountNumber = "2700", // Output VAT
-                    amount = invoiceLine.vat.negate(),
-                    currency = invoice.currencyCode,
-                    postingDate = now,
-                    description = description,
-                    originalAmount = invoiceLine.vat.negate(),
-                    originalCurrency = invoice.currencyCode,
-                    vatCode = invoiceLine.vatCode,
-                    rowNumber = postRowNumberPointer
-                )
-            )
-            postRowNumberPointer++
-        }
+        invoice.lines
+            .filter { it.vatRate != BigDecimal.ZERO }
+            .forEachIndexed { index, invoiceLine ->
+                postings +=
+                    CreatePostingPayload(
+                        accountNumber = "2700", // Output VAT
+                        amount = invoiceLine.vat.negate(),
+                        currency = invoice.currencyCode,
+                        postingDate = now,
+                        description = description,
+                        originalAmount = invoiceLine.vat.negate(),
+                        originalCurrency = invoice.currencyCode,
+                        vatCode = invoiceLine.vatCode,
+                        rowNumber = index + 2
+                    )
+            }
         val voucherPayload = CreateVoucherPayload(
             description = description,
-            date = invoice.issueDate,
+            date = now,
             postings = postings
         )
         return voucherService.createVoucher(voucherPayload)
