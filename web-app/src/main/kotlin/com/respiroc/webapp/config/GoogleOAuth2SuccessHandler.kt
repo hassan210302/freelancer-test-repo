@@ -1,6 +1,7 @@
 package com.respiroc.webapp.config
 
 import com.respiroc.user.application.UserService
+import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.service.JwtService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -15,7 +16,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User
 class GoogleOAuth2SuccessHandler(
     private val userService: UserService,
     private val jwtService: JwtService
-) : AuthenticationSuccessHandler {
+) : AuthenticationSuccessHandler, BaseController() {
 
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
@@ -29,12 +30,7 @@ class GoogleOAuth2SuccessHandler(
         val user = userService.loginOrSignupOAuth2(email)
         val token = jwtService.generateToken(subject = user.id.toString(), tenantId = user.tenantId)
 
-        val jwtCookie = Cookie("token", token)
-        jwtCookie.isHttpOnly = true
-        jwtCookie.secure = false
-        jwtCookie.path = "/"
-        jwtCookie.maxAge = 24 * 60 * 60
-        response.addCookie(jwtCookie)
+        setJwtCookie(token,response)
         response.sendRedirect("/")
 
     }
