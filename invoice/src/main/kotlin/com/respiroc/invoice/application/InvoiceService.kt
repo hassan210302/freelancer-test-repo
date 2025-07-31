@@ -1,33 +1,101 @@
 package com.respiroc.invoice.application
 
+import com.respiroc.customer.application.CustomerService
+import com.respiroc.customer.domain.model.Customer
 import com.respiroc.invoice.application.payload.NewInvoiceLinePayload
 import com.respiroc.invoice.application.payload.NewInvoicePayload
 import com.respiroc.invoice.domain.entity.Invoice
 import com.respiroc.invoice.domain.entity.InvoiceLine
 import com.respiroc.invoice.domain.repository.InvoiceRepository
 import com.respiroc.ledger.application.VatService
-import com.respiroc.util.context.ContextAwareApi
+import com.respiroc.ledger.application.VoucherService
+import com.respiroc.ledger.application.payload.CreatePostingPayload
+import com.respiroc.ledger.application.payload.CreateVoucherPayload
+import com.respiroc.ledger.application.payload.VoucherPayload
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDate
 
 @Service
 @Transactional
 class InvoiceService(
     private val invoiceRepository: InvoiceRepository,
-    private val vatService: VatService
-) : ContextAwareApi {
+    private val vatService: VatService,
+    private val voucherService: VoucherService,
+    private val customerService: CustomerService
+) {
 
     fun save(newInvoice: NewInvoicePayload): Invoice {
         val invoice = toInvoice(newInvoice).apply {
             number = getNextInvoiceNumber(issueDate.year)
         }
-        val savedInvoice = invoiceRepository.save(invoice)
+        var savedInvoice = invoiceRepository.save(invoice)
         savedInvoice.lines = newInvoice.invoiceLines.map { linePayload ->
             toInvoiceLine(linePayload, savedInvoice.id)
         }.toMutableList()
-        return invoiceRepository.save(savedInvoice)
+        savedInvoice = invoiceRepository.save(savedInvoice)
+        populateInvoiceAmounts(savedInvoice)
+        val customer = customerService.findById(invoice.customerId!!)
+        createVoucher(savedInvoice, customer)
+        return savedInvoice
+    }
+
+    fun createVoucher(invoice: Invoice, customer: Customer): VoucherPayload {
+        val description = "Invoice number ${invoice.number} to ${customer.getName()}"
+        val now = LocalDate.now()
+        var postRowNumberPointer = 0
+        val postings = mutableListOf<CreatePostingPayload>()
+        postings.add(
+            CreatePostingPayload(
+                accountNumber = "1500", // Accounts Receivables
+                amount = invoice.totalAmount,
+                currency = invoice.currencyCode,
+                postingDate = now,
+                description = description,
+                originalAmount = invoice.totalAmount,
+                originalCurrency = invoice.currencyCode,
+                rowNumber = postRowNumberPointer
+            )
+        )
+        postRowNumberPointer++
+        postings.add(
+            CreatePostingPayload(
+                accountNumber = "3000", // Sales – Goods – High VAT Rate
+                amount = invoice.discountedSubTotal.negate(),
+                currency = invoice.currencyCode,
+                postingDate = now,
+                description = description,
+                originalAmount = invoice.discountedSubTotal.negate(),
+                originalCurrency = invoice.currencyCode,
+                rowNumber = postRowNumberPointer
+            )
+        )
+        postRowNumberPointer++
+        invoice.lines.forEach { invoiceLine ->
+            if (invoiceLine.vatRate.equals(0)) return@forEach
+            postings.add(
+                CreatePostingPayload(
+                    accountNumber = "2700", // Output VAT
+                    amount = invoiceLine.vat.negate(),
+                    currency = invoice.currencyCode,
+                    postingDate = now,
+                    description = description,
+                    originalAmount = invoiceLine.vat.negate(),
+                    originalCurrency = invoice.currencyCode,
+                    vatCode = invoiceLine.vatCode,
+                    rowNumber = postRowNumberPointer
+                )
+            )
+            postRowNumberPointer++
+        }
+        val voucherPayload = CreateVoucherPayload(
+            description = description,
+            date = invoice.issueDate,
+            postings = postings
+        )
+        return voucherService.createVoucher(voucherPayload)
     }
 
 
