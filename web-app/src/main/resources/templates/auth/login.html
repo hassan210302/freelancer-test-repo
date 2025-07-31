@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="#{login.page.title}"/>
     <th:block th:replace="~{layout/libs :: common-libs}"></th:block>
+    <script type="module" th:src="@{/assets/components/r-continue-with-google-button.js}"></script>
 </head>
 
 <body hx-ext="response-targets">
@@ -22,6 +23,9 @@
                               required></wa-input>
                     <a href="/auth/signup" th:text="#{login.form.signup.link}"/>
                     <wa-button type="submit" variant="brand" th:text="#{login.form.submit.button}"></wa-button>
+
+                    <r-continue-with-google-button></r-continue-with-google-button>
+
                 </div>
             </form>
         </wa-card>
