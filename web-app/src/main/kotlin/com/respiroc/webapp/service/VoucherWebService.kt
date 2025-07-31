@@ -1,14 +1,13 @@
 package com.respiroc.webapp.service
 
-import com.respiroc.ledger.application.payload.CreatePostingPayload
 import com.respiroc.ledger.application.VatService
 import com.respiroc.ledger.application.VoucherService
+import com.respiroc.ledger.application.payload.CreatePostingPayload
 import com.respiroc.ledger.application.payload.UpdateVoucherPayload
 import com.respiroc.ledger.domain.model.Posting
 import com.respiroc.util.currency.CurrencyService
 import com.respiroc.webapp.controller.request.CreateVoucherRequest
 import com.respiroc.webapp.controller.request.PostingLine
-import com.respiroc.webapp.controller.response.Callout
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
@@ -246,7 +245,8 @@ class VoucherWebService(
             originalAmount = originalBaseAmount,
             originalCurrency = if (originalCurrency != companyCurrency) originalCurrency else null,
             vatCode = vatCode,
-            rowNumber = rowNumber
+            rowNumber = rowNumber,
+            supplierId = line.supplier
         )
 
         val vatPosting = CreatePostingPayload(
@@ -258,7 +258,8 @@ class VoucherWebService(
             originalAmount = originalVatAmount,
             originalCurrency = if (originalCurrency != companyCurrency) originalCurrency else null,
             vatCode = null,
-            rowNumber = rowNumber
+            rowNumber = rowNumber,
+            supplierId = line.supplier
         )
 
         return listOf(basePosting, vatPosting)
@@ -281,7 +282,8 @@ class VoucherWebService(
             originalAmount = if (originalCurrency != companyCurrency) originalAmount else null,
             originalCurrency = if (originalCurrency != companyCurrency) originalCurrency else null,
             vatCode = vatCode,
-            rowNumber = rowNumber
+            rowNumber = rowNumber,
+            supplierId = line.supplier
         )
     }
 
