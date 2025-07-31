@@ -36,4 +36,13 @@ class Customer {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "private_person_id", nullable = true)
     var person: PrivatePerson? = null
+
+    fun isPrivateCustomer(): Boolean {
+        return companyId == null
+    }
+
+    fun getName(): String {
+        return if (isPrivateCustomer()) person!!.name
+        else company!!.name
+    }
 }

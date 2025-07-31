@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -102,6 +103,19 @@ class UserService(
             }
     }
 
+    fun loginOrSignupOAuth2(email: String): LoginPayload {
+        val existingUser = userRepository.findByEmail(email)
+      if (existingUser != null) {
+            return login(existingUser)
+        }
+        else{
+          val dummyPassword = "OAUTH2_USER_" + UUID.randomUUID().toString()
+          val newUser = User()
+          newUser.email = email
+          newUser.passwordHash = passwordEncoder.encode(dummyPassword)
+          return signup(newUser)
+        }
+    }
     // ---------------------------------
     // Private Helper
     // ---------------------------------

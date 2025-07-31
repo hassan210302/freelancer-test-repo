@@ -53,7 +53,8 @@ class WebSecurityConfig(
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
-        userService: UserService
+        userService: UserService,
+        successHandler: GoogleOAuth2SuccessHandler
     ): SecurityFilterChain {
         return http
             .authorizeHttpRequests { requests ->
@@ -63,6 +64,12 @@ class WebSecurityConfig(
             }
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .csrf { it.disable() }
+            .oauth2Login { oauth2 ->
+                oauth2
+                    .successHandler(successHandler)
+                    .loginPage("/auth/login")
+
+            }
             .oauth2ResourceServer { oauth2 ->
                 oauth2
                     .jwt { jwt ->
