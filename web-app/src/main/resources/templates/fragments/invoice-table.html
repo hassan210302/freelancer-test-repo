@@ -2,11 +2,10 @@
     <thead>
     <tr>
         <th th:text="#{invoice.table.number}"></th>
+        <th th:text="#{invoice.table.customer_name}"></th>
         <th th:text="#{invoice.table.issue_date}"></th>
         <th th:text="#{invoice.table.due_date}"></th>
-        <th th:text="#{invoice.table.customer_name}"></th>
         <th th:text="#{invoice.table.amount}"></th>
-        <th style="text-align: right;" th:text="#{invoice.table.actions}"></th>
     </tr>
     </thead>
     <tbody id="invoice-table-body">
@@ -15,17 +14,17 @@
     </tr>
     <tr th:each="invoice : ${invoices}" th:id="'row-' + ${invoice.id}">
         <td th:data-label="#{invoice.table.number}">
-            <a th:href="@{/invoice/{id}(id=${invoice.id})}" th:text="${invoice.number}"></a>
+            <div class="wa-split">
+                <a th:href="@{/invoice/{id}(id=${invoice.id})}" th:text="${invoice.number}"></a>
+                <a th:href="@{'/invoice/' + ${invoice.id} + '/pdf'}" class="wa-button">
+                    <wa-icon name="eye"></wa-icon>
+                </a>
+            </div>
         </td>
+        <td th:data-label="#{invoice.table.customer_name}" th:text="${invoice.customer.getName()}"></td>
         <td th:data-label="#{invoice.table.issue_date}" th:text="${invoice.issueDate}"></td>
         <td th:data-label="#{invoice.table.due_date}" th:text="${invoice.dueDate}"></td>
-        <td th:data-label="#{invoice.table.customer_name}" th:text="${invoice.customer.getName()}"></td>
         <td th:data-label="#{invoice.table.amount}" th:text="|${invoice.totalAmount} ${invoice.currencyCode}|"></td>
-        <td th:data-label="#{invoice.table.actions}" style="text-align: right;">
-            <a th:href="@{'/invoice/' + ${invoice.id} + '/pdf'}" class="wa-button">
-                <wa-icon name="eye"></wa-icon>
-            </a>
-        </td>
     </tr>
     </tbody>
 </table>
