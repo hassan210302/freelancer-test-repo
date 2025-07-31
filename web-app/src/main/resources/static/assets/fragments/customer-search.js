@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleDropdownClose = () => {
         dropdown.style.display = 'none';
-        const currentInput = input.value.trim();
+        const currentInput = input.value?.trim();
 
         if (!lastSelectedCustomer.id && !dropdownHasResults()) {
             input.value = '';
