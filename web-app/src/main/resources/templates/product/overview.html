@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+
+<body>
+<main layout:fragment="content">
+    <div class="wa-container">
+        <div class="wa-stack wa-gap-s">
+
+            <wa-card>
+                <div class="wa-cluster">
+                    <wa-button variant="primary"
+                               th:hx-get="'/htmx/product/overview'"
+                               th:hx-target="'#tableContent'"
+                               th:hx-target-error="'#r-callout'"
+                               th:hx-indicator="'#loading-indicator'">
+                        Load Products
+                    </wa-button>
+                </div>
+            </wa-card>
+
+            <div id="tableContent" th:fragment="tableContent">
+                <wa-card>
+                    <wa-progress-bar id="loading-indicator" indeterminate class="htmx-indicator"></wa-progress-bar>
+                    <div class="wa-stack wa-gap-m">
+                        <div th:if="${#lists.isEmpty(products)}" class="wa-align-items-center">
+                            <div class="wa-stack wa-gap-m wa-align-items-center">
+                                <wa-icon name="package" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
+                                <h3 class="wa-heading-m">No products found</h3>
+                            </div>
+                        </div>
+                        <wa-scroller>
+                            <table id="productTable" style="--wa-table-row-padding: var(--wa-space-xs);"
+                                   th:unless="${#lists.isEmpty(products)}">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Has Variants</th>
+                                    <th>Created At</th>
+                                    <th>Variants</th>
+                                    <th>Options</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="product : ${products}">
+                                    <td th:text="${product.name}"
+                                        style="cursor: pointer;"
+                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
+                                    <td th:text="${product.hasVariants ? 'Yes' : 'No'}"
+                                        style="cursor: pointer;"
+                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
+                                    <td th:text="${#temporals.format(product.createdAt.atZone(T(java.time.ZoneId).systemDefault()).toLocalDateTime(), 'dd.MM.yyyy HH:mm')}"
+                                        style="cursor: pointer;"
+                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
+                                    <td th:text="${#lists.size(product.variants)}"
+                                        style="cursor: pointer;"
+                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
+                                    <td th:text="${#lists.size(product.options)}"
+                                        style="cursor: pointer;"
+                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
+                                    <td>
+                                        <div class="wa-cluster wa-gap-xs">
+                                            <wa-button size="small" variant="neutral"
+                                                       th:onclick="|window.location.href='/product/' + ${product.id}|">
+                                                <wa-icon name="eye" label="View"></wa-icon>
+                                            </wa-button>
+                                            <wa-button size="small" variant="danger"
+                                                       th:data-product-id="${product.id}"
+                                                       th:data-product-name="${product.name}"
+                                                       onclick="confirmDelete(this)">
+                                                <wa-icon name="trash" label="Delete"></wa-icon>
+                                            </wa-button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </wa-scroller>
+                    </div>
+                </wa-card>
+            </div>
+
+            <wa-card th:unless="${#lists.isEmpty(products)}">
+                <div class="wa-cluster">
+                    <wa-button variant="secondary" th:onclick="'window.location.href=\'/product/new\''">
+                        Add Product
+                    </wa-button>
+                </div>
+            </wa-card>
+
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <wa-dialog id="deleteConfirmDialog">
+        <div class="wa-stack wa-gap-m">
+            <h3 class="wa-heading-m">Confirm Delete</h3>
+            <p id="deleteConfirmMessage">Are you sure you want to delete this product?</p>
+            <div class="wa-cluster wa-gap-s wa-justify-content-end">
+                <wa-button variant="neutral" onclick="closeDeleteDialog()">Cancel</wa-button>
+                <wa-button variant="danger" onclick="executeDelete()">
+                    Delete
+                    <wa-spinner slot="end" id="delete-loading-indicator" class="htmx-indicator"></wa-spinner>
+                </wa-button>
+            </div>
+        </div>
+    </wa-dialog>
+
+    <script>
+        let productToDelete = null;
+
+        function confirmDelete(button) {
+            productToDelete = button.getAttribute('data-product-id');
+            const productName = button.getAttribute('data-product-name');
+            document.getElementById('deleteConfirmMessage').textContent =
+                `Are you sure you want to delete "${productName}"? This action cannot be undone.`;
+            document.getElementById('deleteConfirmDialog').open = true;
+        }
+
+        function closeDeleteDialog() {
+            document.getElementById('deleteConfirmDialog').open = false;
+            productToDelete = null;
+        }
+
+        function executeDelete() {
+            if (productToDelete) {
+                // Use HTMX to make the delete request
+                htmx.ajax('DELETE', `/htmx/product/${productToDelete}`, {
+                    target: '#tableContent',
+                    indicator: '#delete-loading-indicator'
+                }).then(() => {
+                    closeDeleteDialog();
+                }).catch((error) => {
+                    console.error('Delete failed:', error);
+                    closeDeleteDialog();
+                });
+            }
+        }
+
+        // Close dialog when clicking outside
+        document.getElementById('deleteConfirmDialog').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteDialog();
+            }
+        });
+    </script>
+</main>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.respiroc.webapp.config
 
+import com.respiroc.product.application.ProductSyncService
 import com.respiroc.util.context.SpringUser
 import org.hibernate.cfg.AvailableSettings
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver
@@ -15,6 +16,8 @@ class TenantIdentifierResolver : CurrentTenantIdentifierResolver<Long>, Hibernat
     }
 
     override fun resolveCurrentTenantIdentifier(): Long {
+        //To Bypass multiTenancy we need to do this
+        ProductSyncService.getCurrentTenantId()?.let { return it }
         val auth = SecurityContextHolder.getContext().authentication ?: return UNKNOWN_TENANT_ID
         val principal = auth.principal
         if (principal !is SpringUser) return UNKNOWN_TENANT_ID

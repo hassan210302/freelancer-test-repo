@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="wa-container">
+        <div class="wa-stack wa-gap-s" id="productContent">
+            <wa-card>
+                <div class="wa-split">
+                    <wa-button variant="neutral" th:onclick="'window.history.back()'">← Back to Products</wa-button>
+
+                    <div class="wa-cluster wa-gap-xs">
+                        <wa-button id="editButton" type="button" variant="primary" onclick="toggleEditMode()">Edit</wa-button>
+                        <wa-button id="saveButton" type="submit" variant="success" form="productForm" style="display: none;">
+                            Save Changes
+                            <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
+                        </wa-button>
+                        <wa-button id="cancelButton" type="button" variant="neutral" onclick="cancelEdit()" style="display: none;">Cancel</wa-button>
+                    </div>
+                </div>
+            </wa-card>
+
+            <div id="displayMode">
+                <!-- Add hidden field for hasVariants -->
+
+
+                <wa-card>
+                    <div class="wa-stack wa-gap-m">
+                        <h1 class="wa-heading-xl" th:text="${product.name}"/>
+                        <div class="wa-cluster wa-gap-l">
+                            <div class="wa-stack wa-gap-xs">
+                                <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description</span>
+                                <span th:text="${product.description ?: 'No description'}"/>
+                            </div>
+                            <div class="wa-stack wa-gap-xs">
+                                <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Created</span>
+                                <span th:text="${#temporals.format(product.createdAt, 'dd.MM.yyyy HH:mm')}"/>
+                            </div>
+                        </div>
+                    </div>
+                </wa-card>
+
+
+                <wa-card th:if="${!product.hasVariants}">
+                    <div class="wa-stack wa-gap-m">
+                        <h3 class="wa-heading-m">Product Details</h3>
+                        <div th:if="${!#lists.isEmpty(product.variants)}">
+                            <div th:with="variant=${product.variants[0]}" class="wa-cluster wa-gap-l">
+                                <div class="wa-stack wa-gap-xs">
+                                    <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">SKU</span>
+                                    <span th:text="${variant.sku}"/>
+                                </div>
+                                <div class="wa-stack wa-gap-xs">
+                                    <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price (cents)</span>
+                                    <span th:text="${variant.priceCents}"/>
+                                </div>
+                                <div class="wa-stack wa-gap-xs">
+                                    <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Stock Quantity</span>
+                                    <span th:text="${variant.stockQty}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </wa-card>
+
+                <wa-card th:if="${product.hasVariants and !#lists.isEmpty(product.variants)}">
+                    <div class="wa-stack wa-gap-m">
+                        <h3 class="wa-heading-m">Variants</h3>
+                        <wa-scroller>
+                            <table style="--wa-table-row-padding: var(--wa-space-xs);">
+                                <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Price (cents)</th>
+                                    <th>Stock</th>
+                                    <th th:if="${!#lists.isEmpty(product.variants) and product.variants[0].optionMap != null}"
+                                        th:each="optionKey : ${product.variants[0].optionMap.keySet()}"
+                                        th:text="${#strings.capitalize(optionKey)}"/>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="variant : ${product.variants}">
+                                    <td th:text="${variant.sku}"/>
+                                    <td th:text="${variant.priceCents}"/>
+                                    <td th:text="${variant.stockQty}"/>
+                                    <td th:if="${variant.optionMap != null}"
+                                        th:each="optionKey : ${variant.optionMap.keySet()}"
+                                        th:text="${variant.optionMap.get(optionKey)}"/>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </wa-scroller>
+                    </div>
+                </wa-card>
+            </div>
+
+            <form id="productForm"
+                  th:hx-post="@{/htmx/product/{id}/update(id=${product.id})}"
+                  th:hx-target="'#productContent'"
+                  th:hx-target-error="'#r-callout'"
+                  th:hx-indicator="'#loading-indicator'"
+                  th:hx-disabled-elt="'#saveButton'"
+                  style="display: none;"
+                  class="wa-stack">
+                <input type="hidden" name="hasVariants" th:value="${product.hasVariants}">
+                <wa-card>
+                    <div class="wa-stack wa-gap-m">
+                        <div class="wa-cluster wa-gap-xs wa-align-items-center">
+                            <wa-input name="name" th:value="${product.name}" placeholder="Product name" style="flex: 1;" required></wa-input>
+                            <wa-icon name="edit" style="color: var(--wa-color-primary-600);"></wa-icon>
+                        </div>
+
+                        <div class="wa-cluster wa-gap-l">
+                            <div class="wa-stack wa-gap-xs" style="flex: 1;">
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description</label>
+                                <div class="wa-cluster wa-gap-xs wa-align-items-start">
+                                    <wa-textarea name="description" placeholder="Product description" style="flex: 1;" th:value="${product.description}"></wa-textarea>
+                                    <wa-icon name="edit" style="color: var(--wa-color-primary-600); margin-top: var(--wa-space-xs);"></wa-icon>
+                                </div>
+                            </div>
+
+                            <div class="wa-stack wa-gap-xs">
+                                <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Created</span>
+                                <span th:text="${#temporals.format(product.createdAt, 'dd.MM.yyyy HH:mm')}"/>
+                            </div>
+                        </div>
+                    </div>
+                </wa-card>
+
+                <wa-card>
+                    <div slot="header" class="wa-split">
+                        <h4 id="variantSectionTitle" th:text="${product.hasVariants ? 'Product Variants' : 'Product Details'}"/>
+                        <wa-button id="addVariantBtn" type="button" variant="secondary" onclick="addVariantRow()">
+                            Add Variant
+                        </wa-button>
+                    </div>
+
+                    <div id="productLevelFields" th:style="${product.hasVariants ? 'display: none;' : 'display: block;'}" class="wa-cluster wa-gap-m">
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">SKU</label>
+                            <wa-input name="productSku" th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].sku : ''}" placeholder="Product SKU"></wa-input>
+                        </div>
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price (cents)</label>
+                            <wa-input type="number" name="productPriceCents" th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].priceCents : ''}" min="0" placeholder="Price"></wa-input>
+                        </div>
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Stock</label>
+                            <wa-input type="number" name="productStockQty" th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].stockQty : ''}" min="0" placeholder="Stock"></wa-input>
+                        </div>
+                    </div>
+
+                    <wa-scroller id="variantTable" th:style="${product.hasVariants ? 'display: block;' : 'display: none;'}">
+                        <table style="--wa-table-row-padding: var(--wa-space-xs);" class="variant-table">
+                            <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Price (cents)</th>
+                                <th>Stock</th>
+                                <th th:if="${!#lists.isEmpty(product.variants) and product.variants[0].optionMap != null}"
+                                    th:each="optionKey : ${product.variants[0].optionMap.keySet()}"
+                                    th:text="${#strings.capitalize(optionKey)}"/>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="variantLines">
+                            <tr th:if="${product.variants != null and !product.variants.isEmpty()}"
+                                th:each="variant, iterStat : ${product.variants}"
+                                class="variant-line-row"
+                                th:fragment="variant-line-row"
+                                th:id="'variant-line-row-' + ${iterStat.index}">
+
+                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].id'" th:value="${variant.id}">
+                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].sku'" th:value="${variant.sku}">
+                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].priceCents'" th:value="${variant.priceCents}">
+                                <input type="hidden" th:if="${variant.optionMap != null}" th:each="optionKey : ${variant.optionMap.keySet()}" th:name="'variants[' + ${iterStat.index} + '].optionCombination[' + ${optionKey} + ']'" th:value="${variant.optionMap.get(optionKey)}">
+
+                                <td th:text="${variant.sku}"/>
+
+                                <td th:text="${variant.priceCents}"/>
+
+                                <td>
+                                    <wa-input type="number" size="small" th:name="'variants[' + ${iterStat.index} + '].stockQty'"
+                                              th:value="${variant.stockQty}" min="0" placeholder="Stock" required></wa-input>
+                                </td>
+
+                                <td th:if="${variant.optionMap != null}"
+                                    th:each="optionKey : ${variant.optionMap.keySet()}"
+                                    th:text="${variant.optionMap.get(optionKey)}"/>
+
+                                <td>
+                                    <wa-button type="button" size="small" variant="danger"
+                                               th:onclick="'removeVariantLine(this, ' + ${iterStat.index} + ')'">
+                                        <wa-icon label="Remove variant" name="trash"></wa-icon>
+                                    </wa-button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </wa-scroller>
+                </wa-card>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let editMode = false;
+        let variantRowCount = /*[[${#lists.size(product.variants)}]]*/ 0;
+        let productOptions = /*[[${product.options}]]*/ [];
+        let existingSkus = [];
+
+        function toggleEditMode() {
+            editMode = true;
+            document.getElementById('productForm').style.display = 'block';
+            document.getElementById('displayMode').style.display = 'none';
+            document.getElementById('editButton').style.display = 'none';
+            document.getElementById('saveButton').style.display = 'inline-flex';
+            document.getElementById('cancelButton').style.display = 'inline-flex';
+
+            // Load existing SKUs for validation
+            fetch('/htmx/product/skus')
+                .then(response => response.json())
+                .then(data => {
+                    existingSkus = data.skus;
+                })
+                .catch(error => console.error('Error loading SKUs:', error));
+        }
+
+        function cancelEdit() {
+            editMode = false;
+            location.reload();
+        }
+
+        function removeVariantLine(button, index) {
+            const row = button.closest('tr');
+            if (row) {
+                row.style.display = 'none';
+                const deleteInput = document.createElement('input');
+                deleteInput.type = 'hidden';
+                deleteInput.name = `variants[${index}].deleted`;
+                deleteInput.value = 'true';
+                row.appendChild(deleteInput);
+
+                updateVariantState();
+            }
+        }
+
+        function addVariantRow() {
+            const tbody = document.getElementById('variantLines');
+            const newIndex = variantRowCount++;
+            const currentlyHasVariants = document.querySelector('input[name="hasVariants"]').value === 'true';
+            if (!currentlyHasVariants) {
+                const existingRows = tbody.querySelectorAll('tr');
+                existingRows.forEach(row => {
+                    const hasOptions = row.querySelectorAll('input[name*=".optionCombination["]').length > 0;
+                    if (!hasOptions) {
+                        const deleteInput = document.createElement('input');
+                        deleteInput.type = 'hidden';
+                        deleteInput.name = `variants[0].deleted`;
+                        deleteInput.value = 'true';
+                        row.appendChild(deleteInput);
+                        row.style.display = 'none';
+                    }
+                });
+
+                document.querySelector('input[name="hasVariants"]').value = 'true';
+            }
+            let optionColumns = '';
+            productOptions.sort((a, b) => b.name.localeCompare(a.name)).forEach(option => {
+                optionColumns += `
+        <td>
+            <wa-select size="small" name="variants[${newIndex}].optionCombination[${option.name}]" required>
+                <wa-option value="">Select ${option.name}</wa-option>
+    `;
+                option.values.forEach(value => {
+                    optionColumns += `<wa-option value="${value.value}">${value.value}</wa-option>`;
+                });
+                optionColumns += `</wa-select></td>`;
+            });
+
+            const newRow = document.createElement('tr');
+            newRow.className = 'variant-line-row';
+            newRow.id = `variant-line-row-${newIndex}`;
+            newRow.innerHTML = `
+        <input type="hidden" name="variants[${newIndex}].id" value="">
+        <input type="hidden" name="variants[${newIndex}].rowNumber" value="${newIndex}">
+
+        <td>
+            <wa-input size="small" name="variants[${newIndex}].sku" placeholder="SKU" required onblur="validateSku(this)"></wa-input>
+        </td>
+
+        <td>
+            <wa-input type="number" size="small" name="variants[${newIndex}].priceCents"
+                     min="0" placeholder="Price" required></wa-input>
+        </td>
+
+        <td>
+            <wa-input type="number" size="small" name="variants[${newIndex}].stockQty"
+                     min="0" placeholder="Stock" required></wa-input>
+        </td>
+
+        ${optionColumns}
+
+        <td>
+            <wa-button type="button" size="small" variant="danger"
+                       onclick="removeVariantLine(this, ${newIndex})">
+                <wa-icon label="Remove variant" name="trash"></wa-icon>
+            </wa-button>
+        </td>
+    `;
+
+            tbody.appendChild(newRow);
+            updateVariantState();
+        }
+
+        function validateSku(input) {
+            const sku = input.value.trim();
+            if (sku && existingSkus.includes(sku)) {
+                input.style.borderColor = 'var(--wa-color-danger-600)';
+                showSkuError(input, 'SKU already exists');
+            } else {
+                input.style.borderColor = '';
+                hideSkuError(input);
+            }
+        }
+
+        function showSkuError(input, message) {
+            let errorDiv = input.parentNode.querySelector('.sku-error');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'sku-error';
+                errorDiv.style.color = 'var(--wa-color-danger-600)';
+                errorDiv.style.fontSize = 'var(--wa-font-size-xs)';
+                errorDiv.style.marginTop = 'var(--wa-space-2xs)';
+                input.parentNode.appendChild(errorDiv);
+            }
+            errorDiv.textContent = message;
+        }
+
+        function hideSkuError(input) {
+            const errorDiv = input.parentNode.querySelector('.sku-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+
+        function updateVariantState() {
+            const visibleRows = document.querySelectorAll('#variantLines tr:not([style*="display: none"])').length;
+            const hasVariants = visibleRows > 0;
+
+            if (hasVariants) {
+                document.getElementById('variantTable').style.display = 'block';
+                document.getElementById('productLevelFields').style.display = 'none';
+                document.getElementById('variantSectionTitle').textContent = 'Product Variants';
+            } else {
+                document.getElementById('variantTable').style.display = 'none';
+                document.getElementById('productLevelFields').style.display = 'block';
+                document.getElementById('variantSectionTitle').textContent = 'Product Details';
+                document.querySelector('input[name="hasVariants"]').value = 'false';
+            }
+        }
+    </script>
+</main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+### Get products overview
+GET {{baseUrl}}/product/overview
+HX-Request: true
+Cookie: token={{token}}
+
+### Get products overview (HTMX fragment)
+GET {{baseUrl}}/htmx/product/overview
+HX-Request: true
+Cookie: token={{token}}
+
+### Get specific product detail
+GET {{baseUrl}}/product/1
+HX-Request: true
+Cookie: token={{token}}

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="wa-container">
+        <div class="wa-stack wa-gap-s" id="productContent">
+            <wa-card>
+                <div class="wa-split">
+                    <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">← Back to Products</wa-button>
+                    <div class="wa-cluster wa-gap-xs">
+                        <wa-button id="saveButton" type="submit" variant="success" form="newProductForm">
+                            Create Product
+                            <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
+                        </wa-button>
+                        <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">Cancel</wa-button>
+                    </div>
+                </div>
+            </wa-card>
+
+            <form id="newProductForm"
+                  th:hx-post="@{/htmx/product/create}"
+                  th:hx-target="'#productContent'"
+                  th:hx-target-error="'#r-callout'"
+                  th:hx-indicator="'#loading-indicator'"
+                  th:hx-disabled-elt="'#saveButton'"
+                  class="wa-stack">
+                <input type="hidden" name="hasVariants" value="false" id="hasVariantsHidden">
+                <wa-card>
+                    <div class="wa-stack wa-gap-m">
+                        <div class="wa-cluster wa-gap-xs wa-align-items-center">
+                            <wa-input name="name" placeholder="Product name" style="flex: 1;" required></wa-input>
+                            <wa-icon name="edit" style="color: var(--wa-color-primary-600);"></wa-icon>
+                        </div>
+
+                        <div class="wa-cluster wa-gap-l">
+                            <div class="wa-stack wa-gap-xs" style="flex: 1;">
+                                <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description</label>
+                                <div class="wa-cluster wa-gap-xs wa-align-items-start">
+                                    <wa-textarea name="description" placeholder="Product description" style="flex: 1;"></wa-textarea>
+                                    <wa-icon name="edit" style="color: var(--wa-color-primary-600); margin-top: var(--wa-space-xs);"></wa-icon>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Product Type</label>
+                            <wa-checkbox name="hasVariants" value="true" onchange="toggleVariantMode(this.checked)">
+                                Has multiple variants (colors, sizes, etc.)
+                            </wa-checkbox>
+                        </div>
+                    </div>
+                </wa-card>
+
+                <wa-card>
+                    <div slot="header" class="wa-split">
+                        <h4 id="variantSectionTitle">Product Details</h4>
+                        <wa-button id="addVariantBtn" type="button" variant="secondary" onclick="addVariantRow()" style="display: none;">
+                            Add Variant
+                        </wa-button>
+                    </div>
+
+
+                    <div id="productLevelFields" class="wa-cluster wa-gap-m">
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">SKU</label>
+                            <wa-input name="productSku" placeholder="Product SKU" onblur="validateSku(this)"></wa-input>
+                        </div>
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price (cents)</label>
+                            <wa-input type="number" name="productPriceCents" min="0" placeholder="Price"></wa-input>
+                        </div>
+                        <div class="wa-stack wa-gap-xs">
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Stock</label>
+                            <wa-input type="number" name="productStockQty" min="0" placeholder="Stock"></wa-input>
+                        </div>
+                    </div>
+
+
+                    <wa-scroller id="variantTable" style="display: none;">
+                        <table style="--wa-table-row-padding: var(--wa-space-xs);" class="variant-table">
+                            <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Price (cents)</th>
+                                <th>Stock</th>
+                                <th>Color</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="variantLines">
+                            </tbody>
+                        </table>
+                    </wa-scroller>
+                </wa-card>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let variantRowCount = 0;
+        let productOptions = /*[[${productOptions}]]*/ [];
+        console.log('Product options loaded:', productOptions);
+        let existingSkus = [];
+        fetch('/htmx/product/skus')
+            .then(response => response.json())
+            .then(data => {
+                existingSkus = data.skus;
+            })
+            .catch(error => console.error('Error loading SKUs:', error));
+
+        function toggleVariantMode(hasVariants) {
+            document.getElementById('hasVariantsHidden').value = hasVariants.toString();
+
+            if (hasVariants) {
+                document.getElementById('variantTable').style.display = 'block';
+                document.getElementById('productLevelFields').style.display = 'none';
+                document.getElementById('addVariantBtn').style.display = 'inline-flex';
+                document.getElementById('variantSectionTitle').textContent = 'Product Variants';
+            } else {
+                document.getElementById('variantTable').style.display = 'none';
+                document.getElementById('productLevelFields').style.display = 'block';
+                document.getElementById('addVariantBtn').style.display = 'none';
+                document.getElementById('variantSectionTitle').textContent = 'Product Details';
+                document.getElementById('variantLines').innerHTML = '';
+                variantRowCount = 0;
+            }
+        }
+
+
+
+        function addVariantRow() {
+            const tbody = document.getElementById('variantLines');
+            const newIndex = variantRowCount++;
+
+            let optionColumns = '';
+            console.log(productOptions)
+            productOptions.forEach(option => {
+                optionColumns += `
+                    <td>
+                        <wa-select size="small" name="variants[${newIndex}].optionCombination[${option.name}]" required>
+                            <wa-option value="">Select ${option.name}</wa-option>
+                `;
+                option.values.forEach(value => {
+                    optionColumns += `<wa-option value="${value}">${value}</wa-option>`;
+                });
+                optionColumns += `</wa-select></td>`;
+            });
+
+            const newRow = document.createElement('tr');
+            newRow.className = 'variant-line-row';
+            newRow.id = `variant-line-row-${newIndex}`;
+            newRow.innerHTML = `
+                <td>
+                    <wa-input size="small" name="variants[${newIndex}].sku" placeholder="SKU" required onblur="validateSku(this)"></wa-input>
+                </td>
+                <td>
+                    <wa-input type="number" size="small" name="variants[${newIndex}].priceCents" min="0" placeholder="Price" required></wa-input>
+                </td>
+                <td>
+                    <wa-input type="number" size="small" name="variants[${newIndex}].stockQty" min="0" placeholder="Stock" required></wa-input>
+                </td>
+                ${optionColumns}
+                <td>
+                    <wa-button type="button" size="small" variant="danger" onclick="removeVariantLine(this)">
+                        <wa-icon label="Remove variant" name="trash"></wa-icon>
+                    </wa-button>
+                </td>
+            `;
+
+            tbody.appendChild(newRow);
+        }
+
+        function removeVariantLine(button) {
+            const row = button.closest('tr');
+            if (row) {
+                row.remove();
+            }
+        }
+
+        function validateSku(input) {
+            const sku = input.value.trim();
+            if (sku && existingSkus.includes(sku)) {
+                input.style.borderColor = 'var(--wa-color-danger-600)';
+                showSkuError(input, 'SKU already exists');
+            } else {
+                input.style.borderColor = '';
+                hideSkuError(input);
+            }
+        }
+
+        function showSkuError(input, message) {
+            let errorDiv = input.parentNode.querySelector('.sku-error');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'sku-error';
+                errorDiv.style.color = 'var(--wa-color-danger-600)';
+                errorDiv.style.fontSize = 'var(--wa-font-size-xs)';
+                errorDiv.style.marginTop = 'var(--wa-space-2xs)';
+                input.parentNode.appendChild(errorDiv);
+            }
+            errorDiv.textContent = message;
+        }
+
+        function hideSkuError(input) {
+            const errorDiv = input.parentNode.querySelector('.sku-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+    </script>
+</main>
+</body>
+</html>

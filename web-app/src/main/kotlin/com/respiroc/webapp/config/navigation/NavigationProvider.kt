@@ -12,6 +12,14 @@ class NavigationProvider {
             ),
 
             NavigationSection(
+                title = "Products", icon = "shopping-bag",
+                items = listOf(
+                    NavigationSectionItem(label = "Overview", url = "/product/overview"),
+                    NavigationSectionItem(label = "New Product", url = "/product/new")
+                )
+            ),
+
+            NavigationSection(
                 title = "Vouchers", icon = "file-text",
                 items = listOf(
                     NavigationSectionItem(label = "Overview", url = "/voucher/overview"),
