@@ -57,6 +57,10 @@ class CustomerService(
         customerRepository.deleteById(id)
     }
 
+    fun findById(id: Long): Customer {
+        return customerRepository.findById(id).get()
+    }
+
     fun findAllCustomer(): List<Customer> {
         return customerRepository.findCustomers()
     }
