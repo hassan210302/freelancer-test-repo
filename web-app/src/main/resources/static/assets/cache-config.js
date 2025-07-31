@@ -21,4 +21,12 @@ function getCachedData(key, timestampKey) {
 function setCachedData(key, timestampKey, data) {
     localStorage.setItem(key, JSON.stringify(data));
     localStorage.setItem(timestampKey, Date.now().toString());
+    const event = new CustomEvent('vat-codes-cached', {
+        detail: {
+            key,
+            timestampKey,
+            data
+        }
+    });
+    window.dispatchEvent(event);
 } 

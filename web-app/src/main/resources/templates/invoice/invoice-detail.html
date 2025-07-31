@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<body>
+<main layout:fragment="content">
+    <wa-card>
+        <div slot="header" class="wa-split">
+            <p th:text="${invoice.creditNote} ? ${#messages.msg('invoice.detail.credit_note_summary.title')} : ${#messages.msg('invoice.detail.summary.title')}"></p>
+            <wa-button type="button" size="small" variant="neutral"
+                       th:hx-get="@{/invoice/{id}/pdf/embed(id=${invoice.id})}"
+                       th:hx-target="'#pdf-container'"
+                       th:hx-target-error="'#r-callout'"
+                       th:hx-swap="'innerHTML'"
+                       id="pdfLoadButton"
+                       hx-trigger="load, click delay:200ms"
+                       hx-on::after-request="activateSplit()">
+                <wa-icon label="Show" name="eye"></wa-icon>
+            </wa-button>
+        </div>
+        <table>
+            <tbody>
+            <tr>
+                <td><strong th:text="#{invoice.detail.number}"></strong></td>
+                <td th:text="${invoice.number}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.detail.issue_date}"></strong></td>
+                <td th:text="${invoice.issueDate}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.detail.due_date}"></strong></td>
+                <td th:text="${invoice.dueDate}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.detail.customer_name}"></strong></td>
+                <td th:text="${invoice.customer.getName()}"></td>
+            </tr>
+            <tr>
+                <td><strong th:text="#{invoice.detail.total_amount}"></strong></td>
+                <td th:text="|${#numbers.formatDecimal(invoice.totalAmount, 1, 'COMMA', 2, 'POINT')} ${invoice.currencyCode}|"></td>
+            </tr>
+            </tbody>
+        </table>
+    </wa-card>
+
+    <wa-card style="margin-top: var(--wa-space-m); overflow: auto;">
+        <div slot="header" th:text="#{invoice.lines.title}"></div>
+        <table class="wa-zebra-rows wa-hover-rows" style="width: 100%;">
+            <thead>
+            <tr>
+                <th th:text="#{invoice.line.product}"></th>
+                <th th:text="#{invoice.line.quantity}"></th>
+                <th th:text="#{invoice.line.unit_price}"></th>
+                <th th:text="#{invoice.line.discount}"></th>
+                <th th:text="#{invoice.line.vat}"></th>
+                <th th:text="#{invoice.line.amount}"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line : ${invoice.lines}">
+                <td th:text="${line.itemName}"></td>
+                <td th:text="${line.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT')}"></td>
+                <td th:text="${line.discount != null ? line.discount : 0}"></td>
+                <td th:text="${line.vatRate}"></td>
+                <td th:text="${#numbers.formatDecimal(line.totalAmount, 1, 'COMMA', 2, 'POINT')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </wa-card>
+</main>
+<div layout:fragment="aside">
+    <div id="aside-split" style="height: 100%">
+        <div id="pdf-container" style="height: 100%; overflow-y: hidden;">
+            <embed id="pdf-embed" type="application/pdf"/>
+        </div>
+    </div>
+</div>
+</body>
+</html>
