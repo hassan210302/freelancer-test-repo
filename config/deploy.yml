@@ -1,5 +1,5 @@
 service: reai
-image: gregtau/reai
+image: reai210/reai
 
 servers:
   web:
@@ -19,9 +19,9 @@ proxy:
     path: /actuator/health
 
 registry:
-  username: gregtau
+  username: reai210
   password:
-    - MRSK_REGISTRY_PASSWORD
+    - REAI_DOCKER_REGISTRY_TOKEN
 
 # https://github.com/basecamp/kamal/discussions/549
 # The "remote" will be a buildx instance running locally on both amd64 and arm64.
