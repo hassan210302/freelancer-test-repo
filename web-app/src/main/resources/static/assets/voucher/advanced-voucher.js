@@ -52,12 +52,17 @@ async function initializeExistingPostingComboboxes() {
             console.error('getVatCodes function is not available');
             return;
         }
+        if (typeof window.getSuppliers() !== 'function') {
+            console.error('getSuppliers function is not available');
+            return;
+        }
 
         const accounts = await window.getAccounts();
         const vatCodes = await window.getVatCodes();
-        
-        if (!accounts || !vatCodes) {
-            console.error('Failed to load accounts or vat codes');
+        const suppliers = await window.getSuppliers();
+
+        if (!accounts || !vatCodes || !suppliers) {
+            console.error('Failed to load accounts, suppliers, or vat codes');
             return;
         }
         
@@ -76,12 +81,21 @@ async function initializeExistingPostingComboboxes() {
             displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
         }));
 
+        const supplierItems = suppliers.map(supplier => ({
+            value: supplier.id,
+            title: supplier.id,
+            subtitle: supplier.company.name,
+            displayText: supplier.id + ' - ' + supplier.company.name,
+        }));
+
         // Initialize all existing comboboxes
         document.querySelectorAll('r-combobox').forEach(combobox => {
             if (combobox.id.includes('account')) {
                 combobox.items = accountItems;
             } else if (combobox.id.includes('vat')) {
                 combobox.items = vatItems;
+            } else if(combobox.id.includes('supplier')) {
+                combobox.items = supplierItems
             }
             combobox.addEventListener('change', () => updateBalance());
         });
@@ -117,10 +131,10 @@ async function addPostingLine(sourceRow = null) {
 
     const supplierItems = suppliers.map(supplier => ({
         value: supplier.id,
-        title: supplier.company.name,
+        title: supplier.id,
         subtitle: supplier.company.name,
-        displayText: supplier.company.name,
-    }))
+        displayText: supplier.id + ' - ' + supplier.company.name,
+    }));
 
     // Get current date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
@@ -215,9 +229,7 @@ async function addPostingLine(sourceRow = null) {
           <r-combobox
             name="postingLines[${rowCounter}].supplier"
             placeholder="Select supplier..."
-            tabindex="${rowCounter * 10 + 9}"
-            class="w-full"
-            filter>
+            tabindex="${rowCounter * 10 + 9}">
           </r-combobox>
         </td>
         <td>
@@ -247,7 +259,7 @@ async function addPostingLine(sourceRow = null) {
     const debitVatCombo = newRow.querySelector('[name*="debitVatCode"]');
     const creditAccountCombo = newRow.querySelector('[name*="creditAccount"]');
     const creditVatCombo = newRow.querySelector('[name*="creditVatCode"]');
-    const supplierCombo = newRow.querySelector('[name*="creditVatCode"]')
+    const supplierCombo = newRow.querySelector('[name*="supplier"]')
     
     debitAccountCombo.items = accountItems;
     supplierCombo.items = supplierItems;
@@ -262,7 +274,7 @@ async function addPostingLine(sourceRow = null) {
     if (defaultValues.creditVatCode) creditVatCombo.value = defaultValues.creditVatCode;
     
     // Add change listeners to comboboxes
-    [debitAccountCombo, debitVatCombo, creditAccountCombo, creditVatCombo].forEach(combo => {
+    [debitAccountCombo, debitVatCombo, creditAccountCombo, creditVatCombo, supplierCombo].forEach(combo => {
         combo.addEventListener('change', () => updateBalance());
     });
     
