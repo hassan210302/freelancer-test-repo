@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="#{signup.page.title}"/>
     <th:block th:replace="~{layout/libs :: common-libs}"></th:block>
-    <th:block th:replace="~{fragments/r-continue-with-google-button :: r-continue-with-google-button-dependencies}"></th:block>
+    <script type="module" th:src="@{/assets/components/r-continue-with-google-button.js}"></script>
 </head>
 
 <body hx-ext="response-targets">
