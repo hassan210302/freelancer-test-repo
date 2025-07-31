@@ -149,6 +149,7 @@ class InvoicePdfGenerator {
     }
 
     private fun addInvoiceDetails(document: Document, invoice: Invoice) {
+        val type = if (invoice.isCreditNote()) "Credit Note" else "Invoice"
         val table = Table(UnitValue.createPointArray(floatArrayOf(100f, 120f)))
             .setWidth(UnitValue.createPercentValue(30f))
             .setHorizontalAlignment(HorizontalAlignment.RIGHT)
@@ -159,7 +160,7 @@ class InvoicePdfGenerator {
 
         table.addCell(
             Cell(1, 2)
-                .add(Paragraph("Invoice").setFont(boldFont).setFontSize(18f))
+                .add(Paragraph(type).setFont(boldFont).setFontSize(18f))
                 .setTextAlignment(TextAlignment.LEFT)
                 .setBorder(Border.NO_BORDER)
                 .setPaddingBottom(2f)

@@ -46,6 +46,10 @@ class Invoice {
     @OneToMany(mappedBy = "invoice", cascade = [CascadeType.ALL], orphanRemoval = true)
     var lines: MutableList<InvoiceLine> = mutableListOf()
 
+    fun isCreditNote(): Boolean {
+        return totalAmount < BigDecimal.ZERO
+    }
+
     @Transient
     lateinit var totalAmount: BigDecimal
 

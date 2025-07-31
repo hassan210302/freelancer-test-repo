@@ -5,7 +5,7 @@
 <main layout:fragment="content">
     <wa-card>
         <div slot="header" class="wa-split">
-            <div th:text="#{invoice.detail.summary.title}"></div>
+            <p th:text="${invoice.creditNote} ? ${#messages.msg('invoice.detail.credit_note_summary.title')} : ${#messages.msg('invoice.detail.summary.title')}"></p>
             <wa-button type="button" size="small" variant="neutral"
                        th:hx-get="@{/invoice/{id}/pdf/embed(id=${invoice.id})}"
                        th:hx-target="'#pdf-container'"
