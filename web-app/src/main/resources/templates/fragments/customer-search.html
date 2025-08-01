@@ -40,7 +40,7 @@
          th:attr="data-customer-id=${customer.id}, data-customer-name=${customer.name}"
          style="padding: var(--wa-space-xs); cursor: pointer; border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-neutral-80);">
         <span th:text="${customer.name}"></span>
-        <span style="color: var(--wa-color-neutral-60); font-size: var(--wa-font-size-small);"
+        <span style="color: var(--wa-color-neutral-60); font-size: var(--wa-font-size-m);"
               th:text="${customer.privateCustomer} ? #{contact.private_person} : #{contact.company}">
   </span>
     </div>
