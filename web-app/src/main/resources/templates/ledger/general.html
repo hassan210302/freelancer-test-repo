@@ -52,7 +52,7 @@
                         </div>
 
                         <wa-scroller>
-                            <table id="ledgerTable" style="--wa-table-row-padding: var(--wa-space-xs);"
+                            <table id="ledgerTable"
                                    th:unless="${#lists.isEmpty(generalLedgerData.accounts)}">
                                 <thead>
                                 <tr>
@@ -67,7 +67,6 @@
                                 </thead>
                                 <tbody>
                                 <th:block th:each="account,accountStat : ${generalLedgerData.accounts}">
-                                    <!-- Account Header with Separator -->
                                     <tr th:unless="${accountStat.first}" style="height: 0;">
                                         <td colspan="7"
                                             style="padding: 0; border-top: 2px solid var(--wa-color-neutral-200);"></td>
