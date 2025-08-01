@@ -1,6 +1,7 @@
 service: reai
 image: reai210/reai
 
+# set app to point to server IP in .ssh/config
 servers:
   web:
     - app # https://dashboard.nrec.no/dashboard/project/instances/28b4d236-fdd9-49d3-a816-a2bbd3c61fac/
