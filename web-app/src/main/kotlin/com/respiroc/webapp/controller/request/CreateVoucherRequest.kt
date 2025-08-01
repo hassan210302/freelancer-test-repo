@@ -1,9 +1,9 @@
 package com.respiroc.webapp.controller.request
 
-import java.time.LocalDate
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
+import java.time.LocalDate
 
 data class CreateVoucherRequest(
     @field:NotNull(message = "Voucher date is required")
@@ -32,6 +32,7 @@ data class PostingLine(
     val description: String? = null,
     val debitVatCode: String? = null,
     val creditVatCode: String? = null,
+    val supplier: Long? = null,
     val rowNumber: Int = 0
 ) {
     fun getAccountNumber(): String {

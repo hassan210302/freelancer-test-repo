@@ -47,5 +47,5 @@ class Company : Serializable {
     var address: Address? = null
 
     @Transient
-    lateinit var currencyCode: String
+    var currencyCode: String? = null
 }

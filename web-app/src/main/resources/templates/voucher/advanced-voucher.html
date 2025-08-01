@@ -131,6 +131,7 @@
                             <th style="width: 160px;" th:text="#{credit}"/>
                             <th style="width: 100px;" th:text="#{amount}"/>
                             <th style="width: 70px;" th:text="#{currency}"/>
+                            <th style="width: 70px;" th:text="#{supplier}"/>
                             <th th:text="#{description}"/>
                             <th style="width: 60px;" th:text="#{action}"/>
                         </tr>
@@ -224,6 +225,14 @@
                                 </wa-select>
                             </td>
                             <td>
+                                <r-combobox th:id="'supplier-' + ${iterStat.index}"
+                                            th:name="'postingLines[' + ${iterStat.index} + '].supplierId'"
+                                            placeholder="Select supplier..."
+                                            th:tabindex="${iterStat.index * 10 + 9}"
+                                            th:value="${postingLine.supplierId}">
+                                </r-combobox>
+                            </td>
+                            <td>
                                 <wa-input type="text" size="small"
                                           th:tabindex="${iterStat.index * 10 + 6}"
                                           placeholder="Description"
@@ -310,6 +319,7 @@
     </script>
     <script th:src="@{/assets/cache-config.js}"></script>
     <script th:src="@{/assets/accounts.js}"></script>
+    <script th:src="@{/assets/suppliers.js}"></script>
     <script th:src="@{/assets/vat-codes.js}"></script>
     <script th:src="@{/assets/voucher/advanced-voucher.js}"></script>
 </th:block>

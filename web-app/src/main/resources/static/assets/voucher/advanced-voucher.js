@@ -52,12 +52,17 @@ async function initializeExistingPostingComboboxes() {
             console.error('getVatCodes function is not available');
             return;
         }
+        if (typeof window.getSuppliers() !== 'function') {
+            console.error('getSuppliers function is not available');
+            return;
+        }
 
         const accounts = await window.getAccounts();
         const vatCodes = await window.getVatCodes();
-        
-        if (!accounts || !vatCodes) {
-            console.error('Failed to load accounts or vat codes');
+        const suppliers = await window.getSuppliers();
+
+        if (!accounts || !vatCodes || !suppliers) {
+            console.error('Failed to load accounts, suppliers, or vat codes');
             return;
         }
         
@@ -76,12 +81,21 @@ async function initializeExistingPostingComboboxes() {
             displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
         }));
 
+        const supplierItems = suppliers.map(supplier => ({
+            value: supplier.id,
+            title: supplier.id,
+            subtitle: supplier.company.name,
+            displayText: supplier.id + ' - ' + supplier.company.name,
+        }));
+
         // Initialize all existing comboboxes
         document.querySelectorAll('r-combobox').forEach(combobox => {
             if (combobox.id.includes('account')) {
                 combobox.items = accountItems;
             } else if (combobox.id.includes('vat')) {
                 combobox.items = vatItems;
+            } else if(combobox.id.includes('supplier')) {
+                combobox.items = supplierItems
             }
             combobox.addEventListener('change', () => updateBalance());
         });
@@ -99,6 +113,7 @@ async function addPostingLine(sourceRow = null) {
 
     const accounts = await window.getAccounts();
     const vatCodes = await window.getVatCodes();
+    const suppliers = await window.getSuppliers();
     
     const accountItems = accounts.map(account => ({
         value: account.noAccountNumber,
@@ -114,6 +129,13 @@ async function addPostingLine(sourceRow = null) {
         displayText: vat.code + ' (' + vat.rate + '%) - ' + vat.description
     }));
 
+    const supplierItems = suppliers.map(supplier => ({
+        value: supplier.id,
+        title: supplier.id,
+        subtitle: supplier.company.name,
+        displayText: supplier.id + ' - ' + supplier.company.name,
+    }));
+
     // Get current date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
     
@@ -126,6 +148,7 @@ async function addPostingLine(sourceRow = null) {
         creditVatCode: sourceRow.querySelector('[name*="creditVatCode"]')?.value || vatCodes[0]?.code || '',
         amount: sourceRow.querySelector('[name*="amount"]')?.value || '',
         currency: sourceRow.querySelector('[name*="currency"]')?.value || 'NOK',
+        supplier: sourceRow.querySelector('[name*="supplier"]')?.value || '',
         description: sourceRow.querySelector('[name*="description"]')?.value || ''
     } : {
         postingDate: today,
@@ -135,6 +158,7 @@ async function addPostingLine(sourceRow = null) {
         creditVatCode: vatCodes[0]?.code || '',
         amount: '',
         currency: 'NOK',
+        supplier: '',
         description: ''
     };
 
@@ -202,6 +226,13 @@ async function addPostingLine(sourceRow = null) {
             </wa-select>
         </td>
         <td>
+          <r-combobox
+            name="postingLines[${rowCounter}].supplier"
+            placeholder="Select supplier..."
+            tabindex="${rowCounter * 10 + 9}">
+          </r-combobox>
+        </td>
+        <td>
             <wa-input type="text" size="small"
                       tabindex="${rowCounter * 10 + 6}"
                       placeholder="Description"
@@ -228,8 +259,10 @@ async function addPostingLine(sourceRow = null) {
     const debitVatCombo = newRow.querySelector('[name*="debitVatCode"]');
     const creditAccountCombo = newRow.querySelector('[name*="creditAccount"]');
     const creditVatCombo = newRow.querySelector('[name*="creditVatCode"]');
+    const supplierCombo = newRow.querySelector('[name*="supplier"]')
     
     debitAccountCombo.items = accountItems;
+    supplierCombo.items = supplierItems;
     debitVatCombo.items = vatItems;
     creditAccountCombo.items = accountItems;
     creditVatCombo.items = vatItems;
@@ -241,7 +274,7 @@ async function addPostingLine(sourceRow = null) {
     if (defaultValues.creditVatCode) creditVatCombo.value = defaultValues.creditVatCode;
     
     // Add change listeners to comboboxes
-    [debitAccountCombo, debitVatCombo, creditAccountCombo, creditVatCombo].forEach(combo => {
+    [debitAccountCombo, debitVatCombo, creditAccountCombo, creditVatCombo, supplierCombo].forEach(combo => {
         combo.addEventListener('change', () => updateBalance());
     });
     

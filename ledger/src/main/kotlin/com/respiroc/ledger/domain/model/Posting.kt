@@ -74,4 +74,7 @@ class Posting : Serializable {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "voucher_id", nullable = true, updatable = false, insertable = false)
     var voucher: Voucher? = null
+
+    @Column(name = "supplier_id", nullable = true, updatable = false)
+    var supllierId: Long? = null
 }

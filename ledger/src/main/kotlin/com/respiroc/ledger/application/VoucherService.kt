@@ -172,6 +172,7 @@ class VoucherService(
         posting.vatCode = postingData.vatCode
         posting.voucherId = voucherId
         posting.rowNumber = postingData.rowNumber
+        posting.supllierId = postingData.supplierId
 
         return posting
     }
