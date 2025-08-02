@@ -50,7 +50,7 @@
                             </div>
                         </div>
                         <wa-scroller>
-                            <table id="voucherTable" style="--wa-table-row-padding: var(--wa-space-xs);"
+                            <table id="voucherTable"
                                    th:unless="${#lists.isEmpty(vouchers)}">
                                 <thead>
                                 <tr>
@@ -95,7 +95,7 @@
 
                                     <tr th:unless="${voucherStat.last}" style="height: 0;">
                                         <td colspan="5"
-                                            style="padding: 0; border-top: 2px solid var(--wa-color-neutral-200);"></td>
+                                            style="padding: 0; border-top: 2px solid var(--wa-color-neutral-80);"></td>
                                     </tr>
                                 </th:block>
                                 </tbody>

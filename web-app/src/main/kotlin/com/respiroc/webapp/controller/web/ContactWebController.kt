@@ -83,6 +83,17 @@ class ContactHTMxController(
         return "fragments/contact-table"
     }
 
+    @GetMapping("/customer/search/dropdown")
+    fun getCustomersDropdown(@RequestParam("name") name: String, model: Model): String {
+        val isExistName = !(name.isBlank())
+        val customers: List<Customer> = if (isExistName)
+            customerService.findByNameContaining(name)
+        else
+            emptyList()
+        model.addAttribute("customers", customers)
+        return "fragments/customer-search :: items"
+    }
+
     @GetMapping("/supplier/search")
     fun searchSuppliers(@RequestParam("name") name: String, model: Model): String {
         val tenantId = tenantId()

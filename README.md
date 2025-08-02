@@ -20,7 +20,7 @@ Some of the features:
 
 And finally agentic AI for automating all of the above. 
 
-## Development 
+## Project conventions: AI and developer instructions  
 
 We use a shared guidelines in [AI.md](AI.md), these are guidelines for developers and AI agents.
 
@@ -35,3 +35,9 @@ ln AI.md .junie/guidelines.md # Jetbrains Junie
 ```
 
 If using a browser UI for AI, you can make a project and include it in "project instructions"
+
+## Frontend autocompletion 
+
+`npm install` -> [dist-cdn](node_modules/%40awesome.me/webawesome/dist-cdn) 
+which gives frontend auto-completion and CMD+click for Web awesome classes. 
+You can remove the duplicate dist folder to avoid duplicate auto-completion alternatives.  

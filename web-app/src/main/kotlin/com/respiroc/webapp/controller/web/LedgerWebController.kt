@@ -54,6 +54,33 @@ class LedgerWebController(
         model.addAttribute("accounts", accountService.findAllAccounts())
         return "ledger/chart-of-accounts"
     }
+
+    @GetMapping(value = ["/suppliers"])
+    fun suppliers(
+        @RequestParam(name = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        startDate: LocalDate?,
+        @RequestParam(name = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        endDate: LocalDate?,
+        model: Model
+    ): String {
+
+            val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+            val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+
+            val supplierData = postingService.getSuppliers(effectiveStartDate, effectiveEndDate)
+
+            model.addAttribute("supplierData", supplierData)
+            model.addAttribute("startDate", effectiveStartDate)
+            model.addAttribute("endDate", effectiveEndDate)
+
+            addCommonAttributesForCurrentTenant(model, "Supplier Ledger")
+
+            return "ledger/suppliers"
+
+    }
+
 }
 
 @Controller
@@ -89,4 +116,34 @@ class LedgerHTMXController(
 
         return "ledger/general :: tableContent"
     }
+
+    @GetMapping("/suppliers")
+    @HxRequest
+    fun suppliersHTMX(
+        @RequestParam(name = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        startDate: LocalDate?,
+        @RequestParam(name = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        endDate: LocalDate?,
+        @RequestParam(name = "supplierName", required = false)
+        organizationNumber: String?,
+        model: Model
+    ): String {
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+
+        val supplierData = if (organizationNumber == null || organizationNumber == "All") {
+            postingService.getSuppliers(effectiveStartDate, effectiveEndDate)
+        } else {
+            postingService.getSuppliersBySupplierName(effectiveStartDate, effectiveEndDate, organizationNumber)
+        }
+
+        model.addAttribute("supplierData", supplierData)
+        model.addAttribute("startDate", effectiveStartDate)
+        model.addAttribute("endDate", effectiveEndDate)
+
+        return "ledger/suppliers :: tableContent"
+    }
+
 }

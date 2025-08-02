@@ -11,3 +11,5 @@ include("contact")
 include("bank")
 include("attachment")
 include("product")
+include("invoice")
+
