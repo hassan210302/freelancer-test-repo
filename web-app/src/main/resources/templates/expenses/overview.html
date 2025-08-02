@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en" layout:decorate="~{layout/base}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<main layout:fragment="content">
+    <div class="wa-container">
+        <div class="wa-stack wa-gap-s">
+
+            <wa-card>
+                <div class="wa-stack wa-gap-m">
+                    <h2 class="wa-heading-l">Expenses</h2>
+
+                    <div th:if="${#lists.isEmpty(expenses)}" class="wa-center">
+                        <div class="wa-stack wa-gap-m wa-center">
+                            <wa-icon name="credit-card" style="font-size: 3rem; opacity: 0.5;"></wa-icon>
+                            <h3 class="wa-heading-m">No expenses found</h3>
+                        </div>
+                    </div>
+
+                    <table th:unless="${#lists.isEmpty(expenses)}">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="expense : ${expenses}">
+                            <td th:text="${expense.expenseDate}"></td>
+                            <td th:text="${expense.description}"></td>
+                            <td th:text="${expense.categoryName}"></td>
+                            <td th:text="${expense.amount}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </wa-card>
+
+        </div>
+    </div>
+</main>
+</body>
+</html>
