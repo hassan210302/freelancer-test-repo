@@ -12,12 +12,16 @@
                     <wa-button variant="neutral" th:onclick="'window.history.back()'">← Back to Products</wa-button>
 
                     <div class="wa-cluster wa-gap-xs">
-                        <wa-button id="editButton" type="button" variant="primary" onclick="toggleEditMode()">Edit</wa-button>
-                        <wa-button id="saveButton" type="submit" variant="success" form="productForm" style="display: none;">
+                        <wa-button id="editButton" type="button" variant="primary" onclick="toggleEditMode()">Edit
+                        </wa-button>
+                        <wa-button id="saveButton" type="submit" variant="success" form="productForm"
+                                   style="display: none;">
                             Save Changes
                             <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
                         </wa-button>
-                        <wa-button id="cancelButton" type="button" variant="neutral" onclick="cancelEdit()" style="display: none;">Cancel</wa-button>
+                        <wa-button id="cancelButton" type="button" variant="neutral" onclick="cancelEdit()"
+                                   style="display: none;">Cancel
+                        </wa-button>
                     </div>
                 </div>
             </wa-card>
@@ -31,11 +35,13 @@
                         <h1 class="wa-heading-xl" th:text="${product.name}"/>
                         <div class="wa-cluster wa-gap-l">
                             <div class="wa-stack wa-gap-xs">
-                                <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description</span>
+                                <span class="wa-body-s"
+                                      style="font-weight: var(--wa-font-weight-semibold);">Description</span>
                                 <span th:text="${product.description ?: 'No description'}"/>
                             </div>
                             <div class="wa-stack wa-gap-xs">
-                                <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Created</span>
+                                <span class="wa-body-s"
+                                      style="font-weight: var(--wa-font-weight-semibold);">Created</span>
                                 <span th:text="${#temporals.format(product.createdAt, 'dd.MM.yyyy HH:mm')}"/>
                             </div>
                         </div>
@@ -49,11 +55,13 @@
                         <div th:if="${!#lists.isEmpty(product.variants)}">
                             <div th:with="variant=${product.variants[0]}" class="wa-cluster wa-gap-l">
                                 <div class="wa-stack wa-gap-xs">
-                                    <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">SKU</span>
+                                    <span class="wa-body-s"
+                                          style="font-weight: var(--wa-font-weight-semibold);">SKU</span>
                                     <span th:text="${variant.sku}"/>
                                 </div>
                                 <div class="wa-stack wa-gap-xs">
-                                    <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price</span>
+                                    <span class="wa-body-s"
+                                          style="font-weight: var(--wa-font-weight-semibold);">Price</span>
                                     <span th:text="${variant.price}"/>
                                 </div>
                                 <div class="wa-stack wa-gap-xs">
@@ -69,7 +77,7 @@
                     <div class="wa-stack wa-gap-m">
                         <h3 class="wa-heading-m">Variants</h3>
                         <wa-scroller>
-                            <table style="--wa-table-row-padding: var(--wa-space-xs);">
+                            <table>
                                 <thead>
                                 <tr>
                                     <th>SKU</th>
@@ -108,7 +116,8 @@
                 <wa-card>
                     <div class="wa-stack wa-gap-m">
                         <div class="wa-cluster wa-gap-xs wa-align-items-center">
-                            <wa-input name="name" th:value="${product.name}" placeholder="Product name" style="flex: 1;" required></wa-input>
+                            <wa-input name="name" th:value="${product.name}" placeholder="Product name" style="flex: 1;"
+                                      required></wa-input>
                             <wa-icon name="edit" style="color: var(--wa-color-primary-600);"></wa-icon>
                         </div>
 
@@ -116,13 +125,16 @@
                             <div class="wa-stack wa-gap-xs" style="flex: 1;">
                                 <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description</label>
                                 <div class="wa-cluster wa-gap-xs wa-align-items-start">
-                                    <wa-textarea name="description" placeholder="Product description" style="flex: 1;" th:value="${product.description}"></wa-textarea>
-                                    <wa-icon name="edit" style="color: var(--wa-color-primary-600); margin-top: var(--wa-space-xs);"></wa-icon>
+                                    <wa-textarea name="description" placeholder="Product description" style="flex: 1;"
+                                                 th:value="${product.description}"></wa-textarea>
+                                    <wa-icon name="edit"
+                                             style="color: var(--wa-color-primary-600); margin-top: var(--wa-space-xs);"></wa-icon>
                                 </div>
                             </div>
 
                             <div class="wa-stack wa-gap-xs">
-                                <span class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Created</span>
+                                <span class="wa-body-s"
+                                      style="font-weight: var(--wa-font-weight-semibold);">Created</span>
                                 <span th:text="${#temporals.format(product.createdAt, 'dd.MM.yyyy HH:mm')}"/>
                             </div>
                         </div>
@@ -131,29 +143,39 @@
 
                 <wa-card>
                     <div slot="header" class="wa-split">
-                        <h4 id="variantSectionTitle" th:text="${product.hasVariants ? 'Product Variants' : 'Product Details'}"/>
+                        <h4 id="variantSectionTitle"
+                            th:text="${product.hasVariants ? 'Product Variants' : 'Product Details'}"/>
                         <wa-button id="addVariantBtn" type="button" variant="secondary" onclick="addVariantRow()">
                             Add Variant
                         </wa-button>
                     </div>
 
-                    <div id="productLevelFields" th:style="${product.hasVariants ? 'display: none;' : 'display: block;'}" class="wa-cluster wa-gap-m">
+                    <div id="productLevelFields"
+                         th:style="${product.hasVariants ? 'display: none;' : 'display: block;'}"
+                         class="wa-cluster wa-gap-m">
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">SKU</label>
-                            <wa-input name="productSku" th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].sku : ''}" placeholder="Product SKU"></wa-input>
+                            <wa-input name="productSku"
+                                      th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].sku : ''}"
+                                      placeholder="Product SKU"></wa-input>
                         </div>
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price</label>
-                            <wa-input type="number" name="productprice" th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].price : ''}" min="0" placeholder="Price"></wa-input>
+                            <wa-input type="number" name="productprice"
+                                      th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].price : ''}"
+                                      min="0" placeholder="Price"></wa-input>
                         </div>
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Stock</label>
-                            <wa-input type="number" name="productStockQty" th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].stockQty : ''}" min="0" placeholder="Stock"></wa-input>
+                            <wa-input type="number" name="productStockQty"
+                                      th:value="${!product.hasVariants and !#lists.isEmpty(product.variants) ? product.variants[0].stockQty : ''}"
+                                      min="0" placeholder="Stock"></wa-input>
                         </div>
                     </div>
 
-                    <wa-scroller id="variantTable" th:style="${product.hasVariants ? 'display: block;' : 'display: none;'}">
-                        <table style="--wa-table-row-padding: var(--wa-space-xs);" class="variant-table">
+                    <wa-scroller id="variantTable"
+                                 th:style="${product.hasVariants ? 'display: block;' : 'display: none;'}">
+                        <table class="variant-table">
                             <thead>
                             <tr>
                                 <th>SKU</th>
@@ -172,18 +194,26 @@
                                 th:fragment="variant-line-row"
                                 th:id="'variant-line-row-' + ${iterStat.index}">
 
-                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].id'" th:value="${variant.id}">
-                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].sku'" th:value="${variant.sku}">
-                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].price'" th:value="${variant.price}">
-                                <input type="hidden" th:if="${variant.optionMap != null}" th:each="optionKey : ${variant.optionMap.keySet()}" th:name="'variants[' + ${iterStat.index} + '].optionCombination[' + ${optionKey} + ']'" th:value="${variant.optionMap.get(optionKey)}">
+                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].id'"
+                                       th:value="${variant.id}">
+                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].sku'"
+                                       th:value="${variant.sku}">
+                                <input type="hidden" th:name="'variants[' + ${iterStat.index} + '].price'"
+                                       th:value="${variant.price}">
+                                <input type="hidden" th:if="${variant.optionMap != null}"
+                                       th:each="optionKey : ${variant.optionMap.keySet()}"
+                                       th:name="'variants[' + ${iterStat.index} + '].optionCombination[' + ${optionKey} + ']'"
+                                       th:value="${variant.optionMap.get(optionKey)}">
 
                                 <td th:text="${variant.sku}"/>
 
                                 <td th:text="${variant.price}"/>
 
                                 <td>
-                                    <wa-input type="number" size="small" th:name="'variants[' + ${iterStat.index} + '].stockQty'"
-                                              th:value="${variant.stockQty}" min="0" placeholder="Stock" required></wa-input>
+                                    <wa-input type="number" size="small"
+                                              th:name="'variants[' + ${iterStat.index} + '].stockQty'"
+                                              th:value="${variant.stockQty}" min="0" placeholder="Stock"
+                                              required></wa-input>
                                 </td>
 
                                 <td th:if="${variant.optionMap != null}"

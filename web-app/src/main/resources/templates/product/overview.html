@@ -27,12 +27,13 @@
                     <div class="wa-stack wa-gap-m">
                         <div th:if="${#lists.isEmpty(products)}" class="wa-align-items-center">
                             <div class="wa-stack wa-gap-m wa-align-items-center">
-                                <wa-icon name="package" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
+                                <wa-icon name="package"
+                                         style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
                                 <h3 class="wa-heading-m">No products found</h3>
                             </div>
                         </div>
                         <wa-scroller>
-                            <table id="productTable" style="--wa-table-row-padding: var(--wa-space-xs);"
+                            <table id="productTable"
                                    th:unless="${#lists.isEmpty(products)}">
                                 <thead>
                                 <tr>
@@ -77,7 +78,8 @@
                                                        hx-swap="innerHTML swap:0.5s">
                                                 <wa-icon name="trash" label="Delete"></wa-icon>
                                             </wa-button>
-                                            <wa-spinner th:id="'delete-loading-indicator-' + ${product.id}" class="htmx-indicator" style="display: none;"></wa-spinner>
+                                            <wa-spinner th:id="'delete-loading-indicator-' + ${product.id}"
+                                                        class="htmx-indicator" style="display: none;"></wa-spinner>
                                         </div>
                                     </td>
                                 </tr>
@@ -88,7 +90,7 @@
                 </wa-card>
             </div>
 
-            <wa-card th:unless="${#lists.isEmpty(products)}">
+            <wa-card>
                 <div class="wa-cluster">
                     <wa-button variant="secondary" th:onclick="'window.location.href=\'/product/new\''">
                         Add Product

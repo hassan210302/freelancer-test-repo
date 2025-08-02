@@ -9,13 +9,16 @@
         <div class="wa-stack wa-gap-s" id="productContent">
             <wa-card>
                 <div class="wa-split">
-                    <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">← Back to Products</wa-button>
+                    <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">← Back to
+                        Products
+                    </wa-button>
                     <div class="wa-cluster wa-gap-xs">
                         <wa-button id="saveButton" type="submit" variant="success" form="newProductForm">
                             Create Product
                             <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
                         </wa-button>
-                        <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">Cancel</wa-button>
+                        <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">Cancel
+                        </wa-button>
                     </div>
                 </div>
             </wa-card>
@@ -39,15 +42,18 @@
                             <div class="wa-stack wa-gap-xs" style="flex: 1;">
                                 <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Description</label>
                                 <div class="wa-cluster wa-gap-xs wa-align-items-start">
-                                    <wa-textarea name="description" placeholder="Product description" style="flex: 1;"></wa-textarea>
-                                    <wa-icon name="edit" style="color: var(--wa-color-primary-600); margin-top: var(--wa-space-xs);"></wa-icon>
+                                    <wa-textarea name="description" placeholder="Product description"
+                                                 style="flex: 1;"></wa-textarea>
+                                    <wa-icon name="edit"
+                                             style="color: var(--wa-color-primary-600); margin-top: var(--wa-space-xs);"></wa-icon>
                                 </div>
                             </div>
                         </div>
 
 
                         <div class="wa-stack wa-gap-xs">
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Product Type</label>
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Product
+                                Type</label>
                             <wa-checkbox name="hasVariants" value="true" onchange="toggleVariantMode(this.checked)">
                                 Has multiple variants (colors, sizes, etc.)
                             </wa-checkbox>
@@ -58,7 +64,8 @@
                 <wa-card>
                     <div slot="header" class="wa-split">
                         <h4 id="variantSectionTitle">Product Details</h4>
-                        <wa-button id="addVariantBtn" type="button" variant="secondary" onclick="addVariantRow()" style="display: none;">
+                        <wa-button id="addVariantBtn" type="button" variant="secondary" onclick="addVariantRow()"
+                                   style="display: none;">
                             Add Variant
                         </wa-button>
                     </div>
@@ -81,7 +88,7 @@
 
 
                     <wa-scroller id="variantTable" style="display: none;">
-                        <table style="--wa-table-row-padding: var(--wa-space-xs);" class="variant-table">
+                        <table class="variant-table">
                             <thead>
                             <tr>
                                 <th>SKU</th>
@@ -130,7 +137,6 @@
                 variantRowCount = 0;
             }
         }
-
 
 
         function addVariantRow() {
