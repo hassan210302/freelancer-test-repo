@@ -47,25 +47,35 @@
                                 </thead>
                                 <tbody>
                                 <tr th:each="product : ${products}" th:id="'product-row-' + ${product.id}">
-                                    <td th:text="${product.name}"
-                                        style="cursor: pointer;"
-                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
-                                    <td th:text="${product.hasVariants ? 'Yes' : 'No'}"
-                                        style="cursor: pointer;"
-                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
-                                    <td th:text="${#temporals.format(product.createdAt.atZone(T(java.time.ZoneId).systemDefault()).toLocalDateTime(), 'dd.MM.yyyy HH:mm')}"
-                                        style="cursor: pointer;"
-                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
-                                    <td th:text="${#lists.size(product.variants)}"
-                                        style="cursor: pointer;"
-                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
-                                    <td th:text="${#lists.size(product.options)}"
-                                        style="cursor: pointer;"
-                                        th:onclick="|window.location.href='/product/' + ${product.id}|"/>
+                                    <td>
+                                        <a th:href="@{/product/{id}(id=${product.id})}"
+                                           th:text="${product.name}"
+                                           style="text-decoration: none; color: inherit;"></a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/product/{id}(id=${product.id})}"
+                                           th:text="${product.hasVariants ? 'Yes' : 'No'}"
+                                           style="text-decoration: none; color: inherit;"></a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/product/{id}(id=${product.id})}"
+                                           th:text="${#temporals.format(product.createdAt.atZone(T(java.time.ZoneId).systemDefault()).toLocalDateTime(), 'dd.MM.yyyy HH:mm')}"
+                                           style="text-decoration: none; color: inherit;"></a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/product/{id}(id=${product.id})}"
+                                           th:text="${#lists.size(product.variants)}"
+                                           style="text-decoration: none; color: inherit;"></a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/product/{id}(id=${product.id})}"
+                                           th:text="${#lists.size(product.options)}"
+                                           style="text-decoration: none; color: inherit;"></a>
+                                    </td>
                                     <td>
                                         <div class="wa-cluster wa-gap-xs">
                                             <wa-button size="small" variant="neutral"
-                                                       th:onclick="|window.location.href='/product/' + ${product.id}|">
+                                                       th:href="@{/product/{id}(id=${product.id})}">
                                                 <wa-icon name="eye" label="View"></wa-icon>
                                             </wa-button>
                                             <wa-button size="small" variant="danger"
@@ -92,7 +102,7 @@
 
             <wa-card>
                 <div class="wa-cluster">
-                    <wa-button variant="secondary" th:onclick="'window.location.href=\'/product/new\''">
+                    <wa-button variant="secondary" href="/product/new">
                         Add Product
                     </wa-button>
                 </div>

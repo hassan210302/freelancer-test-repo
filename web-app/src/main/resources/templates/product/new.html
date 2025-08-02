@@ -9,16 +9,13 @@
         <div class="wa-stack wa-gap-s" id="productContent">
             <wa-card>
                 <div class="wa-split">
-                    <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">← Back to
-                        Products
-                    </wa-button>
+                    <wa-button variant="neutral" href="/product/overview">← Back to Products</wa-button>
                     <div class="wa-cluster wa-gap-xs">
                         <wa-button id="saveButton" type="submit" variant="success" form="newProductForm">
                             Create Product
                             <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
                         </wa-button>
-                        <wa-button variant="neutral" th:onclick="'window.location.href=\'/product/overview\''">Cancel
-                        </wa-button>
+                        <wa-button variant="neutral" href="/product/overview">Cancel</wa-button>
                     </div>
                 </div>
             </wa-card>
@@ -50,7 +47,6 @@
                             </div>
                         </div>
 
-
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Product
                                 Type</label>
@@ -70,7 +66,6 @@
                         </wa-button>
                     </div>
 
-
                     <div id="productLevelFields" class="wa-cluster wa-gap-m">
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">SKU</label>
@@ -85,7 +80,6 @@
                             <wa-input type="number" name="productStockQty" min="0" placeholder="Stock"></wa-input>
                         </div>
                     </div>
-
 
                     <wa-scroller id="variantTable" style="display: none;">
                         <table class="variant-table">
@@ -137,7 +131,6 @@
                 variantRowCount = 0;
             }
         }
-
 
         function addVariantRow() {
             const tbody = document.getElementById('variantLines');
