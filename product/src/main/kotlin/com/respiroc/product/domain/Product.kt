@@ -11,7 +11,7 @@ import java.time.Instant
 
 @Entity
 @Table(name = "products")
-open class Product {
+class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
