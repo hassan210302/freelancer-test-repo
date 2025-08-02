@@ -1,5 +1,6 @@
 package com.respiroc.ledger.domain.repository
 
+import com.respiroc.ledger.application.payload.SupplierPostingDTO
 import com.respiroc.ledger.domain.model.Posting
 import com.respiroc.util.repository.CustomJpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -106,4 +107,60 @@ interface PostingRepository : CustomJpaRepository<Posting, Long> {
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate
     ): List<Array<Any>>
+
+    @Query(
+        """
+    SELECT new com.respiroc.ledger.application.payload.SupplierPostingDTO(
+        c.name,
+        p.accountNumber,
+        p.amount,
+        p.postingDate,
+        p.currency,
+        c.organizationNumber,
+        p.description
+    )
+    FROM Supplier s
+    JOIN Posting p ON s.id = p.supllierId
+    JOIN Company c ON s.companyId = c.id
+
+    WHERE p.accountNumber = '2400'
+      AND p.postingDate BETWEEN :startDate AND :endDate
+    ORDER BY c.name
+    """
+    )
+    fun findSuppliersByDateRange(
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate
+    ): List<SupplierPostingDTO>
+
+
+    @Query(
+        """
+    SELECT new com.respiroc.ledger.application.payload.SupplierPostingDTO(
+        c.name,
+        p.accountNumber,
+        p.amount,
+        p.postingDate,
+        p.currency,
+        c.organizationNumber,
+        p.description
+    )
+    FROM Supplier s
+    JOIN Posting p ON s.id = p.supllierId
+    JOIN Company c ON s.companyId = c.id
+    WHERE 
+        p.accountNumber = '2400'
+    AND 
+        p.postingDate BETWEEN :startDate AND :endDate
+    AND
+        c.organizationNumber = :organizationNumber
+    ORDER BY
+        c.name
+"""
+    )
+    fun findSuppliersByDateRangeAndOrganizationNumber(
+        @Param("startDate") startDate: LocalDate?,
+        @Param("endDate") endDate: LocalDate?,
+        @Param("organizationNumber") organizationNumber: String?,
+    ): List<SupplierPostingDTO>
 }

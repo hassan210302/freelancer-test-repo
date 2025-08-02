@@ -1,6 +1,7 @@
 service: reai
-image: gregtau/reai
+image: reai210/reai
 
+# set app to point to server IP in .ssh/config
 servers:
   web:
     - app # https://dashboard.nrec.no/dashboard/project/instances/28b4d236-fdd9-49d3-a816-a2bbd3c61fac/
@@ -19,9 +20,9 @@ proxy:
     path: /actuator/health
 
 registry:
-  username: gregtau
+  username: reai210
   password:
-    - MRSK_REGISTRY_PASSWORD
+    - REAI_DOCKER_REGISTRY_TOKEN
 
 # https://github.com/basecamp/kamal/discussions/549
 # The "remote" will be a buildx instance running locally on both amd64 and arm64.
@@ -43,3 +44,4 @@ env:
     - DB_URL_PROD
     - DB_USERNAME_PROD
     - DB_PASSWORD_PROD
+    - REAI_GOOGLE_CLIENT_SECRET

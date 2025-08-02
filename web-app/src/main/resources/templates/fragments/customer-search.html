@@ -1,0 +1,47 @@
+<div th:fragment="customerSearch">
+    <div style="position: relative;">
+        <wa-input th:placeholder="#{contact.search_customer}"
+                  autocomplete="off"
+                  size="small"
+                  type="text"
+                  id="customer-search-search-input"
+                  hx-get="/htmx/contact/customer/search/dropdown"
+                  hx-trigger="keyup changed delay:500ms"
+                  hx-target="#customer-search-dropdown"
+                  hx-swap="innerHTML">
+            <wa-icon name="search" slot="start"></wa-icon>
+        </wa-input>
+        <div id="customer-search-dropdown"
+             class="dropdown"
+             style="position: absolute; width: 100%; background: white;
+                 box-shadow: var(--wa-shadow-m);
+                 border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-neutral-90);
+                 max-height: 300px; overflow-y: auto; z-index: 10; display: none;">
+        </div>
+    </div>
+    <script>
+        document.getElementById('customer-search-search-input')
+            .addEventListener('htmx:configRequest', e =>
+                e.detail.parameters.name =
+                    e.target.value || e.target.getAttribute('value') || ''
+            );
+    </script>
+</div>
+
+<div th:fragment="items">
+    <div th:if="${customers == null or #lists.isEmpty(customers)}"
+         style="padding: var(--wa-space-xs); color: var(--wa-color-neutral-60);" th:text="#{contact.no_customer_found}">
+    </div>
+
+    <div th:each="customer : ${customers}"
+         onmouseover="this.style.backgroundColor='var(--wa-color-neutral-80)'"
+         onmouseout="this.style.backgroundColor='transparent'"
+         class="dropdown-item wa-split"
+         th:attr="data-customer-id=${customer.id}, data-customer-name=${customer.name}"
+         style="padding: var(--wa-space-xs); cursor: pointer; border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-neutral-80);">
+        <span th:text="${customer.name}"></span>
+        <span style="color: var(--wa-color-neutral-60); font-size: var(--wa-font-size-m);"
+              th:text="${customer.privateCustomer} ? #{contact.private_person} : #{contact.company}">
+  </span>
+    </div>
+</div>

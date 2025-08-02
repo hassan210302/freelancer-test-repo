@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+
+
+<body>
+<main layout:fragment="content" >
+    <div >
+
+
+            <wa-card  style="background: var(--wa-color-surface-raised); --spacing: 0">
+
+                <div slot="header" class="wa-split"  >
+
+                    <div class="wa-cluster" style="padding: var(--wa-space-l)">
+
+                        <div>
+                            <label  for="startDate" th:text="#{start_date}" />
+                            <wa-input type="date"
+                                      name="startDate"
+                                      id="startDate"
+                                      size="small"
+                                      th:value="${startDate}"
+                                      th:hx-get="'/htmx/ledger/suppliers'"
+                                      th:hx-target="'#tableContent'"
+                                      th:hx-target-error="'#r-callout'"
+                                      th:hx-swap="'innerHTML'"
+                                      th:hx-indicator="'#loading-indicator'"
+                                      th:hx-trigger="'change'"
+                                      th:hx-include="'[name=\'endDate\'], [name=\'organizationNumber\']'"></wa-input>
+                        </div>
+
+                        <div >
+                            <label  for="endDate" th:text="#{end_date}" />
+                            <wa-input type="date"
+                                      name="endDate"
+                                      id="endDate"
+                                      size="small"
+                                      th:value="${endDate}"
+                                      th:hx-get="'/htmx/ledger/suppliers'"
+                                      th:hx-target="'#tableContent'"
+                                      th:hx-target-error="'#r-callout'"
+                                      th:hx-swap="'innerHTML'"
+                                      th:hx-indicator="'#loading-indicator'"
+                                      th:hx-trigger="'change'"
+                                      th:hx-include="'[name=\'startDate\'], [name=\'organizationNumber\']'"></wa-input>
+                        </div>
+
+                        <div >
+                            <label for="supplierName" th:text="#{supplier}" />
+                            <wa-select
+                                    name="supplierName"
+                                    id="supplierName"
+                                       size="small"
+                                       th:hx-get="'/htmx/ledger/suppliers'"
+                                       th:hx-target="'#tableContent'"
+                                       th:hx-target-error="'#r-callout'"
+                                       th:hx-swap="'innerHTML'"
+                                       th:hx-indicator="'#loading-indicator'"
+                                       th:hx-trigger="'change'"
+                                       th:hx-include="'[name=\'startDate\'], [name=\'endDate\']'"
+                                       >
+                                <wa-option th:each="supplier : ${supplierData}" th:value="${supplier.organizationNumber}" th:text="${supplier.name}"></wa-option>
+
+                                <wa-option value="All" selected>(All)</wa-option>
+                            </wa-select>
+                        </div>
+
+                        <div>
+                            <div id="loading-indicator" class="htmx-indicator">
+                                <wa-spinner size="small"></wa-spinner>
+                                <span style="margin-left: var(--wa-space-s);" th:text="#{loading}" />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="tableContent" style="background: var(--wa-color-surface-default);" >
+                    <div th:fragment="tableContent">
+                        <div th:unless="${#lists.isEmpty(supplierData)}">
+                            <div style="overflow-x: auto;">
+
+                                <table style="font-size: var(--wa-font-size-s); padding: var(--wa-space-m) var(--wa-space-s);">
+                                    <thead style="background: var(--wa-color-surface-raised);">
+
+                                    <tr>
+                                        <th style="width: 20%;" th:text="#{invoice_no}" />
+                                        <th style="width: 15%;" th:text="#{date}" />
+                                        <th style="width: 15%;" th:text="#{due_date}" />
+                                        <th style="width: 20%;" th:text="#{description}" />
+                                        <th style="width: 20%;" th:text="#{amount}" />
+                                        <th style="width: 15%;" th:text="#{currency}" />
+                                    </tr>
+
+                                    </thead>
+                                    <tbody>
+                                    <th:block th:each="supplier : ${supplierData}">
+                                        <tr>
+                                            <td colspan="5">
+                <span  style="width: 80%;     font-weight: 900;color: var(--wa-color-blue-40); padding: var(--wa-space-m) var(--wa-space-s);"
+                      th:text="${supplier.name + ' (' + supplier.organizationNumber + ')'}"></span>
+                                            </td>
+                                        </tr>
+
+                                        <tr th:each="posting : ${supplier.postings}">
+                                            <td></td>
+                                            <td th:text="${posting.postingDate}"></td>
+                                            <td></td>
+                                            <td th:text="${posting.description}"></td>
+                                            <td  th:text="${posting.amount}"></td>
+                                            <td th:text="${posting.currency}"></td>
+                                        </tr>
+
+                                        <tr style="background: var(--wa-color-surface-default);border-top: 2px solid var(--wa-color-blue-70);    font-weight: 600;color: var(--wa-color-blue-40);padding: var(--wa-space-m) var(--wa-space-s);">
+                                            <td><strong th:text="#{total}"></strong></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>
+                                                <strong th:text="${#numbers.formatDecimal(supplier.totalAmount, 1, 2)}"></strong>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </th:block>
+                                    </tbody>
+
+
+
+                                </table>
+
+
+
+                            </div>
+                        </div>
+
+
+                        <div th:if="${#lists.isEmpty(supplierData)}" style="    text-align: center;padding: var(--wa-space-4xl);color: var(--wa-color-gray-50);">
+                            <div style="    font-size: var(--wa-font-size-4xl);margin-bottom: var(--wa-space-m);opacity: 0.5;">
+                                <wa-icon name="table"></wa-icon>
+                            </div>
+                            <h3 th:text="#{no_Data_available}" />
+                            <p th:text="#{no_posting_found}" />
+                            <p th:text="#{try_adjusting_date}" />
+                        </div>
+                    </div>
+                </div>
+            </wa-card>
+
+
+
+    </div>
+</main>
+</body>
+</html>

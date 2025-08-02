@@ -33,6 +33,7 @@ class NavigationProvider {
                 items = listOf(
                     NavigationSectionItem(label = "General Ledger", url = "/ledger/general"),
                     NavigationSectionItem(label = "Chart of Accounts", url = "/ledger/chart-of-accounts"),
+                    NavigationSectionItem(label = "Supplier", url = "/ledger/suppliers"),
                 )
             ),
 
@@ -59,6 +60,14 @@ class NavigationProvider {
                 title = "Bank", icon = "bank",
                 items = listOf(
                     NavigationSectionItem(label = "Bank Accounts Overview", url = "/bank/account"),
+                )
+            ),
+
+            NavigationSection(
+                title = "Invoice", icon = "file-invoice",
+                items = listOf(
+                    NavigationSectionItem(label = "Invoices", url = "/invoice"),
+                    NavigationSectionItem(label = "New Invoice", url = "/invoice/new"),
                 )
             )
         )

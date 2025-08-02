@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <th:block th:replace="~{fragments/r-combobox :: r-combobox-dependencies}"></th:block>
+</head>
+<body>
+<main layout:fragment="content">
+    <form id="invoiceForm">
+        <div class="wa-stack">
+            <wa-card>
+                <div slot="header" th:text="#{invoice.form.customer}"></div>
+                <div class="wa-cluster wa-gap-s">
+                    <div th:replace="fragments/customer-search :: customerSearch"></div>
+                    <wa-input name="customerId" id="customerId" class="wa-visually-hidden" tabindex="-1"></wa-input>
+                    <wa-select style="width: 5.6rem" size="small" value="NOK" name="currencyCode" required
+                               id="currencyCode">
+                        <wa-option th:each="currency : ${supportedCurrencies}"
+                                   th:value="${currency}" th:text="${currency}">
+                        </wa-option>
+                    </wa-select>
+                </div>
+            </wa-card>
+            <wa-card>
+                <div slot="header" th:text="#{invoice.form.date_section}"></div>
+                <div class="wa-cluster wa-gap-s">
+                    <wa-input id="invoiceDate" name="issueDate" type="date" required size="small"
+                              th:label="#{invoice.form.issue_date}"></wa-input>
+                    <wa-input id="daysUntilDue" value="14" min="0" size="small" required
+                              type="number" th:label="#{invoice.form.due_days}"></wa-input>
+                    <wa-input name="dueDate" required id="dueDate" class="wa-visually-hidden" tabindex="-1"></wa-input>
+                </div>
+            </wa-card>
+            <wa-card style="overflow: auto">
+                <div slot="header" th:text="#{invoice.form.lines_section}"></div>
+                <table id="invoiceTable">
+                    <thead>
+                    <tr>
+                        <th th:text="#{invoice.form.line.product}"></th>
+                        <th th:text="#{invoice.form.line.quantity}"></th>
+                        <th th:text="#{invoice.form.line.unit_price}"></th>
+                        <th th:text="#{invoice.form.line.discount}"></th>
+                        <th th:text="#{invoice.form.line.vat}"></th>
+                        <th th:text="#{invoice.form.line.amount}"></th>
+                        <th th:text="#{invoice.form.line.actions}"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="invoiceBody">
+                    <tr>
+                        <td>
+                            <wa-input size="small" style="width: 350px;" name="itemName" required value=""></wa-input>
+                        </td>
+                        <td>
+                            <wa-input type="number" min="0" value="1" size="small" required style="width: 80px;"
+                                      name="quantity"></wa-input>
+                        </td>
+                        <td>
+                            <wa-input type="number" value="0" size="small" required style="width: 120px;"
+                                      name="unitPrice"></wa-input>
+                        </td>
+                        <td>
+                            <wa-input type="number" min="0" max="100" value="0" size="small" style="width: 80px;"
+                                      name="discount"></wa-input>
+                        </td>
+                        <td>
+                            <r-combobox placeholder="Select VAT code..." value="0" data-default-value="0" required
+                                        style="font-size: var(--wa-font-size-xs);"></r-combobox>
+                            <wa-input name="vatCode" type="number" value="0" class="wa-visually-hidden"
+                                      tabindex="-1"></wa-input>
+                        </td>
+                        <td class="amount">0.00</td>
+                        <td>
+                            <wa-button size="small" variant="neutral" data-action="duplicate">
+                                <wa-icon label="duplicate" name="copy" variant="solid"
+                                         th:title="#{invoice.form.button.duplicate}">
+                                </wa-icon>
+                            </wa-button>
+                            <wa-button size="small" variant="danger" data-action="delete">
+                                <wa-icon label="delete" name="trash" variant="solid"
+                                         th:title="#{invoice.form.button.delete}">
+                                </wa-icon>
+                            </wa-button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="4"></td>
+                        <td style="text-align: right;" th:text="#{invoice.detail.total_amount}"></td>
+                        <td id="invoiceTotal">0.00</td>
+                        <td>
+                            <wa-button type="button" variant="neutral" data-action="add-row"
+                                       th:text="#{invoice.form.button.add_row}">
+                            </wa-button>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </wa-card>
+            <wa-button type="submit" variant="success" style="width: fit-content"
+                       th:text="#{invoice.form.button.submit}">
+            </wa-button>
+        </div>
+    </form>
+</main>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        let vatCodes = [];
+    </script>
+    <script th:src="@{/assets/cache-config.js}"></script>
+    <script th:src="@{/assets/vat-codes.js}"></script>
+    <script th:src="@{/assets/fragments/customer-search.js}"></script>
+    <script th:src="@{/assets/invoice/invoice-form.js}"></script>
+</th:block>
+</body>
+</html>
