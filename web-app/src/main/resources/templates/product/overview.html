@@ -69,15 +69,15 @@
                                             </wa-button>
                                             <wa-button size="small" variant="danger"
                                                        th:hx-delete="@{/htmx/product/{id}(id=${product.id})}"
-                                                       th:hx-target="'#product-row-' + ${product.id}"
+                                                       th:hx-target="'#tableContent'"
                                                        th:hx-target-error="'#r-callout'"
                                                        th:hx-indicator="'#delete-loading-indicator-' + ${product.id}"
-                                                       th:hx-confirm="'Are you sure you want to delete \\'' + ${product.name} + '\\'? This action cannot be undone.'"
+                                                       th:hx-confirm="|Are you sure you want to delete '${product.name}'? This action cannot be undone.|"
                                                        hx-disabled-elt="this"
                                                        hx-swap="innerHTML swap:0.5s">
                                                 <wa-icon name="trash" label="Delete"></wa-icon>
-                                                <wa-spinner slot="end" th:id="'delete-loading-indicator-' + ${product.id}" class="htmx-indicator"></wa-spinner>
                                             </wa-button>
+                                            <wa-spinner th:id="'delete-loading-indicator-' + ${product.id}" class="htmx-indicator" style="display: none;"></wa-spinner>
                                         </div>
                                     </td>
                                 </tr>
