@@ -29,7 +29,7 @@ data class ProductOptionValueResponse(
 data class VariantResponse(
     val id: Long,
     val sku: String,
-    val priceCents: Int,
+    val price: Int,
     val stockQty: Int,
     val optionMap: Map<String, String>,
     val isDefault: Boolean

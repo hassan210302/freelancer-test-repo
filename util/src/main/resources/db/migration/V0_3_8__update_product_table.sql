@@ -1,0 +1,1 @@
+ALTER TABLE variants RENAME COLUMN price_cents TO price;

@@ -5,7 +5,7 @@ data class CreateProductPayload(
     val description: String?,
     val hasVariants: Boolean,
     val productSku: String? = null,  //these fields are added for default product (no variant)
-    val productPriceCents: Int? = null,
+    val productprice: Int? = null,
     val productStockQty: Int? = null,
     val variants: List<VariantPayload> = emptyList()
 )

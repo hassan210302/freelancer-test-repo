@@ -70,8 +70,8 @@
                             <wa-input name="productSku" placeholder="Product SKU" onblur="validateSku(this)"></wa-input>
                         </div>
                         <div class="wa-stack wa-gap-xs">
-                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price (cents)</label>
-                            <wa-input type="number" name="productPriceCents" min="0" placeholder="Price"></wa-input>
+                            <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Price</label>
+                            <wa-input type="number" name="productprice" min="0" placeholder="Price"></wa-input>
                         </div>
                         <div class="wa-stack wa-gap-xs">
                             <label class="wa-body-s" style="font-weight: var(--wa-font-weight-semibold);">Stock</label>
@@ -85,7 +85,7 @@
                             <thead>
                             <tr>
                                 <th>SKU</th>
-                                <th>Price (cents)</th>
+                                <th>Price</th>
                                 <th>Stock</th>
                                 <th>Color</th>
                                 <th>Size</th>
@@ -159,7 +159,7 @@
                     <wa-input size="small" name="variants[${newIndex}].sku" placeholder="SKU" required onblur="validateSku(this)"></wa-input>
                 </td>
                 <td>
-                    <wa-input type="number" size="small" name="variants[${newIndex}].priceCents" min="0" placeholder="Price" required></wa-input>
+                    <wa-input type="number" size="small" name="variants[${newIndex}].price" min="0" placeholder="Price" required></wa-input>
                 </td>
                 <td>
                     <wa-input type="number" size="small" name="variants[${newIndex}].stockQty" min="0" placeholder="Stock" required></wa-input>

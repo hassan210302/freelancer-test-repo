@@ -73,7 +73,7 @@ class ProductService(
                     VariantResponse(
                         id = variant.id,
                         sku = variant.sku,
-                        priceCents = variant.priceCents,
+                        price = variant.price,
                         stockQty = variant.stockQty,
                         optionMap = variant.optionMap,
                         isDefault = variant.isDefault
@@ -110,7 +110,7 @@ class ProductService(
                     VariantResponse(
                         id = variant.id,
                         sku = variant.sku,
-                        priceCents = variant.priceCents,
+                        price = variant.price,
                         stockQty = variant.stockQty,
                         optionMap = variant.optionMap,
                         isDefault = variant.isDefault
@@ -147,7 +147,7 @@ class ProductService(
                 VariantResponse(
                     id = variant.id,
                     sku = variant.sku,
-                    priceCents = variant.priceCents,
+                    price = variant.price,
                     stockQty = variant.stockQty,
                     optionMap = variant.optionMap,
                     isDefault = variant.isDefault
@@ -166,7 +166,7 @@ class ProductService(
             val singleVariant = Variant().apply {
                 this.productId = productId
                 this.sku = request.productSku
-                this.priceCents = request.productPriceCents ?: 0
+                this.price = request.productprice ?: 0
                 this.stockQty = request.productStockQty ?: 0
                 this.optionMap = emptyMap()
             }
@@ -179,13 +179,13 @@ class ProductService(
 
                 if (existingVariant != null) {
                     existingVariant.stockQty += variantPayload.stockQty
-                    existingVariant.priceCents = variantPayload.priceCents
+                    existingVariant.price = variantPayload.price
                     variantRepository.save(existingVariant)
                 } else {
                     val variant = Variant().apply {
                         this.productId = productId
                         this.sku = variantPayload.sku
-                        this.priceCents = variantPayload.priceCents
+                        this.price = variantPayload.price
                         this.stockQty = variantPayload.stockQty
                         this.optionMap = variantPayload.optionCombination
                     }
@@ -257,7 +257,7 @@ class ProductService(
             val singleVariant = Variant().apply {
                 this.productId = productId
                 this.sku = request.productSku
-                this.priceCents = request.productPriceCents ?: 0
+                this.price = request.productprice ?: 0
                 this.stockQty = request.productStockQty ?: 0
                 this.optionMap = emptyMap()
             }
@@ -286,7 +286,7 @@ class ProductService(
                     val newVariant = Variant().apply {
                         this.productId = productId
                         this.sku = variantUpdate.sku
-                        this.priceCents = variantUpdate.priceCents
+                        this.price = variantUpdate.price
                         this.stockQty = variantUpdate.stockQty
                         this.optionMap = variantUpdate.optionCombination
                     }

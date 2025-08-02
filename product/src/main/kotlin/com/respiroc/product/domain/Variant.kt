@@ -35,8 +35,8 @@ open class Variant {
     @Column(name = "sku", nullable = false, length = 100)
     open lateinit var sku: String
 
-    @Column(name = "price_cents", nullable = false)
-    open var priceCents: Int = 0
+    @Column(name = "price", nullable = false)
+    open var price: Int = 0
 
     @Column(name = "stock_qty", nullable = false)
     open var stockQty: Int = 0

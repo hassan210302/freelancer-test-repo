@@ -5,7 +5,7 @@ data class UpdateProductPayload(
     val description: String?,
     val hasVariants: Boolean,
     val productSku: String? = null,
-    val productPriceCents: Int? = null,
+    val productprice: Int? = null,
     val productStockQty: Int? = null,
     val variants: List<UpdateVariantPayload> = emptyList()
 )
@@ -13,7 +13,7 @@ data class UpdateProductPayload(
 data class UpdateVariantPayload(
     val id: Long? = null,
     val sku: String,
-    val priceCents: Int,
+    val price: Int,
     val stockQty: Int = 0,
     val deleted: Boolean = false,
     val optionCombination: Map<String, String> = emptyMap()
